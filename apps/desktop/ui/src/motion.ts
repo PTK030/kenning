@@ -23,10 +23,40 @@ function list(t: Targets): Element[] {
   return Array.from(t);
 }
 
+/**
+ * Put elements in their first keyframe right now. Motion starts animations
+ * on the next frame, so without this a freshly inserted element is painted
+ * once in its final state and then jumps back to the start: a flicker.
+ */
+function prime(els: Element[], keyframes: DOMKeyframesDefinition) {
+  const k = keyframes as Record<string, unknown>;
+  const first = (v: unknown) => (Array.isArray(v) ? v[0] : undefined);
+  const len = (v: unknown) => (typeof v === "number" ? `${v}px` : String(v));
+  const parts: string[] = [];
+  const x = first(k.x);
+  const y = first(k.y);
+  const rotate = first(k.rotate);
+  const scale = first(k.scale);
+  if (x !== undefined) parts.push(`translateX(${len(x)})`);
+  if (y !== undefined) parts.push(`translateY(${len(y)})`);
+  if (rotate !== undefined) parts.push(`rotate(${typeof rotate === "number" ? `${rotate}deg` : rotate})`);
+  if (scale !== undefined) parts.push(`scale(${scale})`);
+  const opacity = first(k.opacity);
+  const filter = first(k.filter);
+  for (const el of els) {
+    const style = (el as HTMLElement).style;
+    if (!style) continue;
+    if (opacity !== undefined) style.opacity = String(opacity);
+    if (parts.length) style.transform = parts.join(" ");
+    if (filter !== undefined) style.filter = String(filter);
+  }
+}
+
 /** Run an animation, or jump to its end state when motion is reduced. */
 export function move(targets: Targets, keyframes: DOMKeyframesDefinition, opts: Opts = {}): Promise<void> {
   const els = list(targets);
   if (!els.length) return Promise.resolve();
+  if (!reduced()) prime(els, keyframes);
   const controls: AnimationPlaybackControls = reduced()
     ? animate(els, keyframes, { duration: 0 })
     : animate(els, keyframes, opts);

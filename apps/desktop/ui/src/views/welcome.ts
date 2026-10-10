@@ -1,14 +1,19 @@
-// First run, in six short steps: what Kenning is, how it speaks, when it
-// reads the clipboard, your first addresses, a few preferences, and a test.
+// First run, in eight short steps: what Kenning is, how it speaks, a
+// sandbox to try it with your own hands, its keys, when it reads the clipboard, your
+// first addresses, a few preferences, and a test on the real clipboard.
 // Each step slides in from the direction you are going; the panel on the
 // right shows the thing being described rather than describing it.
+// Enter continues, the left arrow goes back.
 
 import { addressWithDiff, CHAIN_NAME } from "../address";
 import { clear, h } from "../dom";
 import { icon, type IconName } from "../icons";
 import { ipc, message } from "../ipc";
 import { draw, EASE_IN, EASE_OUT, move, POP, rise, SPRING, stagger } from "../motion";
-import type { Overview, Recognition, Span } from "../types";
+import type { Overview, Recognition } from "../types";
+import { group, KNOWN, POISON, shortAddr, spans } from "./demo";
+import { sandbox } from "./sandbox";
+import { keysStep } from "./keys";
 import iconUrl from "../../../src-tauri/icons/128x128@2x.png";
 
 /** A real stablecoin contract, recognised by its public label. */
@@ -16,10 +21,7 @@ const SAMPLE = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 /** Shares its first 6 and last 4 characters with SAMPLE. */
 const SAMPLE_LOOKALIKE = "0xa0b869111111111111111111111111111111eb48";
 
-const KNOWN = "0x28C6c06298d514Db089934071355E5743bf21d60";
-const POISON = "0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60";
-
-const STEPS = ["hello", "how", "clipboard", "book", "prefs", "done"] as const;
+const STEPS = ["hello", "how", "try", "keys", "clipboard", "book", "prefs", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 type Added = { label: string; address: string; chain: string };
@@ -58,6 +60,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     h(
       "div",
       { class: "ob" },
+      backdrop(),
       h(
         "header",
         { class: "ob-top" },
@@ -77,6 +80,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
         next.disabled = true;
         await ipc.finishOnboarding(s.watch);
         stops.forEach((f) => f());
+        document.removeEventListener("keydown", onKey);
         await done();
         return;
       }
@@ -100,13 +104,17 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     s.saved = true;
   }
 
+  /** A step change in flight; clicks and keys wait for it. */
+  let busy = false;
+
   async function go(n: number) {
-    if (n < 0 || n >= STEPS.length) return;
+    if (busy || n < 0 || n >= STEPS.length) return;
+    busy = true;
     const dir = n >= s.step ? 1 : -1;
     stops.forEach((f) => f());
     stops = [];
     const old = stage.firstElementChild;
-    if (old) await move(old, { opacity: 0, x: -28 * dir }, { duration: 0.18, ease: EASE_IN });
+    if (old) await move(old, { opacity: 0, x: -20 * dir }, { duration: 0.16, ease: EASE_IN });
     s.step = n;
 
     const step = STEPS[n];
@@ -118,15 +126,32 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     back.style.visibility = n === 0 ? "hidden" : "visible";
     clear(next, NEXT_LABEL[step], icon(step === "done" ? "check" : "arrowRight", 16));
 
-    void move(panel, { opacity: [0, 1], x: [36 * dir, 0] }, SPRING);
-    void rise(panel.querySelectorAll(".ob-copy > *"), { y: 12, delay: 0.04, gap: 0.05 });
-    void move(panel.querySelector(".ob-visual"), { opacity: [0, 1], scale: [0.96, 1] }, { ...SPRING, delay: 0.08 });
+    // The panel only slides; its parts fade in one after another. Fading
+    // both at once multiplies the opacities and reads as a flicker.
+    void move(panel, { x: [28 * dir, 0] }, SPRING);
+    void move(panel.querySelectorAll(".ob-copy > *"), { opacity: [0, 1], y: [10, 0] }, { ...SPRING, delay: stagger(0.045) });
+    void move(panel.querySelector(".ob-visual"), { opacity: [0, 1], x: [24 * dir, 0], scale: [0.97, 1] }, { ...SPRING, delay: 0.06 });
     ENTER[step]?.(panel);
+    busy = false;
   }
+
+  // Enter continues and the left arrow goes back, except while typing.
+  const onKey = (e: KeyboardEvent) => {
+    const typing = (e.target as HTMLElement | null)?.closest("input, textarea, select, button");
+    if (e.key === "Enter" && !typing) {
+      e.preventDefault();
+      void forward();
+    } else if (e.key === "ArrowLeft" && !typing) {
+      void go(s.step - 1);
+    }
+  };
+  document.addEventListener("keydown", onKey);
 
   const NEXT_LABEL: Record<Step, string> = {
     hello: "Get started",
-    how: "Continue",
+    how: "Try it",
+    try: "Continue",
+    keys: "Continue",
     clipboard: "Continue",
     book: "Continue",
     prefs: "Save and continue",
@@ -202,6 +227,20 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           ),
         ),
       ),
+
+    try: () => {
+      const box = sandbox({
+        sounds: () => s.sounds,
+        later,
+        onComplete: () => void move(next, { scale: [1, 1.06, 1] }, { duration: 0.5, delay: 0.4 }),
+      });
+      return panel(box.copy, box.visual);
+    },
+
+    keys: () => {
+      const k = keysStep({ shortcut: c.shortcut, later, own: (stop) => stops.push(stop) });
+      return panel(k.copy, k.visual);
+    },
 
     clipboard: () => {
       const visual = h("div", { class: "ob-mode" });
@@ -381,8 +420,8 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       };
       return panel(
         [
-          h("h1", {}, "You are set."),
-          h("p", { class: "lead" }, "Try it now. These buttons copy a test address, the way you would from a wallet or an exchange."),
+          h("h1", {}, "Now for real."),
+          h("p", { class: "lead" }, "Kenning is running. These buttons put a test address on your actual clipboard, the way copying from a wallet would."),
           h(
             "div",
             { class: "ob-try" },
@@ -469,26 +508,18 @@ function bullet(ic: IconName, tone: string, title: string, text: string) {
   return h("div", { class: `ob-bullet ${tone}` }, h("span", { class: "ic" }, icon(ic, 18)), h("div", {}, h("strong", {}, title), h("p", { class: "muted" }, text)));
 }
 
-/** "0x" and groups of four, the way Rust formats them. */
-function group(addr: string): string {
-  return ["0x", ...(addr.slice(2).match(/.{1,4}/g) ?? [])].join(" ");
-}
 
-/** Matching prefix and suffix (ignoring case) against `other`, as spans. */
-function spans(addr: string, other: string): Span[] {
-  const a = addr.slice(2);
-  const b = other.slice(2);
-  let p = 0;
-  while (p < a.length && a[p].toLowerCase() === b[p]?.toLowerCase()) p++;
-  let q = 0;
-  while (q < a.length - p && a.at(-1 - q)!.toLowerCase() === b.at(-1 - q)?.toLowerCase()) q++;
-  return [
-    { text: "0x" + a.slice(0, p), same: true },
-    { text: a.slice(p, a.length - q), same: false },
-    { text: a.slice(a.length - q), same: true },
-  ];
-}
-
-function shortAddr(a: string): string {
-  return a ? `${a.slice(0, 8)}…${a.slice(-4)}` : "";
+/** Faint rows of addresses drifting behind the onboarding. */
+function backdrop(): HTMLElement {
+  let seed = 11;
+  const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const hex = "0123456789abcdefABCDEF";
+  const addr = () => "0x" + Array.from({ length: 40 }, () => hex[Math.floor(rnd() * hex.length)]).join("");
+  return h(
+    "div",
+    { class: "ob-backdrop", "aria-hidden": "true" },
+    Array.from({ length: 14 }, (_, i) =>
+      h("div", { style: `animation-duration:${90 + Math.round(rnd() * 80)}s;animation-direction:${i % 2 ? "reverse" : "normal"}` }, Array.from({ length: 5 }, addr).join("   ")),
+    ),
+  );
 }

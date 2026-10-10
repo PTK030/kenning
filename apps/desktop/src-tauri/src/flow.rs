@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 
 use kenning_core::journal::Action;
 use kenning_core::{ClipboardMode, Recognition, State, extract};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::clipboard::{self, Content};
 use crate::state::{AppState, Badge};
@@ -55,6 +55,7 @@ fn is_repeat(st: &AppState, address: &kenning_core::Address) -> bool {
 /// The global shortcut (or "Check clipboard now"): always answers, even
 /// when there is nothing to recognise.
 pub fn on_shortcut(app: &AppHandle) {
+    let _ = app.emit_to(crate::ui::MAIN, "shortcut", ());
     let text = match clipboard::read() {
         Content::Text(t) => t,
         Content::Private => {
