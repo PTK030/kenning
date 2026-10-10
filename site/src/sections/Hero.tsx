@@ -15,6 +15,7 @@ import { Alert, Copy, Download, Replay } from "../components/icons";
 import { RiseTitle } from "../components/Reveal";
 import { KNOWN, POISON } from "../address";
 import { INSTALL_CLI, RELEASES, ease } from "../links";
+import { flashCursor } from "../components/pointer";
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -57,7 +58,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease, delay: 0.7 }}
           >
-            <a className="btn btn-light" href={RELEASES}>
+            <a className="btn btn-light" href={RELEASES} data-cursor="Download" data-cursor-icon="download">
               <Download /> Download for Windows
             </a>
             <CopyCommand />
@@ -75,13 +76,14 @@ function CopyCommand() {
     try {
       await navigator.clipboard.writeText(INSTALL_CLI);
       setHint("Copied");
+      flashCursor("Copied");
     } catch {
       setHint("Select and copy");
     }
     setTimeout(() => setHint("Copy"), 1800);
   };
   return (
-    <button className="command" type="button" onClick={copy}>
+    <button className="command" type="button" onClick={copy} data-cursor="Copy" data-cursor-icon="copy">
       <code>{INSTALL_CLI}</code>
       <span className="command-hint" aria-live="polite">
         {hint}
@@ -131,7 +133,7 @@ function Specimen({ px, py }: { px: MotionValue<number>; py: MotionValue<number>
             <span className={`specimen-state${phase >= 2 ? " alert" : ""}`}>
               <Alert /> {phase >= 2 ? "Lookalike" : "Comparing"}
             </span>
-            <button className="replay" type="button" onClick={() => setRun((r) => r + 1)} aria-label="Play again">
+            <button className="replay" type="button" onClick={() => setRun((r) => r + 1)} aria-label="Play again" data-cursor="Play again" data-cursor-icon="replay">
               <Replay />
             </button>
           </div>

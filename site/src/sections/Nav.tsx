@@ -33,7 +33,7 @@ export function Nav() {
         <a href={RULES}>Detection rules</a>
         <a href={REPO}>GitHub</a>
       </nav>
-      <a className="btn btn-small" href={RELEASES}>
+      <a className="btn btn-small" href={RELEASES} data-cursor="Download" data-cursor-icon="download">
         Download
       </a>
     </motion.header>

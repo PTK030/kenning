@@ -1191,6 +1191,95 @@ svg {
   font-size: 14px;
 }
 
+/* Custom cursor: the white arrow from the story, with a label beside it. */
+html.custom-cursor,
+html.custom-cursor * {
+  cursor: none !important;
+}
+.cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.cursor-arrow,
+.cursor-label-anchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+.cursor-arrow svg {
+  display: block;
+  width: 26px;
+  height: 26px;
+  /* The arrow's tip is at (5, 3) of 24: put it exactly on the pointer. */
+  margin: -3.25px 0 0 -5.4px;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 28%));
+}
+.cursor-label {
+  position: absolute;
+  left: 20px;
+  top: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  background: var(--night);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  transform-origin: 0 0;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 14%),
+    0 8px 20px -8px rgb(0 0 0 / 50%);
+}
+.cursor-label svg {
+  font-size: 15px;
+}
+
+/* Custom scrollbar: thin, fades when idle, wider while you point at it. */
+html.custom-scrollbar {
+  scrollbar-width: none;
+}
+html.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.sb {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  width: 16px;
+}
+.sb-thumb {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  width: 5px;
+  border-radius: 999px;
+  background: rgb(22 32 42 / 55%);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 40%);
+  opacity: 0;
+  transition:
+    opacity 0.35s ease,
+    width 0.2s ease,
+    background-color 0.2s ease;
+}
+.sb.on .sb-thumb {
+  opacity: 1;
+}
+.sb.wide .sb-thumb {
+  width: 8px;
+}
+.sb-thumb:hover,
+.sb-thumb.held {
+  background: var(--blue);
+}
+
 /* Smaller screens */
 @media (max-width: 1080px) {
   .nav nav a:not(:last-child) {

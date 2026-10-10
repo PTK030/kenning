@@ -1,5 +1,7 @@
 import { useEffect } from "react";
-import Lenis from "lenis";
+import { startSmoothScroll } from "./scroll";
+import { Cursor } from "./components/Cursor";
+import { Scrollbar } from "./components/Scrollbar";
 import { Nav } from "./sections/Nav";
 import { Hero } from "./sections/Hero";
 import { Marquee } from "./sections/Marquee";
@@ -14,11 +16,7 @@ import { Footer } from "./sections/Footer";
 export default function App() {
   // Smooth, weighted scrolling. Pinned sections are driven by the same scroll
   // position, so they glide instead of stepping. Off for reduced motion.
-  useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ autoRaf: true, lerp: 0.085, anchors: true });
-    return () => lenis.destroy();
-  }, []);
+  useEffect(() => startSmoothScroll(), []);
 
   return (
     <>
@@ -37,6 +35,8 @@ export default function App() {
         <Cta />
       </main>
       <Footer />
+      <Scrollbar />
+      <Cursor />
     </>
   );
 }
