@@ -469,9 +469,9 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       (legend as HTMLElement).style.opacity = "0";
       // The comparison lands: matches brighten, differences turn red, one
       // run after another, then the legend says what that means.
+      spec.querySelectorAll<HTMLElement>(".addr .diff").forEach((d, i) => (d.style.transitionDelay = `${i * 35}ms`));
       later(() => {
         spec.classList.add("lit");
-        void move(spec.querySelectorAll(".addr .diff"), { y: [-2, 0] }, { duration: 0.3, ease: EASE_OUT, delay: stagger(0.035) });
         void move(legend, { opacity: [0, 1], y: [4, 0] }, { duration: 0.4, ease: EASE_OUT, delay: 0.5 });
       }, 1000);
     },

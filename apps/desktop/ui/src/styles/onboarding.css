@@ -132,7 +132,9 @@ main.onboarding {
 
 /* Differences, shown quietly: the matching start and end are bright (they
    are what people check), the differing middle is a muted red with a
-   fine dotted underline. No filled blocks. */
+   fine dotted underline. No filled blocks. The cascade is colour only:
+   moving the runs would re-render the dots when the motion ends, and they
+   would jump. */
 .ob-visual .addr .same {
   color: var(--v-ink);
   font-weight: 600;
@@ -1209,14 +1211,35 @@ body.immersive #app {
   justify-self: start;
 }
 
+/* Keys and their name sit in the middle. The demo row below opens only
+   while a demo is showing, and the group glides up to make room. */
 .hud {
   display: grid;
+  grid-template-rows: auto auto 0px;
   justify-items: center;
   align-content: center;
-  gap: 26px;
   width: 100%;
   height: 100%;
   text-align: center;
+  transition: grid-template-rows 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hud:has(.hud-demo:not(:empty)) {
+  grid-template-rows: auto auto 166px;
+}
+
+.hud-caps {
+  margin-bottom: 22px;
+}
+
+/* No keys yet: the hint alone sits in the middle (half the keys' row
+   above it), and slides down into place when the first key appears. */
+.hud-slot {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hud:has(.hud-caps:empty) .hud-slot {
+  transform: translateY(-51px);
 }
 
 .hud-caps {
@@ -1439,7 +1462,9 @@ body.immersive #app {
   display: grid;
   place-items: center;
   width: 100%;
-  height: 150px;
+  height: 100%;
+  padding-top: 16px;
+  overflow: hidden;
   text-align: left;
 }
 
