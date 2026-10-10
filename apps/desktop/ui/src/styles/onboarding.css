@@ -75,8 +75,6 @@ main.onboarding {
 }
 
 .ob-copy {
-  max-height: 100%;
-  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -682,6 +680,16 @@ main.onboarding {
   border-radius: 50%;
   border: 2px solid #5ad07a;
   opacity: 0;
+}
+
+/* Only a very short window may need to scroll the copy. Normally it must
+   not: elements entering from a few pixels below would briefly overflow
+   and flash a scrollbar. */
+@media (max-height: 560px) {
+  .ob-copy {
+    max-height: 100%;
+    overflow: auto;
+  }
 }
 
 @media (max-width: 760px) {

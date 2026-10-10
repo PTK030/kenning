@@ -9,7 +9,7 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { Addr } from "../components/Addr";
 import { Alert, Copy, Download, Replay } from "../components/icons";
 import { RiseTitle } from "../components/Reveal";
@@ -39,7 +39,6 @@ export function Hero() {
   return (
     <section className="hero" id="top" ref={ref} onPointerMove={onPointerMove}>
       <motion.div className="hero-glow" style={{ background: glow }} aria-hidden="true" />
-      <HexField progress={scrollYProgress} />
       <motion.div className="hero-inner" style={{ scale, opacity, y: lift }}>
         <RiseTitle as="h1" className="hero-title" text="Know what you copied." delay={0.1} now />
         <div className="hero-row">
@@ -183,30 +182,4 @@ function Specimen({ px, py }: { px: MotionValue<number>; py: MotionValue<number>
       </motion.div>
     </div>
   );
-}
-
-/** Rows of faint addresses drifting behind the hero at different speeds. */
-function HexField({ progress }: { progress: MotionValue<number> }) {
-  const rows = useMemo(() => {
-    let seed = 7;
-    const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
-    const hex = "0123456789abcdefABCDEF";
-    const addr = () => "0x" + Array.from({ length: 40 }, () => hex[Math.floor(rnd() * hex.length)]).join("");
-    return Array.from({ length: 16 }, (_, i) => ({
-      text: Array.from({ length: 6 }, addr).join("   "),
-      speed: (i % 2 ? 1 : -1) * (80 + rnd() * 220),
-    }));
-  }, []);
-  return (
-    <div className="hexfield" aria-hidden="true">
-      {rows.map((r, i) => (
-        <HexRow key={i} text={r.text} speed={r.speed} progress={progress} />
-      ))}
-    </div>
-  );
-}
-
-function HexRow({ text, speed, progress }: { text: string; speed: number; progress: MotionValue<number> }) {
-  const x = useTransform(progress, [0, 1], [0, speed]);
-  return <motion.div style={{ x }}>{text}</motion.div>;
 }

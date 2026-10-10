@@ -258,19 +258,6 @@ svg {
   inset: 0;
   z-index: -1;
 }
-.hexfield {
-  position: absolute;
-  inset: -10% -20%;
-  z-index: -1;
-  display: grid;
-  align-content: space-around;
-  font-family: var(--mono);
-  font-size: 15px;
-  color: rgb(230 237 243 / 6%);
-  white-space: nowrap;
-  pointer-events: none;
-  mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%);
-}
 .hero-inner {
   width: var(--page);
   margin: 0 auto;
