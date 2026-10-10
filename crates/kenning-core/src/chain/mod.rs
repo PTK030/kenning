@@ -126,12 +126,20 @@ impl Address {
         }
     }
 
-    /// The address split into groups of 4 characters after the fixed prefix,
-    /// e.g. `0x 5aAe b605 3F3E ...`.
+    /// Where grouping into fours starts: after a multi-character fixed prefix
+    /// (`0x`, `bc1q`), which stands alone, or at 0 for single-character
+    /// prefixes (`T`, `1`) that read better as part of the first group.
+    pub fn group_start(&self) -> usize {
+        if self.fixed >= 2 { self.fixed } else { 0 }
+    }
+
+    /// The address split into groups of 4, e.g. `0x 5aAe b605 3F3E ...` or
+    /// `TR7N Hqje KQxG ...`.
     pub fn grouped(&self) -> String {
+        let start = self.group_start();
         let mut out = String::with_capacity(self.text.len() + self.text.len() / 4 + 1);
-        out.push_str(self.fixed_prefix());
-        for (i, ch) in self.body().chars().enumerate() {
+        out.push_str(&self.text[..start]);
+        for (i, ch) in self.text[start..].chars().enumerate() {
             if i % 4 == 0 && !out.is_empty() {
                 out.push(' ');
             }
@@ -262,5 +270,7 @@ mod tests {
         );
         assert_eq!(a.short(), "0x5aAeb6…eAed");
         assert_eq!(a.body().len(), 40);
+        let t = parse("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t").unwrap();
+        assert_eq!(t.grouped(), "TR7N Hqje KQxG TCi8 q8ZY 4pL8 otSz gjLj 6t");
     }
 }
