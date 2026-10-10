@@ -4,7 +4,7 @@
 // one, and one click to take the right address back. Nothing here touches
 // the real clipboard.
 
-import { addressWithDiff } from "../address";
+import { addressWithDiff, detailLine, metaChip } from "../address";
 import { clear, h } from "../dom";
 import { icon, type IconName } from "../icons";
 import { draw, EASE_IN, move, POP, rise, SPRING, stagger } from "../motion";
@@ -79,7 +79,7 @@ export function sandbox(opts: {
       "div",
       { class: `sbx-badge ${tone}` },
       h("span", { class: "tile" }, icon(ic, 18)),
-      h("span", { class: "t" }, h("b", {}, title), h("span", {}, line)),
+      h("span", { class: "t" }, h("b", {}, title), h("span", {}, ...detailLine(line))),
       bar,
     );
     clear(badgeSlot, badge);
@@ -91,11 +91,15 @@ export function sandbox(opts: {
 
   const wallet = h("div", { class: "sbx-wallet" });
   const row = (dir: "in" | "out", what: string, who: string, amount: string, when: string, onCopy: () => void) => {
-    const copy = h("button", { class: "sbx-copy" }, icon("copy", 13), "Copy");
+    const copy = h("button", { class: "sbx-copy", "aria-label": `Copy ${who}`, title: "Copy address" }, icon("copy", 15));
     copy.addEventListener("click", () => {
-      clear(copy, icon("check", 13), "Copied");
-      void move(copy, { scale: [0.92, 1] }, POP);
-      opts.later(() => clear(copy, icon("copy", 13), "Copy"), 1400);
+      copy.classList.add("copied");
+      clear(copy, icon("check", 15));
+      void move(copy, { scale: [0.85, 1] }, POP);
+      opts.later(() => {
+        copy.classList.remove("copied");
+        clear(copy, icon("copy", 15));
+      }, 1400);
       onCopy();
     });
     return h(
@@ -148,7 +152,7 @@ export function sandbox(opts: {
 
   clear(
     wallet,
-    h("div", { class: "sbx-head" }, h("b", {}, "Activity"), h("span", {}, "USDT · Ethereum")),
+    h("div", { class: "sbx-head" }, h("b", {}, "Activity"), h("span", { class: "chips" }, metaChip("coins", "USDT"), metaChip("layers", "Ethereum"))),
     h(
       "ul",
       {},

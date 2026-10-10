@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useRef, useState } from "react";
 import { Addr } from "../components/Addr";
-import { ArrowIn, ArrowOut, Copy, Pointer } from "../components/icons";
+import { ArrowIn, ArrowOut, Coins, Copy, Layers, Pointer } from "../components/icons";
 import { KNOWN, POISON, short } from "../address";
 import { ease } from "../links";
 
@@ -72,7 +72,14 @@ export function Story() {
           >
             <div className="wallet-head">
               <b>Activity</b>
-              <span>USDT · Ethereum</span>
+              <span className="chips">
+                <span className="chip">
+                  <Coins /> USDT
+                </span>
+                <span className="chip">
+                  <Layers /> Ethereum
+                </span>
+              </span>
             </div>
             <ul className="tx-list">
               <AnimatePresence initial={false}>

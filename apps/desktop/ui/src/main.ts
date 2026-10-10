@@ -72,7 +72,8 @@ async function render() {
       { class: "facts" },
       h("span", {}, c.network ? "Network: on" : "Network: off"),
       h("span", {}, c.clipboard === "watch" ? (overview.paused ? "Clipboard: paused" : "Clipboard: watched") : `Clipboard: ${c.shortcut} only`),
-      h("span", {}, `v${overview.version} · MIT`),
+      h("span", {}, `Version ${overview.version}`),
+      h("span", {}, "MIT licence"),
       h("button", { class: "keys-hint", onclick: () => toggleSheet(c.shortcut) }, h("kbd", {}, "?"), "Shortcuts"),
     ),
   );
@@ -104,17 +105,20 @@ async function render() {
 window.addEventListener("hashchange", () => void render());
 
 // Keyboard: Ctrl+1…5 sections, Ctrl+N add, Ctrl+F check, ? shortcuts.
-/** An input to focus once the next render is done. */
-let pendingFocus: string | null = null;
+/** An input to focus once the next render is done, and the button that
+ *  reveals it if it is folded away (the book's add form). */
+let pendingFocus: { selector: string; opener?: string } | null = null;
 
 function focusPending() {
   if (!pendingFocus) return;
-  document.querySelector<HTMLElement>(pendingFocus)?.focus();
+  const { selector, opener } = pendingFocus;
   pendingFocus = null;
+  if (!document.querySelector(selector) && opener) document.querySelector<HTMLElement>(opener)?.click();
+  document.querySelector<HTMLElement>(selector)?.focus();
 }
 
-function openWith(tab: string, selector: string) {
-  pendingFocus = selector;
+function openWith(tab: string, selector: string, opener?: string) {
+  pendingFocus = { selector, opener };
   if (currentTab() === tab) focusPending();
   else location.hash = tab;
 }
@@ -128,7 +132,7 @@ document.addEventListener("keydown", (e) => {
     location.hash = TABS[Number(key) - 1].id;
   } else if (e.ctrlKey && !e.altKey && key === "n") {
     e.preventDefault();
-    openWith("book", 'main input[aria-label="Address"]');
+    openWith("book", 'main input[aria-label="Address"]', "main > header .btn.primary");
   } else if (e.ctrlKey && !e.altKey && key === "f") {
     e.preventDefault();
     openWith("check", "main textarea");

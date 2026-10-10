@@ -6,7 +6,7 @@
 import { clear, h } from "../dom";
 import { icon } from "../icons";
 import { on } from "../ipc";
-import { draw, move, POP, rise, SPRING } from "../motion";
+import { draw, EASE_IN, EASE_OUT, move, rise } from "../motion";
 import { keycaps, keyName, shortcuts, type Shortcut } from "../shortcuts";
 
 export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: number) => void; own: (stop: () => void) => void }) {
@@ -37,71 +37,97 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
   const paintCount = () => (count.textContent = `${tried.size} of ${list.length} tried`);
   paintCount();
 
-  // ---- The heads-up display on the right --------------------------------
+  // ---- The keys on the right -------------------------------------------
+  // A key appears once when pressed, sits down while held and springs back
+  // when released; the set fades out after a pause. One line below names
+  // the action, or says what to do.
   const caps = h("div", { class: "hud-caps" });
-  const action = h("div", { class: "hud-action" });
-  const hint = h("p", { class: "hud-hint" }, "Press any shortcut from the list");
-  const hud = h("div", { class: "hud" }, caps, action, hint);
+  const HINT = "Press any shortcut from the list";
+  const slot = h("p", { class: "hud-slot" }, h("span", { class: "hint" }, HINT));
+  const hud = h("div", { class: "hud" }, caps, slot);
 
   const held = new Set<string>();
+  const capEls = new Map<string, HTMLElement>();
   let idle = 0;
 
-  const paintHeld = () => {
-    clear(caps, [...held].map((k) => h("kbd", {}, k)));
-    hint.hidden = held.size > 0 || action.childElementCount > 0;
-    void move(caps.lastElementChild, { y: [6, 0], scale: [0.9, 1] }, POP);
+  const say = (node: HTMLElement) => {
+    clear(slot, node);
+    void move(node, { opacity: [0, 1], y: [4, 0] }, { duration: 0.22, ease: EASE_OUT });
+  };
+
+  const press = (k: string) => {
+    // A new chord after everything was released starts from a clean row.
+    if (held.size === 0 && capEls.size) {
+      clear(caps);
+      capEls.clear();
+    }
+    held.add(k);
+    let el = capEls.get(k);
+    if (!el) {
+      el = h("kbd", {}, k);
+      capEls.set(k, el);
+      caps.appendChild(el);
+      // Opacity only: the press itself (the "down" class) is the movement.
+      void move(el, { opacity: [0, 1] }, { duration: 0.16, ease: EASE_OUT });
+    }
+    el.classList.add("down");
+  };
+
+  const release = (k: string) => {
+    held.delete(k);
+    capEls.get(k)?.classList.remove("down");
   };
 
   const recognise = (s: Shortcut) => {
-    clear(action, h("span", { class: "hud-tag" }, s.where), h("strong", {}, s.what));
-    hint.hidden = true;
-    void move(action, { opacity: [0, 1], y: [10, 0] }, SPRING);
+    say(h("strong", {}, s.what));
     if (!tried.has(s.id)) {
       tried.add(s.id);
       const row = rows.get(s.id)!;
       row.classList.add("done");
       const tick = row.querySelector(".tick")!;
       tick.replaceChildren(icon("check", 14));
-      void move(tick, { scale: [0.3, 1] }, POP);
+      void move(tick, { scale: [0.6, 1] }, { duration: 0.25, ease: EASE_OUT });
       draw(tick.querySelector("svg"), { duration: 0.3 });
       paintCount();
-      void move(count, { scale: [1.08, 1] }, POP);
     }
-    // Light the matching caps in the list for a moment.
+    // Light the matching row in the list for a moment.
     const row = rows.get(s.id)!;
     row.classList.add("flash");
     opts.later(() => row.classList.remove("flash"), 500);
   };
 
+  /** After a quiet moment with nothing held, fade the keys and bring the hint back. */
   const settle = () => {
     clearTimeout(idle);
-    idle = window.setTimeout(() => {
-      held.clear();
+    idle = window.setTimeout(async () => {
+      if (held.size) return settle();
+      await move(caps, { opacity: 0 }, { duration: 0.25, ease: EASE_IN });
       clear(caps);
-      clear(action);
-      hint.hidden = false;
-    }, 1600);
+      capEls.clear();
+      caps.style.opacity = "";
+      say(h("span", { class: "hint" }, HINT));
+    }, 1400);
   };
 
   const down = (e: KeyboardEvent) => {
     const onButton = (e.target as HTMLElement | null)?.closest("button");
     if (e.key === "Tab" || (onButton && (e.key === "Enter" || e.key === " "))) return;
-    const k = keyName(e.key);
-    if (["Ctrl", "Alt", "Shift", "Meta"].includes(k) === false && e.ctrlKey) held.add("Ctrl");
-    held.add(k);
     // These keys would otherwise move on, open the find bar, or do nothing useful here.
     e.preventDefault();
     e.stopPropagation();
-    paintHeld();
+    if (e.repeat) return;
+    clearTimeout(idle);
+    const k = keyName(e.key);
+    if (e.ctrlKey && k !== "Ctrl" && !held.has("Ctrl")) press("Ctrl");
+    press(k);
     const hit = list.find((s) => s.matches(held));
     if (hit) recognise(hit);
-    settle();
   };
   const up = (e: KeyboardEvent) => {
-    held.delete(keyName(e.key));
-    if (!e.ctrlKey) held.delete("Ctrl");
-    if (!e.altKey) held.delete("Alt");
-    if (!e.shiftKey) held.delete("Shift");
+    release(keyName(e.key));
+    if (!e.ctrlKey) release("Ctrl");
+    if (!e.altKey) release("Alt");
+    if (!e.shiftKey) release("Shift");
     settle();
   };
 
@@ -115,11 +141,12 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
   });
   const unlisten = on<null>("shortcut", () => {
     const s = list.find((x) => x.id === "check")!;
-    held.clear();
-    s.keys.forEach((k) => held.add(k));
-    paintHeld();
+    s.keys.forEach(press);
     recognise(s);
-    settle();
+    opts.later(() => {
+      s.keys.forEach(release);
+      settle();
+    }, 220);
   });
   opts.own(() => void unlisten.then((f) => f()));
 

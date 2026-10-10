@@ -1,4 +1,4 @@
-import { CHAIN_NAME, short } from "../address";
+import { CHAIN_NAME, metaChip, short } from "../address";
 import { clear, h } from "../dom";
 import { ipc, message } from "../ipc";
 import type { BookView, Entry, Overview, Owner } from "../types";
@@ -32,7 +32,8 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
       "header",
       {},
       h("h1", {}, "Address book"),
-      h("span", { class: "muted" }, `${overview.book_count} yours · ${overview.public_label_count} public labels built in`),
+      metaChip("user", `${overview.book_count} yours`),
+      metaChip("landmark", `${overview.public_label_count} public labels built in`),
       h("span", { class: "spacer" }),
       h("button", { class: "btn primary", onclick: openAdd }, "Add address"),
     ),

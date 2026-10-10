@@ -2,7 +2,7 @@
 // one big fix ("Copy the correct address") and one small way out ("This is
 // mine"). It never closes by itself.
 
-import { addressWithDiff, CHAIN_NAME } from "./address";
+import { addressWithDiff, chainChip, detailLine } from "./address";
 import { $, clear, h } from "./dom";
 import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
@@ -90,7 +90,7 @@ function render(view: LookalikeView | null) {
         "div",
         {},
         h("h1", { id: "headline" }, r.headline),
-        h("p", { id: "detail" }, r.detail, " · ", CHAIN_NAME[r.address.chain]),
+        h("p", { id: "detail" }, ...detailLine(r.detail), chainChip(r.address.chain)),
       ),
     ),
     h(

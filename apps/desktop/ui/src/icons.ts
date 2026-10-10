@@ -9,6 +9,16 @@ type Shape =
   | ["rect", number, number, number, number, number];
 
 const ICONS = {
+  layers: [
+    ["path", "m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"],
+    ["path", "m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"],
+    ["path", "m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"],
+  ],
+  coins: [
+    ["circle", 8, 8, 6],
+    ["path", "M18.09 10.37A6 6 0 1 1 10.34 18"],
+    ["path", "M7 6h1v4"],
+  ],
   minimize: [["path", "M5 12h14"]],
   maximize: [["rect", 5, 5, 14, 14, 2]],
   restore: [

@@ -838,8 +838,15 @@ body.immersive #app {
   padding: 0 4px 10px;
 }
 
-.sbx-head span {
-  font-size: 12px;
+.sbx-head .chips {
+  display: flex;
+  gap: 6px;
+}
+
+.sbx-head .meta-chip {
+  margin: 0;
+  background: #f4f6f9;
+  box-shadow: inset 0 0 0 1px #e3e8ee;
   color: #4b5764;
 }
 
@@ -881,6 +888,9 @@ body.immersive #app {
 }
 
 .sbx-main code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   background: none;
   padding: 0;
   font-size: 11.5px;
@@ -889,6 +899,7 @@ body.immersive #app {
 
 .sbx-side {
   justify-items: end;
+  white-space: nowrap;
   color: #4b5764;
   font-size: 11.5px;
 }
@@ -899,26 +910,32 @@ body.immersive #app {
 }
 
 .sbx-copy {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 10px;
+  /* Icon only, fixed size: copying never moves the row. */
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
   border: 1px solid #cfd6df;
   border-radius: 8px;
   background: #fff;
-  color: #16202a;
-  font-size: 12px;
-  font-weight: 600;
+  color: #4b5764;
   cursor: pointer;
   transition:
     background 120ms,
-    border-color 120ms;
+    border-color 120ms,
+    color 120ms;
 }
 
 .sbx-copy:hover {
   background: #eef2ff;
   border-color: #3a55c9;
   color: #3a55c9;
+}
+
+.sbx-copy.copied {
+  background: #e7f4eb;
+  border-color: #1f7a3a;
+  color: #1f7a3a;
 }
 
 .sbx-badge-slot {
@@ -1141,7 +1158,7 @@ body.immersive #app {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 22px;
+  gap: 26px;
   width: 100%;
   height: 100%;
   text-align: center;
@@ -1150,8 +1167,8 @@ body.immersive #app {
 .hud-caps {
   display: flex;
   gap: 10px;
-  min-height: 72px;
-  align-items: center;
+  min-height: 80px;
+  align-items: flex-start;
 }
 
 .hud-caps kbd {
@@ -1164,35 +1181,35 @@ body.immersive #app {
   font-size: 24px;
   font-weight: 650;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 10%),
-    0 5px 0 #0c1218,
-    0 0 40px -6px rgb(138 164 255 / 55%);
+    inset 0 1px 0 rgb(255 255 255 / 8%),
+    0 5px 0 #0c1218;
+  transition:
+    transform 70ms ease-out,
+    box-shadow 70ms ease-out,
+    background 120ms;
 }
 
-.hud-action {
-  display: grid;
-  gap: 6px;
-  min-height: 52px;
+/* Held: the key sits down onto its base. */
+.hud-caps kbd.down {
+  transform: translateY(4px);
+  background: linear-gradient(180deg, #314256, #26364a);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 8%),
+    0 1px 0 #0c1218;
 }
 
-.hud-action strong {
+.hud-slot {
+  min-height: 30px;
+  margin: 0;
+}
+
+.hud-slot strong {
   font-family: var(--font-display);
   font-size: 22px;
   letter-spacing: -0.02em;
 }
 
-.hud-tag {
-  justify-self: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgb(138 164 255 / 16%);
-  color: #8aa4ff;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.hud-hint {
-  margin: 0;
+.hud-slot .hint {
   color: var(--v-ink-2);
 }
 

@@ -169,7 +169,7 @@ pub fn show_lookalike(app: &AppHandle, r: Recognition) {
         return;
     }
     let built = window(app, LOOKALIKE, "lookalike.html")
-        .title("Kenning · Not the address you know")
+        .title("Kenning: not the address you know")
         .inner_size(640.0, 430.0)
         // Kenning draws its own title bar (ui/src/titlebar.ts).
         .decorations(false)

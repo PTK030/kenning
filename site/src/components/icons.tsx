@@ -63,6 +63,20 @@ export const Download = () => (
     <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
   </Icon>
 );
+export const Layers = () => (
+  <Icon>
+    <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+    <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+    <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+  </Icon>
+);
+export const Coins = () => (
+  <Icon>
+    <circle cx="8" cy="8" r="6" />
+    <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+    <path d="M7 6h1v4" />
+  </Icon>
+);
 export const Pointer = () => (
   <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true">
     <path d="M5 3l14 7.5-6.2 1.6L10 18.5z" fill="#fff" stroke="#16202A" strokeWidth="1.6" strokeLinejoin="round" />

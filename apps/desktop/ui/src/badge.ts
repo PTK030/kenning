@@ -4,7 +4,7 @@
 // and it slips back out the same way. A newer badge replaces the content in
 // place instead of replaying the entrance.
 
-import { short, STATE_WORD } from "./address";
+import { detailLine, short, STATE_WORD } from "./address";
 import { $, clear, h } from "./dom";
 import { icon, STATE_ICON } from "./icons";
 import { ipc, on } from "./ipc";
@@ -51,7 +51,7 @@ function render(view: BadgeView | null) {
         "div",
         { class: "text" },
         h("div", { class: "headline" }, h("span", { class: "name" }, r.headline), h("span", { class: "word" }, STATE_WORD[r.state])),
-        h("div", { class: "detail" }, r.detail),
+        h("div", { class: "detail" }, ...detailLine(r.detail)),
         h("div", { class: "detail" }, h("span", { class: "addr" }, short(r.address.text))),
         onchainLine(r.address.text),
       ),
