@@ -734,39 +734,6 @@ body.immersive #app {
   isolation: isolate;
 }
 
-.ob-backdrop {
-  position: absolute;
-  inset: -20px -40%;
-  z-index: -1;
-  display: grid;
-  align-content: space-around;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  white-space: nowrap;
-  color: rgb(230 237 243 / 4.5%);
-  pointer-events: none;
-  mask-image: radial-gradient(ellipse at 50% 45%, #000 25%, transparent 75%);
-}
-
-.ob-backdrop div {
-  animation: ob-drift linear infinite;
-}
-
-@keyframes ob-drift {
-  from {
-    transform: translateX(-12%);
-  }
-  to {
-    transform: translateX(12%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ob-backdrop div {
-    animation: none;
-  }
-}
-
 /* ---- Try it yourself ---------------------------------------------------- */
 
 .sbx-tasks {

@@ -60,7 +60,6 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     h(
       "div",
       { class: "ob" },
-      backdrop(),
       h(
         "header",
         { class: "ob-top" },
@@ -509,17 +508,3 @@ function bullet(ic: IconName, tone: string, title: string, text: string) {
 }
 
 
-/** Faint rows of addresses drifting behind the onboarding. */
-function backdrop(): HTMLElement {
-  let seed = 11;
-  const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
-  const hex = "0123456789abcdefABCDEF";
-  const addr = () => "0x" + Array.from({ length: 40 }, () => hex[Math.floor(rnd() * hex.length)]).join("");
-  return h(
-    "div",
-    { class: "ob-backdrop", "aria-hidden": "true" },
-    Array.from({ length: 14 }, (_, i) =>
-      h("div", { style: `animation-duration:${90 + Math.round(rnd() * 80)}s;animation-direction:${i % 2 ? "reverse" : "normal"}` }, Array.from({ length: 5 }, addr).join("   ")),
-    ),
-  );
-}
