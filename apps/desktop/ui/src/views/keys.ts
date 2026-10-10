@@ -61,6 +61,11 @@ export function keysStep(opts: {
   const hud = h("div", { class: "hud" }, caps, slot, stage);
 
   const MODS = ["Ctrl", "Alt", "Shift", "Win"];
+  // Only keys that mean something here are shown: the modifiers the
+  // shortcuts use, and a last key when it completes one of them. Win, an
+  // unused Shift or a stray letter shows nothing.
+  const usedMods = new Set(list.flatMap((s) => s.combo.split("+").slice(0, -1)));
+  const hint = () => h("span", { class: "hint" }, tried.size === list.length ? DONE : HINT);
   const held = new Set<string>();
   const capEls = new Map<string, HTMLElement>();
   let idle = 0;
@@ -71,10 +76,13 @@ export function keysStep(opts: {
   };
 
   const press = (k: string) => {
-    // A new chord after everything was released starts from a clean row.
+    // A new chord after everything was released starts from a clean row,
+    // and the name of the last shortcut goes with it.
     if (held.size === 0 && capEls.size) {
       clear(caps);
+      clear(stage);
       capEls.clear();
+      if (slot.querySelector("strong")) say(hint());
     }
     held.add(k);
     // Show the modifiers held and the latest key only: holding Ctrl and
@@ -136,7 +144,7 @@ export function keysStep(opts: {
       clear(caps);
       clear(stage);
       capEls.clear();
-      say(h("span", { class: "hint" }, tried.size === list.length ? DONE : HINT));
+      say(hint());
     }, 2600);
   };
 
@@ -147,16 +155,28 @@ export function keysStep(opts: {
     e.preventDefault();
     e.stopPropagation();
     if (e.repeat) return;
-    clearTimeout(idle);
     const k = keyOf(e);
-    if (e.ctrlKey && k !== "Ctrl" && !held.has("Ctrl")) press("Ctrl");
+    if (MODS.includes(k)) {
+      if (!usedMods.has(k)) return;
+      clearTimeout(idle);
+      press(k);
+      if (opts.sounds()) cue("key");
+      return;
+    }
+    const combo = comboOf(e);
+    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-5]$/.test(k);
+    const hit = tabs
+      ? list.find((s) => s.id === "tabs")
+      : list.find((s) => s.editable && combo !== null && normalize(s.combo) === normalize(combo));
+    if (!hit) return;
+    clearTimeout(idle);
+    // The modifiers of the shortcut, in case one was held before the step began.
+    for (const m of (tabs ? "Ctrl" : hit.combo).split("+").filter((p) => MODS.includes(p))) {
+      if (!held.has(m)) press(m);
+    }
     press(k);
     if (opts.sounds()) cue("key");
-    const combo = comboOf(e);
-    if (!combo) return;
-    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-5]$/.test(k);
-    const hit = tabs ? list.find((s) => s.id === "tabs") : list.find((s) => s.editable && normalize(s.combo) === normalize(combo));
-    if (hit) recognise(hit, k);
+    recognise(hit, k);
   };
   const up = (e: KeyboardEvent) => {
     release(keyOf(e));
