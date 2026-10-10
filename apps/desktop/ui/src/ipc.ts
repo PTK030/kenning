@@ -57,9 +57,15 @@ export function on<T>(event: string, handler: (payload: T) => void): Promise<Unl
   return listen<T>(event, (e) => handler(e.payload));
 }
 
-export function closeThisWindow(): Promise<void> {
-  return getCurrentWindow().close();
-}
+/** The window this page runs in: the custom title bar's controls. */
+export const win = {
+  minimize: () => getCurrentWindow().minimize(),
+  toggleMaximize: () => getCurrentWindow().toggleMaximize(),
+  isMaximized: () => getCurrentWindow().isMaximized(),
+  close: () => getCurrentWindow().close(),
+  onResized: (fn: () => void) => getCurrentWindow().onResized(fn),
+  onFocusChanged: (fn: (focused: boolean) => void) => getCurrentWindow().onFocusChanged((e) => fn(e.payload)),
+};
 
 /** Turn a rejected command into a readable message. */
 export function message(e: unknown): string {

@@ -195,6 +195,102 @@ textarea {
   resize: vertical;
 }
 
+/* Title bar (main and lookalike windows). */
+.titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 4px 0 12px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 160ms;
+}
+
+.titlebar.blurred .tb-mark,
+.titlebar.blurred .tb-sign,
+.titlebar.blurred .tb-title,
+.titlebar.blurred .tb-sub {
+  opacity: 0.55;
+}
+
+.tb-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+}
+
+.tb-sign {
+  display: grid;
+  place-items: center;
+  color: var(--look);
+}
+
+.tb-title {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
+}
+
+.tb-sub {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.tb-sub:not(:empty)::before {
+  content: "";
+  width: 1px;
+  height: 14px;
+  margin: 0 10px 0 2px;
+  background: var(--line-strong);
+}
+
+.tb-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.tb-btn {
+  width: 40px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background 120ms,
+    color 120ms;
+}
+
+.tb-btn:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.tb-btn:active {
+  transform: scale(0.94);
+}
+
+.tb-btn.close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+
+.tb-btn:focus-visible {
+  outline-offset: -2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

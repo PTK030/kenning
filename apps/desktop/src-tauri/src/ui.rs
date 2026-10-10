@@ -170,7 +170,9 @@ pub fn show_lookalike(app: &AppHandle, r: Recognition) {
     }
     let built = window(app, LOOKALIKE, "lookalike.html")
         .title("Kenning · Not the address you know")
-        .inner_size(640.0, 400.0)
+        .inner_size(640.0, 430.0)
+        // Kenning draws its own title bar (ui/src/titlebar.ts).
+        .decorations(false)
         .resizable(false)
         .maximizable(false)
         .minimizable(false)
@@ -202,7 +204,8 @@ pub fn open_main(app: &AppHandle, tab: &str) {
     }
     let built = window(app, MAIN, &format!("index.html#{tab}"))
         .title("Kenning")
-        .inner_size(880.0, 620.0)
+        .inner_size(880.0, 640.0)
+        .decorations(false)
         .min_inner_size(640.0, 480.0)
         .center()
         .build();

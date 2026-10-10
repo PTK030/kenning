@@ -2,12 +2,18 @@
 @import "./onboarding.css";
 
 html,
-body,
-#app {
+body {
   height: 100%;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 #app {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 200px 1fr;
 }
@@ -17,7 +23,7 @@ nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 18px 10px;
+  padding: 14px 10px;
   background: var(--bg-2);
   border-right: 1px solid var(--line);
 }

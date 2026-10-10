@@ -22,7 +22,8 @@
         "connect-src": "ipc: http://ipc.localhost"
       },
       "capabilities": [
-        "default"
+        "default",
+        "window-chrome"
       ]
     }
   },

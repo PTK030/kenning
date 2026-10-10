@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "window-chrome",
+  "description": "The main and lookalike windows draw their own title bar, so they may move, minimise, maximise and close themselves. The badge cannot.",
+  "windows": [
+    "main",
+    "lookalike"
+  ],
+  "permissions": [
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized"
+  ]
+}

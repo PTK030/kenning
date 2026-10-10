@@ -9,6 +9,12 @@ type Shape =
   | ["rect", number, number, number, number, number];
 
 const ICONS = {
+  minimize: [["path", "M5 12h14"]],
+  maximize: [["rect", 5, 5, 14, 14, 2]],
+  restore: [
+    ["rect", 4, 8, 12, 12, 2],
+    ["path", "M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"],
+  ],
   keyboard: [
     ["rect", 2, 4, 20, 16, 2],
     ["path", "M6 8h.01"],

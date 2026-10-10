@@ -61,7 +61,6 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       h(
         "header",
         { class: "ob-top" },
-        h("div", { class: "ob-brand" }, h("img", { src: iconUrl, alt: "" }), "Kenning"),
         stepText,
         h("div", { class: "ob-progress", "aria-hidden": "true" }, bar),
       ),

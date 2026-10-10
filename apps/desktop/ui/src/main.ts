@@ -9,9 +9,9 @@ import { journalView } from "./views/journal";
 import { settingsView } from "./views/settings";
 import { trustView } from "./views/trust";
 import { welcomeView } from "./views/welcome";
-import iconUrl from "../../src-tauri/icons/128x128.png";
 import { icon, type IconName } from "./icons";
 import { move, rise, SPRING } from "./motion";
+import { titlebar } from "./titlebar";
 
 type View = (main: HTMLElement, overview: Overview, refresh: () => Promise<void>) => Promise<void> | void;
 
@@ -24,6 +24,8 @@ const TABS: { id: string; title: string; icon: IconName; view: View }[] = [
 ];
 
 const app = $("#app");
+const bar = titlebar({ title: "Kenning", minimize: true, maximize: true });
+$("#chrome").replaceWith(bar.el);
 let overview: Overview;
 /** The tab drawn last, and where its highlight sat, so a change can glide. */
 let lastTab = "";
@@ -43,6 +45,7 @@ async function render() {
   if (tab === "welcome" || !overview.config.onboarded) {
     app.style.display = "block";
     lastTab = "welcome";
+    bar.setSubtitle("Welcome");
     const main = h("main", { class: "onboarding" });
     clear(app, main);
     await welcomeView(main, overview, async () => {
@@ -53,11 +56,11 @@ async function render() {
   }
   app.style.display = "";
   const active = TABS.find((t) => t.id === tab) ?? TABS[0];
+  bar.setSubtitle(active.title);
   const c = overview.config;
   const nav = h(
     "nav",
     {},
-    h("div", { class: "brand" }, h("img", { src: iconUrl, alt: "" }), "Kenning"),
     TABS.map((t) =>
       h("a", { href: `#${t.id}`, "aria-current": t.id === active.id ? "page" : false }, icon(t.icon, 16), t.title),
     ),

@@ -7,11 +7,15 @@ import { $, clear, h } from "./dom";
 import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
 import { draw, move, POP, rise, SPRING, stagger } from "./motion";
+import { titlebar } from "./titlebar";
 import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { KnownKind, LookalikeView } from "./types";
 
 const root = $("#lookalike");
+$("#chrome").replaceWith(
+  titlebar({ title: "Not the address you know", sign: "alert", onClose: () => ipc.dismissLookalike() }).el,
+);
 
 const WHO: Record<KnownKind, string> = {
   mine: "Your address",
