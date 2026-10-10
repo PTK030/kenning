@@ -130,18 +130,27 @@ main.onboarding {
   padding: 0;
 }
 
+/* Differences, shown quietly: the matching start and end are bright (they
+   are what people check), the differing middle is a muted red with a
+   fine dotted underline. No filled blocks. */
 .ob-visual .addr .same {
-  color: var(--v-ink-2);
+  color: var(--v-ink);
+  font-weight: 600;
+  transition: color 500ms ease;
 }
 
 .ob-visual .addr .diff {
   display: inline-block;
-  color: var(--v-look);
-  background: var(--v-look-soft);
-  text-decoration: none;
+  color: color-mix(in srgb, var(--v-look) 85%, transparent);
+  background: none;
+  font-weight: 400;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, var(--v-look) 55%, transparent);
   transition:
-    color 300ms,
-    background 300ms;
+    color 500ms ease,
+    text-decoration-color 500ms ease;
 }
 
 .ob-foot {
@@ -260,9 +269,42 @@ main.onboarding {
   margin-bottom: 6px;
 }
 
-.ob-spec .addr .diff:not(.lit) {
+/* Before the comparison lands, both addresses are plain grey. */
+.ob-spec:not(.lit) .addr .same,
+.ob-spec:not(.lit) .addr .diff {
   color: var(--v-ink-2);
-  background: none;
+  font-weight: 400;
+  text-decoration-color: transparent;
+}
+
+.ob-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--v-ink-2);
+}
+
+.ob-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ob-legend span::before {
+  content: "";
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.ob-legend .same::before {
+  background: var(--v-ink);
+}
+
+.ob-legend .diff::before {
+  background: color-mix(in srgb, var(--v-look) 70%, transparent);
 }
 
 /* Step 2: how it speaks */

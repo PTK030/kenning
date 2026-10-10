@@ -210,6 +210,12 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
             addressWithDiff(group(KNOWN), spans(KNOWN, POISON)),
             h("small", {}, "You copied"),
             addressWithDiff(group(POISON), spans(POISON, KNOWN)),
+            h(
+              "p",
+              { class: "ob-legend" },
+              h("span", { class: "same" }, "First 6 and last 4 match"),
+              h("span", { class: "diff" }, "The 30 between differ"),
+            ),
           ),
         ),
       ),
@@ -457,12 +463,17 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
   const ENTER: Partial<Record<Step, (panel: HTMLElement) => void>> = {
     hello: (p) => {
       void move(p.querySelector(".ob-logo"), { scale: [0.6, 1], rotate: [-8, 0], opacity: [0, 1] }, { ...POP, delay: 0.1 });
-      void rise(p.querySelectorAll(".ob-spec > *"), { y: 8, delay: 0.35, gap: 0.08 });
-      const diffs = p.querySelectorAll(".addr .diff");
+      const spec = p.querySelector(".ob-spec")!;
+      const legend = spec.querySelector(".ob-legend")!;
+      void rise(spec.querySelectorAll(":scope > :not(.ob-legend)"), { y: 8, delay: 0.35, gap: 0.08 });
+      (legend as HTMLElement).style.opacity = "0";
+      // The comparison lands: matches brighten, differences turn red, one
+      // run after another, then the legend says what that means.
       later(() => {
-        diffs.forEach((d) => d.classList.add("lit"));
-        void move(diffs, { y: [-3, 0], opacity: [0.3, 1] }, { ...POP, delay: stagger(0.04) });
-      }, 900);
+        spec.classList.add("lit");
+        void move(spec.querySelectorAll(".addr .diff"), { y: [-2, 0] }, { duration: 0.3, ease: EASE_OUT, delay: stagger(0.035) });
+        void move(legend, { opacity: [0, 1], y: [4, 0] }, { duration: 0.4, ease: EASE_OUT, delay: 0.5 });
+      }, 1000);
     },
     how: (p) => {
       const badge = p.querySelector<HTMLElement>(".ob-badge")!;
