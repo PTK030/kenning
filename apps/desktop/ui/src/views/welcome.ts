@@ -405,13 +405,24 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
         clear(
           hosts,
           h("div", { class: "ob-bookhead" }, icon(s.network ? "globe" : "power", 16), s.network ? "Kenning will ask only these hosts" : "Everything stays on this computer"),
+          // The folder once, then what lives in it: short rows, no repeated path.
           s.network
-            ? h("ul", {}, overview.hosts.map(([chain, host]) => h("li", {}, h("b", {}, chain), h("code", {}, host))))
-            : h(
-                "ul",
-                {},
-                ["book.toml", "history.json", "journal.jsonl", "config.toml"].map((f) => h("li", {}, h("b", {}, f), h("code", {}, overview.home))),
-              ),
+            ? h("ul", { class: "ob-files" }, overview.hosts.map(([chain, host]) => h("li", {}, h("b", {}, chain), h("code", {}, host))))
+            : [
+                h("code", { class: "ob-home", title: overview.home }, overview.home),
+                h(
+                  "ul",
+                  { class: "ob-files" },
+                  (
+                    [
+                      ["book.toml", "your address book"],
+                      ["history.json", "addresses you copied"],
+                      ["journal.jsonl", "checks and decisions"],
+                      ["config.toml", "these settings"],
+                    ] as const
+                  ).map(([f, what]) => h("li", {}, h("b", {}, f), h("span", {}, what))),
+                ),
+              ],
         );
         void rise(hosts.querySelectorAll("li"), { y: 6, gap: 0.04 });
       };
@@ -453,7 +464,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           hint,
           h("p", { class: "muted small" }, "Kenning lives in the tray. Right-click its icon for settings, pause and the address book."),
         ],
-        h("div", { class: "ob-done" }, h("div", { class: "ring" }), h("div", { class: "seal" }, icon("check", 56))),
+        h("div", { class: "ob-done" }, h("div", { class: "seal" }, icon("check", 40))),
       );
     },
   };
@@ -491,12 +502,9 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     },
     clipboard: () => undefined,
     done: (p) => {
-      draw(p.querySelector(".seal svg"), { delay: 0.2, duration: 0.7 });
-      void move(p.querySelector(".seal"), { scale: [0.5, 1] }, { ...POP, delay: 0.05 });
-      const ring = p.querySelector(".ring");
-      const pulse = () => void move(ring, { scale: [0.8, 1.5], opacity: [0.5, 0] }, { duration: 1.6, ease: EASE_OUT });
-      pulse();
-      every(pulse, 2200);
+      // Same calm tile as the clipboard step: it settles in, the check draws.
+      void move(p.querySelector(".seal"), { opacity: [0, 1], scale: [0.9, 1] }, { duration: 0.4, ease: EASE_OUT, delay: 0.05 });
+      draw(p.querySelector(".seal svg"), { delay: 0.25, duration: 0.5 });
     },
   };
 

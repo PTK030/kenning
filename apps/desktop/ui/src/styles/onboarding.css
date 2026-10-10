@@ -734,24 +734,18 @@ main.onboarding {
   place-items: center;
 }
 
+/* The same tile as the clipboard step, in the "yours" green. */
 .ob-done .seal {
-  width: 120px;
-  height: 120px;
+  width: 104px;
+  height: 104px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
+  border-radius: 26px;
   background: #1f7a3a;
   color: #fff;
-  box-shadow: 0 24px 50px -16px rgb(31 122 58 / 80%);
-}
-
-.ob-done .ring {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 2px solid #5ad07a;
-  opacity: 0;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 14%),
+    0 10px 24px -14px rgb(0 0 0 / 60%);
 }
 
 /* Only a very short window may need to scroll the copy. Normally it must
@@ -1673,4 +1667,46 @@ body.immersive #app {
   font-size: 10px;
   padding: 1px 5px;
   min-width: 0;
+}
+
+/* Preferences: the folder once, then compact rows (files, or hosts). */
+.ob-home {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--v-ink-2);
+}
+
+.ob-hosts ul.ob-files {
+  display: grid;
+  gap: 0;
+  overflow: visible;
+  border-radius: 12px;
+  background: rgb(14 19 25 / 45%);
+  box-shadow: inset 0 0 0 1px var(--v-line);
+}
+
+.ob-hosts .ob-files li {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 12.5px;
+}
+
+.ob-hosts .ob-files li + li {
+  border-top: 1px solid var(--v-line);
+}
+
+.ob-hosts .ob-files li span {
+  color: var(--v-ink-2);
 }
