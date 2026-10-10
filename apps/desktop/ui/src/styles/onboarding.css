@@ -481,22 +481,21 @@ main.onboarding {
 }
 
 .clip {
-  width: 110px;
-  height: 110px;
+  width: 104px;
+  height: 104px;
   display: grid;
   place-items: center;
-  border-radius: 28px;
+  border-radius: 26px;
   background: #3a55c9;
   color: #fff;
-  box-shadow: 0 20px 40px -14px rgb(58 85 201 / 80%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 14%),
+    0 10px 24px -14px rgb(0 0 0 / 60%);
 }
 
-.ping {
-  position: absolute;
-  inset: 0;
-  border-radius: 28px;
-  border: 2px solid #8aa4ff;
-  opacity: 0;
+.clip-glyph {
+  display: grid;
+  place-items: center;
 }
 
 /* Step 4: first addresses */
@@ -1093,19 +1092,33 @@ body.immersive #app {
 
 /* ---- Keycaps, the shortcut list, the HUD and the "?" sheet -------------- */
 
+/* One grid for the whole list: the keys column is as wide as the longest
+   combination, and every row lines up with it (sections and rows are
+   subgrids). */
 .keys-list {
   display: grid;
-  gap: 8px;
+  grid-template-columns: max-content 1fr auto;
+  align-content: start;
+  row-gap: 12px;
 }
 
 .keys-list section,
 .sheet-card section {
+  grid-column: 1 / -1;
   display: grid;
-  gap: 1px;
+  grid-template-columns: subgrid;
+  row-gap: 1px;
+}
+
+/* Not the page sections' spacing: these groups sit close together. */
+.keys-list section + section,
+.sheet-card section + section {
+  margin-top: 4px;
 }
 
 .keys-list h3,
 .sheet-card h3 {
+  grid-column: 1 / -1;
   font-size: 11.5px;
   font-weight: 600;
   color: var(--ink-2);
@@ -1113,17 +1126,14 @@ body.immersive #app {
 }
 
 .keys-row {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 128px 1fr auto;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 12px;
+  column-gap: 16px;
   padding: 3px 8px;
   border-radius: 8px;
   transition: background 200ms;
-}
-
-.sheet-card .keys-row {
-  grid-template-columns: 140px 1fr;
 }
 
 .keys-row.flash {
@@ -1192,6 +1202,12 @@ body.immersive #app {
     background 120ms;
 }
 
+.hud-caps.many kbd {
+  min-width: 58px;
+  padding: 14px 15px;
+  font-size: 20px;
+}
+
 /* Held: the key sits down onto its base. */
 .hud-caps kbd.down {
   transform: translateY(4px);
@@ -1254,6 +1270,7 @@ body.immersive #app {
 }
 
 .sheet-card {
+  grid-template-columns: max-content 1fr;
   align-content: start;
   width: min(480px, 100%);
   max-height: 100%;
@@ -1266,6 +1283,11 @@ body.immersive #app {
   box-shadow:
     0 0 0 1px var(--line),
     0 30px 60px -20px rgb(0 0 0 / 55%);
+}
+
+.sheet-card > h2,
+.sheet-card > p {
+  grid-column: 1 / -1;
 }
 
 .sheet-card h2 {
@@ -1367,4 +1389,221 @@ body.immersive #app {
 .ob-toggle:hover {
   border-color: var(--line-strong);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+
+/* ---- Shortcut demos under the keys -------------------------------------- */
+
+.hud-demo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 150px;
+  text-align: left;
+}
+
+.hud-demo > * {
+  width: min(280px, 100%);
+}
+
+.mini-look {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--v-bg);
+  border-top: 3px solid var(--v-look);
+  box-shadow: 0 16px 32px -16px rgb(0 0 0 / 70%);
+  font-size: 12px;
+}
+
+.mini-look .top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--v-ink);
+}
+
+.mini-look .top .icon {
+  color: var(--v-look);
+}
+
+.mini-look code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--v-ink-2);
+  background: none;
+  padding: 0;
+}
+
+.mini-look mark {
+  background: var(--v-look-soft);
+  color: var(--v-look);
+}
+
+.mini-look .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mini-fix {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #3a55c9;
+  color: #fff;
+  font-weight: 600;
+  font-size: 11.5px;
+  transition: background 150ms;
+}
+
+.mini-fix.pressed {
+  background: #5570e0;
+}
+
+.mini-link {
+  color: var(--v-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 11.5px;
+}
+
+.mini-link.pressed {
+  color: var(--v-ink);
+}
+
+.mini-note {
+  margin: 0;
+  text-align: center;
+  color: var(--v-ink-2);
+}
+
+.mini-nav {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.mini-nav li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  color: var(--v-ink-2);
+  transition: color 200ms;
+}
+
+.mini-nav li.on {
+  color: var(--v-ink);
+}
+
+.mini-nav kbd {
+  min-width: 16px;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  text-align: center;
+  color: var(--v-ink-2);
+}
+
+.mini-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  border-radius: 7px;
+  background: rgb(138 164 255 / 16%);
+}
+
+.mini-form,
+.mini-search {
+  display: grid;
+  gap: 6px;
+}
+
+.mini-form small {
+  color: var(--v-ink-2);
+  font-size: 11px;
+}
+
+.mini-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--v-line);
+  background: rgb(255 255 255 / 3%);
+  color: var(--v-ink);
+  font-size: 12px;
+}
+
+.mini-field.focus {
+  border-color: #8aa4ff;
+  box-shadow: inset 0 0 0 1px #8aa4ff;
+}
+
+.mini-field .ph {
+  color: var(--v-ink-2);
+  opacity: 0.7;
+}
+
+.caret {
+  width: 1px;
+  height: 14px;
+  background: var(--v-ink);
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.mini-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.mini-results li {
+  overflow: hidden;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--v-ink);
+}
+
+.mini-sheet {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--v-bg);
+  box-shadow:
+    0 0 0 1px var(--v-line),
+    0 16px 32px -16px rgb(0 0 0 / 70%);
+  font-size: 12px;
+}
+
+.mini-sheet div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--v-ink-2);
+}
+
+.mini-sheet .keycaps kbd {
+  font-size: 10px;
+  padding: 1px 5px;
+  min-width: 0;
 }

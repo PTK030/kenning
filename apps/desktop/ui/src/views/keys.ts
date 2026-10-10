@@ -10,6 +10,7 @@ import { on } from "../ipc";
 import { draw, EASE_IN, EASE_OUT, move, rise } from "../motion";
 import { comboOf, keycaps, keyOf, normalize, shortcuts, type Shortcut } from "../shortcuts";
 import { cue } from "../sound";
+import { actOut } from "./keysDemo";
 import type { Config } from "../types";
 
 export function keysStep(opts: {
@@ -55,8 +56,11 @@ export function keysStep(opts: {
   const HINT = "Press any shortcut from the list";
   const DONE = "That is all of them. Press Enter to go on.";
   const slot = h("p", { class: "hud-slot" }, h("span", { class: "hint" }, HINT));
-  const hud = h("div", { class: "hud" }, caps, slot);
+  // Under the name, the shortcut acted out in miniature.
+  const stage = h("div", { class: "hud-demo" });
+  const hud = h("div", { class: "hud" }, caps, slot, stage);
 
+  const MODS = ["Ctrl", "Alt", "Shift", "Win"];
   const held = new Set<string>();
   const capEls = new Map<string, HTMLElement>();
   let idle = 0;
@@ -73,6 +77,16 @@ export function keysStep(opts: {
       capEls.clear();
     }
     held.add(k);
+    // Show the modifiers held and the latest key only: holding Ctrl and
+    // pressing several letters replaces the letter instead of adding one.
+    if (!MODS.includes(k)) {
+      for (const [key, old] of capEls) {
+        if (!MODS.includes(key) && !held.has(key)) {
+          old.remove();
+          capEls.delete(key);
+        }
+      }
+    }
     let el = capEls.get(k);
     if (!el) {
       el = h("kbd", {}, k);
@@ -82,6 +96,7 @@ export function keysStep(opts: {
       void move(el, { opacity: [0, 1] }, { duration: 0.16, ease: EASE_OUT });
     }
     el.classList.add("down");
+    caps.classList.toggle("many", capEls.size > 3);
   };
 
   const release = (k: string) => {
@@ -89,8 +104,9 @@ export function keysStep(opts: {
     capEls.get(k)?.classList.remove("down");
   };
 
-  const recognise = (s: Shortcut) => {
+  const recognise = (s: Shortcut, key = "") => {
     say(h("strong", {}, s.what));
+    actOut(stage, s, key, opts.later);
     if (!tried.has(s.id)) {
       tried.add(s.id);
       if (opts.sounds()) opts.later(() => cue("tick"), 90);
@@ -116,11 +132,12 @@ export function keysStep(opts: {
       if (held.size) return settle();
       // Fade the keys themselves, never the row: an opacity left on the
       // row would hide every key pressed after this.
-      await move(caps.children, { opacity: 0 }, { duration: 0.25, ease: EASE_IN });
+      await move([...caps.children, ...stage.children], { opacity: 0 }, { duration: 0.25, ease: EASE_IN });
       clear(caps);
+      clear(stage);
       capEls.clear();
       say(h("span", { class: "hint" }, tried.size === list.length ? DONE : HINT));
-    }, 1400);
+    }, 2600);
   };
 
   const down = (e: KeyboardEvent) => {
@@ -139,7 +156,7 @@ export function keysStep(opts: {
     if (!combo) return;
     const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-5]$/.test(k);
     const hit = tabs ? list.find((s) => s.id === "tabs") : list.find((s) => s.editable && normalize(s.combo) === normalize(combo));
-    if (hit) recognise(hit);
+    if (hit) recognise(hit, k);
   };
   const up = (e: KeyboardEvent) => {
     release(keyOf(e));

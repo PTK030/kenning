@@ -503,15 +503,23 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       later(press, 500);
       every(press, 2400);
     } else {
-      const sheet = h("div", { class: "clip" }, icon("clipboard", 44));
-      const ping = h("span", { class: "ping" });
-      clear(visual, h("div", { class: "clipwrap" }, ping, sheet), h("p", {}, "Every copy is checked as it happens."));
-      const tick = () => {
-        void move(sheet, { scale: [1, 0.92, 1] }, { duration: 0.4 });
-        void move(ping, { scale: [0.6, 1.6], opacity: [0.55, 0] }, { duration: 1.1, ease: EASE_OUT });
+      // A copy lands: the tile presses in, the clipboard turns into a check
+      // for a moment, and turns back. No rings, no glow.
+      const glyph = h("span", { class: "clip-glyph" }, icon("clipboard", 40));
+      const sheet = h("div", { class: "clip" }, glyph);
+      clear(visual, h("div", { class: "clipwrap" }, sheet), h("p", {}, "Every copy is checked as it happens."));
+      const swap = async (name: "check" | "clipboard") => {
+        await move(glyph, { opacity: 0, scale: 0.85 }, { duration: 0.14, ease: EASE_IN });
+        glyph.replaceChildren(icon(name, 40));
+        void move(glyph, { opacity: [0, 1], scale: [0.85, 1] }, { duration: 0.22, ease: EASE_OUT });
       };
-      later(tick, 400);
-      every(tick, 1800);
+      const tick = () => {
+        void move(sheet, { scale: [1, 0.96, 1] }, { duration: 0.32, ease: "easeInOut" });
+        later(() => void swap("check"), 120);
+        later(() => void swap("clipboard"), 1100);
+      };
+      later(tick, 500);
+      every(tick, 2600);
     }
   }
 

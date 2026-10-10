@@ -72,17 +72,43 @@ export function rise(targets: Targets, { y = 10, delay = 0, gap = 0.045 } = {}):
 export function draw(svg: SVGSVGElement | null, { delay = 0, duration = 0.5 } = {}): void {
   if (!svg || reduced()) return;
   const shapes = Array.from(svg.querySelectorAll<SVGGeometryElement>("path, circle, rect"));
-  shapes.forEach((s, i) => {
-    const len = Math.ceil(s.getTotalLength?.() ?? 60) + 1;
-    s.style.strokeDasharray = `${len}`;
-    // Plain Web Animations: hidden until its turn, fully drawn afterwards.
-    s.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], {
-      duration: duration * 1000,
-      delay: (delay + i * 0.12) * 1000,
-      easing: `cubic-bezier(${EASE_OUT.join(",")})`,
+  if (!shapes.length) return;
+  // An icon not rendered yet (not in the page, or hidden) has no length:
+  // show it as it is rather than draw it.
+  const length = (s: SVGGeometryElement) => {
+    try {
+      return s.getTotalLength();
+    } catch {
+      return 0;
+    }
+  };
+  const lengths = shapes.map(length);
+  if (Math.max(...lengths) <= 0) return;
+  const outline = shapes[lengths.indexOf(Math.max(...lengths))];
+  const easing = `cubic-bezier(${EASE_OUT.join(",")})`;
+  // The outline traces itself. The gap is longer than the stroke's round
+  // cap, so nothing shows at the start before the line arrives.
+  const len = Math.ceil(Math.max(...lengths)) + 1;
+  const hidden = len + 4;
+  outline.style.strokeDasharray = `${len} ${len + 8}`;
+  outline.animate([{ strokeDashoffset: hidden }, { strokeDashoffset: 0 }], {
+    duration: duration * 1000,
+    delay: delay * 1000,
+    easing,
+    fill: "backwards",
+  });
+  // Everything inside comes in together once most of the outline is drawn.
+  for (const s of shapes) {
+    if (s === outline) continue;
+    s.style.transformBox = "fill-box";
+    s.style.transformOrigin = "center";
+    s.animate([{ opacity: 0, transform: "scale(0.6)" }, { opacity: 1, transform: "scale(1)" }], {
+      duration: 220,
+      delay: (delay + duration * 0.6) * 1000,
+      easing,
       fill: "backwards",
     });
-  });
+  }
 }
 
 export { animate, stagger };
