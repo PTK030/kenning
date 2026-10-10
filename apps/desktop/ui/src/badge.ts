@@ -12,6 +12,7 @@ import { draw, EASE_IN, move, POP, rise, SPRING } from "./motion";
 import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { BadgeView } from "./types";
+import "./guard";
 
 const root = $("#badge");
 let bar: HTMLElement | null = null;

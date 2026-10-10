@@ -14,6 +14,7 @@ import { move, rise, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import { closeSheet, sheetOpen, toggleSheet } from "./shortcutSheet";
 import { keycaps, matches } from "./shortcuts";
+import "./guard";
 
 type View = (main: HTMLElement, overview: Overview, refresh: () => Promise<void>) => Promise<void> | void;
 
@@ -106,7 +107,7 @@ async function render() {
 window.addEventListener("hashchange", () => void render());
 
 // Keyboard: Ctrl+1…5 sections, and the add / search / help keys from the
-// config (Ctrl+N, Ctrl+F, Ctrl+/ unless changed in Settings).
+// config (Alt+N, Ctrl+F, Ctrl+/ unless changed in Settings).
 /** An input to focus once the next render is done, and the button that
  *  reveals it if it is folded away (the book's add form). */
 let pendingFocus: { selector: string; opener?: string } | null = null;

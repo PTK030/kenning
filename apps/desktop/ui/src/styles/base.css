@@ -184,11 +184,38 @@ input[type="text"],
 input[type="number"],
 select,
 textarea {
-  padding: 7px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 7px;
-  background: var(--bg);
   min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-2);
+  transition:
+    border-color 140ms,
+    background 140ms,
+    box-shadow 140ms;
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--line-strong);
+}
+
+/* Focus: the border takes the brand colour and thickens inward. No outline
+   on top of the border, and nothing outside the field to be cut off. */
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+::placeholder {
+  color: color-mix(in srgb, var(--ink-2) 75%, transparent);
 }
 
 textarea {
@@ -402,6 +429,69 @@ textarea {
 
 .tb-btn:focus-visible {
   outline-offset: -2px;
+}
+
+/* Hover and press: eased, never a hard switch. Buttons brighten and
+   lift a pixel; pressing settles them back and slightly in. */
+.btn {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 220ms ease,
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--ink) 22%, var(--bg));
+}
+
+.btn.primary:hover:not(:disabled) {
+  filter: none;
+  background: color-mix(in srgb, var(--brand) 86%, #fff);
+  border-color: color-mix(in srgb, var(--brand) 86%, #fff);
+  box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--brand) 80%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Keyboard focus on a button: a soft ring with air, not a hard frame. */
+.btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 80ms;
+}
+
+.link {
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  transition:
+    color 160ms ease,
+    text-decoration-color 160ms ease;
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+.option {
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.option:hover {
+  border-color: var(--line-strong);
+}
+
+.recorder {
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 200ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

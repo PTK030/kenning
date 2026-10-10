@@ -13,9 +13,10 @@ import type { Keys } from "./types";
 import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { KnownKind, LookalikeView } from "./types";
+import "./guard";
 
 const root = $("#lookalike");
-/** The window's keys, from the config (Ctrl+Enter and Ctrl+D by default). */
+/** The window's keys, from the config (Alt+C and Alt+D by default). */
 let keys: Keys = DEFAULT_KEYS;
 $("#chrome").replaceWith(
   titlebar({ title: "Not the address you know", sign: "alert", onClose: () => ipc.dismissLookalike() }).el,

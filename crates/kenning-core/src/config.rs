@@ -71,7 +71,9 @@ impl Default for Config {
 }
 
 /// Shortcuts inside Kenning's windows. Every one has a modifier, so a key
-/// pressed by accident while typing never acts on a warning.
+/// pressed by accident while typing never acts on a warning. Actions use
+/// Alt and a letter, like the buttons of a Windows dialog; moving around
+/// uses Ctrl.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Keys {
@@ -90,9 +92,9 @@ pub struct Keys {
 impl Default for Keys {
     fn default() -> Self {
         Keys {
-            fix: "Ctrl+Enter".into(),
-            dismiss: "Ctrl+D".into(),
-            add: "Ctrl+N".into(),
+            fix: "Alt+C".into(),
+            dismiss: "Alt+D".into(),
+            add: "Alt+N".into(),
             find: "Ctrl+F".into(),
             help: "Ctrl+/".into(),
         }

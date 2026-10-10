@@ -16,6 +16,8 @@ export function keysStep(opts: {
   config: Config;
   sounds: () => boolean;
   later: (fn: () => void, ms: number) => void;
+  /** Every shortcut tried: the onboarding suggests moving on. */
+  onComplete: () => void;
   own: (stop: () => void) => void;
 }) {
   const list = shortcuts(opts.config);
@@ -51,6 +53,7 @@ export function keysStep(opts: {
   // the action, or says what to do.
   const caps = h("div", { class: "hud-caps" });
   const HINT = "Press any shortcut from the list";
+  const DONE = "That is all of them. Press Enter to go on.";
   const slot = h("p", { class: "hud-slot" }, h("span", { class: "hint" }, HINT));
   const hud = h("div", { class: "hud" }, caps, slot);
 
@@ -98,6 +101,7 @@ export function keysStep(opts: {
       void move(tick, { scale: [0.6, 1] }, { duration: 0.25, ease: EASE_OUT });
       draw(tick.querySelector("svg"), { duration: 0.3 });
       paintCount();
+      if (tried.size === list.length) opts.later(opts.onComplete, 600);
     }
     // Light the matching row in the list for a moment.
     const row = rows.get(s.id)!;
@@ -110,11 +114,12 @@ export function keysStep(opts: {
     clearTimeout(idle);
     idle = window.setTimeout(async () => {
       if (held.size) return settle();
-      await move(caps, { opacity: 0 }, { duration: 0.25, ease: EASE_IN });
+      // Fade the keys themselves, never the row: an opacity left on the
+      // row would hide every key pressed after this.
+      await move(caps.children, { opacity: 0 }, { duration: 0.25, ease: EASE_IN });
       clear(caps);
       capEls.clear();
-      caps.style.opacity = "";
-      say(h("span", { class: "hint" }, HINT));
+      say(h("span", { class: "hint" }, tried.size === list.length ? DONE : HINT));
     }, 1400);
   };
 

@@ -105,12 +105,21 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     s.saved = true;
   }
 
+  /** Done with this step: Continue takes focus and breathes, so Enter or
+   *  a click moves on. */
+  function suggestNext() {
+    next.classList.add("ready");
+    next.focus({ preventScroll: true });
+    void move(next, { scale: [1, 1.05, 1] }, { duration: 0.45, ease: "easeOut" });
+  }
+
   /** A step change in flight; clicks and keys wait for it. */
   let busy = false;
 
   async function go(n: number) {
     if (busy || n < 0 || n >= STEPS.length) return;
     busy = true;
+    next.classList.remove("ready");
     const dir = n >= s.step ? 1 : -1;
     if (s.sounds && s.step !== n && document.querySelector(".ob-panel")) cue(dir > 0 ? "step" : "back");
     stops.forEach((f) => f());
@@ -236,13 +245,13 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       const box = sandbox({
         sounds: () => s.sounds,
         later,
-        onComplete: () => void move(next, { scale: [1, 1.06, 1] }, { duration: 0.5, delay: 0.4 }),
+        onComplete: () => later(suggestNext, 500),
       });
       return panel(box.copy, box.visual);
     },
 
     keys: () => {
-      const k = keysStep({ config: c, sounds: () => s.sounds, later, own: (stop) => stops.push(stop) });
+      const k = keysStep({ config: c, sounds: () => s.sounds, later, own: (stop) => stops.push(stop), onComplete: suggestNext });
       return panel(k.copy, k.visual);
     },
 

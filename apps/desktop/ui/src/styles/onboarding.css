@@ -160,6 +160,32 @@ main.onboarding {
   font-size: 12.5px;
 }
 
+/* Continue, once a step is done: a slow, faint ring. */
+.btn.primary.ready {
+  animation: ready 2.2s ease-in-out infinite;
+}
+
+.btn.primary.ready:focus-visible {
+  outline: none;
+}
+
+@keyframes ready {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 0%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 22%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.primary.ready {
+    animation: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 30%, transparent);
+  }
+}
+
 .btn.big {
   padding: 10px 20px;
   font-size: 14.5px;
@@ -174,7 +200,8 @@ main.onboarding {
 }
 
 .btn.ghost:hover {
-  background: var(--bg-2);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  border-color: color-mix(in srgb, var(--ink) 10%, transparent);
   color: var(--ink);
 }
 
@@ -574,11 +601,13 @@ main.onboarding {
   padding: 30px 12px;
   text-align: center;
   color: var(--v-ink-2);
-  background: none;
+  /* Opaque enough to read over the panel's light. */
+  background: rgb(14 19 25 / 55%);
 }
 
 /* Step 5: preferences */
 .ob-toggle {
+  transition: border-color 180ms ease, background 180ms ease;
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1333,4 +1362,9 @@ body.immersive #app {
   margin: -10px 0 0;
   font-size: 14px;
   color: var(--ink-2);
+}
+
+.ob-toggle:hover {
+  border-color: var(--line-strong);
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
 }

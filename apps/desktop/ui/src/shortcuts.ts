@@ -18,7 +18,10 @@ export type Shortcut = {
   editable: boolean;
 };
 
-export const DEFAULT_KEYS: Keys = { fix: "Ctrl+Enter", dismiss: "Ctrl+D", add: "Ctrl+N", find: "Ctrl+F", help: "Ctrl+/" };
+/** Actions are Alt and a letter, like the buttons of a Windows dialog;
+ *  moving around is Ctrl. None of them is something you press while typing
+ *  or chatting (Ctrl+Enter sends a message in most apps). */
+export const DEFAULT_KEYS: Keys = { fix: "Alt+C", dismiss: "Alt+D", add: "Alt+N", find: "Ctrl+F", help: "Ctrl+/" };
 export const DEFAULT_GLOBAL = "Ctrl+Alt+K";
 
 export function shortcuts(c: Pick<Config, "shortcut" | "keys">): Shortcut[] {
@@ -106,6 +109,18 @@ const RESERVED: Record<string, string> = {
   "Ctrl+Esc": "the Start menu",
   "Alt+Tab": "switching windows",
   "Ctrl+Alt+Delete": "Windows security",
+  "Alt+Space": "the window menu",
+  "Alt+Esc": "switching windows",
+  "Ctrl+N": "a new window in the web view",
+  "Ctrl+T": "a new tab in the web view",
+  "Ctrl+W": "closing a window",
+  "Ctrl+Shift+N": "a private window in the web view",
+  "Ctrl+Shift+T": "reopening a tab in the web view",
+  "Ctrl+P": "printing",
+  "Ctrl+R": "reloading",
+  "Ctrl+S": "saving",
+  "F5": "reloading",
+  "Ctrl+Enter": "sending a message in most apps",
 };
 
 /** Polish letters typed with AltGr, which Windows reports as Ctrl+Alt. */
