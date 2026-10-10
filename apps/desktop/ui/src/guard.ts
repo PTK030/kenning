@@ -4,6 +4,7 @@
 // every window. Kenning's own shortcuts are handled before this runs.
 
 import { comboOf, normalize } from "./shortcuts";
+import "./contextMenu";
 
 const BROWSER_KEYS = [
   "F5",
@@ -31,13 +32,21 @@ const BROWSER_KEYS = [
   "Ctrl+0",
   "Ctrl+Shift+I",
   "Ctrl+Shift+J",
+  "Ctrl+Shift+C",
   "F12",
+  "Alt+ArrowLeft",
+  "Alt+ArrowRight",
 ].map(normalize);
 
 window.addEventListener("keydown", (e) => {
   const combo = comboOf(e);
-  if (combo && BROWSER_KEYS.includes(normalize(combo))) e.preventDefault();
+  if (e.key === "BrowserBack" || e.key === "BrowserForward") e.preventDefault();
+  else if (combo && BROWSER_KEYS.includes(normalize(combo))) e.preventDefault();
 });
+
+// The mouse's back and forward buttons would navigate the web view away.
+window.addEventListener("mouseup", (e) => (e.button === 3 || e.button === 4) && e.preventDefault());
+window.addEventListener("auxclick", (e) => (e.button === 3 || e.button === 4) && e.preventDefault());
 
 // Ctrl+wheel zooms a web view; Kenning has a fixed layout.
 window.addEventListener("wheel", (e) => e.ctrlKey && e.preventDefault(), { passive: false });

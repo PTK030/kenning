@@ -28,7 +28,12 @@ type Step = (typeof STEPS)[number];
 
 type Added = { label: string; address: string; chain: string };
 
+/** Stops the onboarding that is running, if any: its timers, step
+ *  listeners (the keys step captures the keyboard) and its own keys. */
+let teardown: (() => void) | null = null;
+
 export function welcomeView(main: HTMLElement, overview: Overview, done: () => Promise<void>) {
+  teardown?.();
   const c = overview.config;
   const s = {
     step: 0,
@@ -80,8 +85,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       if (STEPS[s.step] === "done") {
         next.disabled = true;
         await ipc.finishOnboarding(s.watch);
-        stops.forEach((f) => f());
-        document.removeEventListener("keydown", onKey);
+        teardown?.();
         await done();
         return;
       }
@@ -159,6 +163,12 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     }
   };
   document.addEventListener("keydown", onKey);
+  teardown = () => {
+    stops.forEach((f) => f());
+    stops = [];
+    document.removeEventListener("keydown", onKey);
+    teardown = null;
+  };
 
   const NEXT_LABEL: Record<Step, string> = {
     hello: "Get started",

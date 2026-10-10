@@ -30,7 +30,15 @@ const BADGE_LINGER: Duration = Duration::from_secs(30);
 const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required";
 
 fn window<'a>(app: &'a AppHandle, label: &str, url: &str) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
-    WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into())).additional_browser_args(BROWSER_ARGS)
+    WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
+        .additional_browser_args(BROWSER_ARGS)
+        .devtools(devtools())
+}
+
+/// Developer tools are off, so nobody pokes at the windows with "Inspect".
+/// A debug build can still open them with `KENNING_DEVTOOLS=1`.
+fn devtools() -> bool {
+    cfg!(debug_assertions) && std::env::var_os("KENNING_DEVTOOLS").is_some()
 }
 
 /// Create the badge window, hidden. It shows itself once its page has loaded

@@ -46,6 +46,9 @@ async function refresh() {
 async function render() {
   const tab = currentTab();
   if (tab === "welcome" || !overview.config.onboarded) {
+    // Already running: a redraw (tray click, navigate event) must not
+    // start it over.
+    if (document.querySelector("main.onboarding")) return;
     app.style.display = "block";
     lastTab = "welcome";
     document.body.classList.add("immersive");

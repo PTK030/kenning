@@ -9,6 +9,30 @@ type Shape =
   | ["rect", number, number, number, number, number];
 
 const ICONS = {
+  scissors: [
+    ["circle", 6, 6, 3],
+    ["path", "M8.12 8.12 12 12"],
+    ["path", "M20 4 8.12 15.88"],
+    ["circle", 6, 18, 3],
+    ["path", "M14.8 14.8 20 20"],
+  ],
+  textSelect: [
+    ["path", "M5 3a2 2 0 0 0-2 2"],
+    ["path", "M19 3a2 2 0 0 1 2 2"],
+    ["path", "M21 19a2 2 0 0 1-2 2"],
+    ["path", "M5 21a2 2 0 0 1-2-2"],
+    ["path", "M9 3h1"],
+    ["path", "M9 21h1"],
+    ["path", "M14 3h1"],
+    ["path", "M14 21h1"],
+    ["path", "M3 9v1"],
+    ["path", "M21 9v1"],
+    ["path", "M3 14v1"],
+    ["path", "M21 14v1"],
+    ["path", "M7 8h10"],
+    ["path", "M7 12h10"],
+    ["path", "M7 16h6"],
+  ],
   layers: [
     ["path", "m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"],
     ["path", "m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"],

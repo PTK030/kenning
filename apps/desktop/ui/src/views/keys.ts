@@ -149,7 +149,10 @@ export function keysStep(opts: {
   };
 
   const down = (e: KeyboardEvent) => {
-    const onButton = (e.target as HTMLElement | null)?.closest("button");
+    const target = e.target as HTMLElement | null;
+    // Typing in a field is never a shortcut test.
+    if (target?.closest("input, textarea, select, [contenteditable]")) return;
+    const onButton = target?.closest("button");
     if (e.key === "Tab" || (onButton && (e.key === "Enter" || e.key === " "))) return;
     // These keys would otherwise move on, open the find bar, or do nothing useful here.
     e.preventDefault();
