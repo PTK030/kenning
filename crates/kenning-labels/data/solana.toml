@@ -1,0 +1,62 @@
+# Public Solana labels (mainnet-beta).
+# kind: token | program | exchange
+
+[[label]]
+address = "11111111111111111111111111111111"
+name = "System Program"
+kind = "program"
+source = "https://docs.solana.com/developing/runtime-facilities/programs"
+
+[[label]]
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+name = "SPL Token Program"
+kind = "program"
+source = "https://spl.solana.com/token"
+
+[[label]]
+address = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+name = "SPL Token-2022 Program"
+kind = "program"
+source = "https://spl.solana.com/token-2022"
+
+[[label]]
+address = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+name = "Associated Token Account Program"
+kind = "program"
+source = "https://spl.solana.com/associated-token-account"
+
+[[label]]
+address = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+name = "USDC (mint)"
+kind = "token"
+source = "https://developers.circle.com/stablecoins/usdc-contract-addresses"
+
+[[label]]
+address = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+name = "USDT (mint)"
+kind = "token"
+source = "https://tether.to/en/supported-protocols"
+
+[[label]]
+address = "So11111111111111111111111111111111111111112"
+name = "Wrapped SOL (mint)"
+kind = "token"
+source = "https://spl.solana.com/token#wrapping-sol"
+
+[[label]]
+address = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+name = "Jupiter Aggregator v6"
+kind = "program"
+source = "https://station.jup.ag/docs/"
+
+[[label]]
+address = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+name = "Orca Whirlpools"
+kind = "program"
+source = "https://orca-so.github.io/whirlpools/"
+
+[[label]]
+address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+name = "Raydium AMM v4"
+kind = "program"
+source = "https://docs.raydium.io/raydium/protocol/developers/addresses"

@@ -1,0 +1,63 @@
+# cargo-deny configuration.
+#
+# The important part is [bans]: kenning-core must never be able to talk to the
+# network. Run it scoped to the core crate:
+#
+#   cargo deny --manifest-path crates/kenning-core/Cargo.toml check
+#
+# (The desktop app has its own deny file once it exists; a webview runtime
+# legitimately depends on HTTP types.)
+
+[graph]
+all-features = true
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "CC0-1.0",
+    "MPL-2.0",
+    "Unlicense",
+]
+confidence-threshold = 0.9
+unused-allowed-license = "allow"
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+deny = [
+    # HTTP clients and servers
+    { crate = "reqwest" },
+    { crate = "hyper" },
+    { crate = "ureq" },
+    { crate = "isahc" },
+    { crate = "curl" },
+    { crate = "attohttpc" },
+    { crate = "surf" },
+    # Async runtimes with networking
+    { crate = "tokio" },
+    { crate = "async-std" },
+    { crate = "smol" },
+    { crate = "mio" },
+    # TLS
+    { crate = "rustls" },
+    { crate = "native-tls" },
+    { crate = "openssl" },
+    # Telemetry
+    { crate = "sentry" },
+    { crate = "opentelemetry" },
+]
+
+[advisories]
+ignore = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

@@ -1,0 +1,14 @@
+# Public Tron labels.
+# kind: token | contract | exchange
+
+[[label]]
+address = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+name = "USDT (TRC-20)"
+kind = "token"
+source = "https://tether.to/en/supported-protocols"
+
+[[label]]
+address = "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8"
+name = "USDC (TRC-20)"
+kind = "token"
+source = "https://tronscan.org/#/token20/TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8"

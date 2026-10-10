@@ -13,11 +13,17 @@ workspace = true
 [dependencies]
 bech32 = "0.12.0"
 bs58 = { version = "0.5.1", default-features = false, features = ["alloc", "check"] }
+csv = "1.4.0"
 directories = "6.0.0"
 jiff = { version = "0.2.38", features = ["serde"] }
-kenning-labels = { path = "../kenning-labels" }
+kenning-labels = { path = "../kenning-labels", version = "0.1.0" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 thiserror = "2.0.21"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
-toml = "1.1.8"
+toml = "1"
+
+[dev-dependencies]
+jiff = "0.2.38"
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1"

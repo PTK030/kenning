@@ -1,0 +1,87 @@
+# Public EVM labels (Ethereum mainnet addresses).
+# kind: token | contract | exchange
+# Additions need a `source` that a reviewer can open and check.
+
+[[label]]
+address = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+name = "USDC"
+kind = "token"
+source = "https://developers.circle.com/stablecoins/usdc-contract-addresses"
+
+[[label]]
+address = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+name = "USDT"
+kind = "token"
+source = "https://tether.to/en/supported-protocols"
+
+[[label]]
+address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+name = "WETH"
+kind = "token"
+source = "https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+
+[[label]]
+address = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+name = "DAI"
+kind = "token"
+source = "https://docs.makerdao.com/"
+
+[[label]]
+address = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+name = "Lido: stETH"
+kind = "token"
+source = "https://docs.lido.fi/deployed-contracts/"
+
+[[label]]
+address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+name = "Uniswap V2: Router 2"
+kind = "contract"
+source = "https://docs.uniswap.org/contracts/v2/reference/smart-contracts/v2-deployments"
+
+[[label]]
+address = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+name = "Uniswap V3: Router"
+kind = "contract"
+source = "https://docs.uniswap.org/contracts/v3/reference/deployments/ethereum-deployments"
+
+[[label]]
+address = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
+name = "Uniswap V3: Router 2"
+kind = "contract"
+source = "https://docs.uniswap.org/contracts/v3/reference/deployments/ethereum-deployments"
+
+[[label]]
+address = "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
+name = "Uniswap: Universal Router"
+kind = "contract"
+source = "https://docs.uniswap.org/contracts/v3/reference/deployments/ethereum-deployments"
+
+[[label]]
+address = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+name = "Uniswap: Permit2"
+kind = "contract"
+source = "https://docs.uniswap.org/contracts/v3/reference/deployments/ethereum-deployments"
+
+[[label]]
+address = "0x1111111254EEB25477B68fb85Ed929f73A960582"
+name = "1inch: Aggregation Router V5"
+kind = "contract"
+source = "https://etherscan.io/address/0x1111111254eeb25477b68fb85ed929f73a960582"
+
+[[label]]
+address = "0x111111125421cA6dc452d289314280a0f8842A65"
+name = "1inch: Aggregation Router V6"
+kind = "contract"
+source = "https://etherscan.io/address/0x111111125421ca6dc452d289314280a0f8842a65"
+
+[[label]]
+address = "0x00000000219ab540356cBB839Cbe05303d7705Fa"
+name = "Ethereum: Beacon Deposit Contract"
+kind = "contract"
+source = "https://ethereum.org/en/staking/deposit-contract/"
+
+[[label]]
+address = "0x28C6c06298d514Db089934071355E5743bf21d60"
+name = "Binance 14"
+kind = "exchange"
+source = "https://etherscan.io/address/0x28c6c06298d514db089934071355e5743bf21d60"

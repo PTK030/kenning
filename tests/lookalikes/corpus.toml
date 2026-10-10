@@ -1,0 +1,135 @@
+# Lookalike test corpus.
+#
+# Every case builds a fresh recognizer from `book` (plus the built-in public
+# labels) and an empty history, recognises `copied`, and checks the result.
+# `same_prefix` / `same_suffix` are counted on the address body, after the
+# fixed prefix (`0x`, `bc1q`, `T`...), ignoring letter case.
+#
+# Non-EVM lookalikes were generated with valid encodings (bech32 checksums,
+# canonical 32-byte base58) by grinding, the same way an attacker would.
+# Add a case for every change to the rules in docs/detection-rules.md.
+
+# ---------------------------------------------------------------- EVM
+
+[[case]]
+name = "EVM: classic 6 + 4 lookalike of your own address"
+book = [{ chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Cold wallet" }]
+copied = "0x5aaeb6aaaaaaaaaaaaaaaaaaaaaaaaaaaa1beaed"
+state = "lookalike"
+same_prefix = 6
+same_suffix = 6
+
+[[case]]
+name = "EVM: 4 + 4 lookalike of your own address"
+book = [{ chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Cold wallet" }]
+copied = "0x5aae00000000000000000000000000000000eaed"
+state = "lookalike"
+same_prefix = 4
+same_suffix = 4
+
+[[case]]
+name = "EVM: 3 + 4 is enough against your own book"
+book = [{ chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Cold wallet" }]
+copied = "0x5aa000000000000000000000000000000000eaed"
+state = "lookalike"
+same_prefix = 3
+same_suffix = 4
+
+[[case]]
+name = "EVM: 3 + 4 is not enough against a public label (USDT)"
+copied = "0xdac0000000000000000000000000000000001ec7"
+state = "new"
+
+[[case]]
+name = "EVM: 4 + 4 lookalike of a public label (USDT)"
+copied = "0xdac1000000000000000000000000000000001ec7"
+state = "lookalike"
+same_prefix = 4
+same_suffix = 4
+
+[[case]]
+name = "EVM: matching only the end is not a lookalike"
+book = [{ chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Cold wallet" }]
+copied = "0x11000000000000000000000000000000001beaed"
+state = "new"
+
+[[case]]
+name = "EVM: your own address in lowercase is still yours"
+book = [{ chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Cold wallet" }]
+copied = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed"
+state = "mine"
+
+[[case]]
+name = "EVM: a lookalike you marked as yours stays yours"
+book = [
+  { chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Cold wallet" },
+  { chain = "evm", address = "0x5aaeb6aaaaaaaaaaaaaaaaaaaaaaaaaaaa1beaed", label = "Vanity" },
+]
+copied = "0x5aaeb6aaaaaaaaaaaaaaaaaaaaaaaaaaaa1beaed"
+state = "mine"
+
+[[case]]
+name = "EVM: team book entries are references too"
+book = [{ chain = "evm", address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", label = "Payroll", owner = "team" }]
+copied = "0x5aaeb6aaaaaaaaaaaaaaaaaaaaaaaaaaaa1beaed"
+state = "lookalike"
+same_prefix = 6
+same_suffix = 6
+
+# ---------------------------------------------------------------- Bitcoin
+
+[[case]]
+name = "Bitcoin: bech32 5 + 4 lookalike (valid checksum, ground)"
+book = [{ chain = "bitcoin", address = "bc1q85xw6lu0q98jxuql5deskkcy49jjafnp2sdtp8", label = "Savings" }]
+copied = "bc1q85xw6meaxupaadn4yeecnjuqf3aur8p2u9dtp8"
+state = "lookalike"
+same_prefix = 5
+same_suffix = 4
+
+# ---------------------------------------------------------------- Solana
+
+[[case]]
+name = "Solana: 5 + 5 lookalike of your own address"
+book = [{ chain = "solana", address = "89jP93FuB5Ca11gMYDh63Fba1bbFNo4hTnKYA22iMXWS", label = "Phantom main" }]
+copied = "89jP9ZJKY8aso8dtL5kkHhXHGdk5vtSyTMQPyhsiMXWS"
+state = "lookalike"
+same_prefix = 5
+same_suffix = 5
+
+[[case]]
+name = "Solana: case-flipped start still counts as matching"
+book = [{ chain = "solana", address = "89jP93FuB5Ca11gMYDh63Fba1bbFNo4hTnKYA22iMXWS", label = "Phantom main" }]
+copied = "89JpwodJh1iyeKYLfYNvDai4P4L9weCmFxKgQWMsMXWS"
+state = "lookalike"
+same_prefix = 4
+same_suffix = 4
+
+[[case]]
+name = "Solana: 5 + 4 lookalike of the USDC mint"
+copied = "EPjFWukopdBu2yZyUZhbFU6PtQ6DWc85SV4725LvDt1v"
+state = "lookalike"
+same_prefix = 5
+same_suffix = 4
+
+[[case]]
+name = "Solana: 3 + 3 against a public label is coincidence"
+copied = "EPjwZeFhBzy8GZtVrcV6D6FodK7ikK8KPLtcgkjfkt1v"
+state = "new"
+
+[[case]]
+name = "Solana: the USDC mint itself"
+copied = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+state = "public"
+
+# ---------------------------------------------------------------- Tron
+
+[[case]]
+name = "Tron: the USDT contract itself"
+copied = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+state = "public"
+
+[[case]]
+name = "Tron: your own label on a public address wins"
+book = [{ chain = "tron", address = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", label = "USDT", owner = "contact" }]
+copied = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+state = "contact"

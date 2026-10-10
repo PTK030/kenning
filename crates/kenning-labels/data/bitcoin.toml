@@ -1,0 +1,14 @@
+# Public Bitcoin labels.
+# kind: exchange | other
+
+[[label]]
+address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+name = "Genesis block coinbase"
+kind = "other"
+source = "https://en.bitcoin.it/wiki/Genesis_block"
+
+[[label]]
+address = "34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo"
+name = "Binance: cold wallet"
+kind = "exchange"
+source = "https://mempool.space/address/34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo"
