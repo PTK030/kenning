@@ -1,65 +1,495 @@
-import { clear, h } from "../dom";
-import { ipc, message } from "../ipc";
-import type { Overview } from "../types";
+// First run, in six short steps: what Kenning is, how it speaks, when it
+// reads the clipboard, your first addresses, a few preferences, and a test.
+// Each step slides in from the direction you are going; the panel on the
+// right shows the thing being described rather than describing it.
 
-/** First run: what Kenning is, what it does not do, and one choice. */
+import { addressWithDiff, CHAIN_NAME } from "../address";
+import { clear, h } from "../dom";
+import { icon, type IconName } from "../icons";
+import { ipc, message } from "../ipc";
+import { draw, EASE_IN, EASE_OUT, move, POP, rise, SPRING, stagger } from "../motion";
+import type { Overview, Recognition, Span } from "../types";
+import iconUrl from "../../../src-tauri/icons/128x128@2x.png";
+
+/** A real stablecoin contract, recognised by its public label. */
+const SAMPLE = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+/** Shares its first 6 and last 4 characters with SAMPLE. */
+const SAMPLE_LOOKALIKE = "0xa0b869111111111111111111111111111111eb48";
+
+const KNOWN = "0x28C6c06298d514Db089934071355E5743bf21d60";
+const POISON = "0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60";
+
+const STEPS = ["hello", "how", "clipboard", "book", "prefs", "done"] as const;
+type Step = (typeof STEPS)[number];
+
+type Added = { label: string; address: string; chain: string };
+
 export function welcomeView(main: HTMLElement, overview: Overview, done: () => Promise<void>) {
-  let watch = false;
-  const error = h("div");
-  const option = (value: boolean, title: string, text: string) =>
-    h(
-      "label",
-      { class: "option" },
-      h("input", { type: "radio", name: "mode", checked: value === watch, onchange: () => (watch = value) }),
-      h("span", {}, h("strong", {}, title), h("span", { class: "muted" }, text)),
-    );
+  const c = overview.config;
+  const s = {
+    step: 0,
+    watch: c.clipboard === "watch" || !c.onboarded,
+    sounds: c.sounds,
+    autostart: c.autostart,
+    network: c.network,
+    added: [] as Added[],
+    saved: false,
+  };
+  /** Timers and loops owned by the current step, stopped when it leaves. */
+  let stops: (() => void)[] = [];
+  const later = (fn: () => void, ms: number) => {
+    const t = setTimeout(fn, ms);
+    stops.push(() => clearTimeout(t));
+  };
+  const every = (fn: () => void, ms: number) => {
+    const t = setInterval(fn, ms);
+    stops.push(() => clearInterval(t));
+  };
+
+  const stepText = h("span", { class: "ob-count" });
+  const bar = h("span");
+  const stage = h("div", { class: "ob-stage" });
+  const error = h("div", { class: "ob-error", role: "alert" });
+  const back = h("button", { class: "btn ghost", onclick: () => void go(s.step - 1) }, icon("arrowLeft", 16), "Back");
+  const next = h("button", { class: "btn primary big", onclick: () => void forward() });
 
   clear(
     main,
     h(
       "div",
-      { class: "welcome" },
-      h("h1", {}, "Know what you copied."),
+      { class: "ob" },
       h(
-        "p",
-        { class: "lead" },
-        "Kenning names the crypto addresses you copy and tells you when one only looks like an address you know. Most of the time it stays quiet.",
+        "header",
+        { class: "ob-top" },
+        h("div", { class: "ob-brand" }, h("img", { src: iconUrl, alt: "" }), "Kenning"),
+        stepText,
+        h("div", { class: "ob-progress", "aria-hidden": "true" }, bar),
       ),
-      h(
-        "div",
-        { class: "trust-line" },
-        ["MIT, open source", "Runs locally", "No account", "No telemetry", "Network: off", "Never writes to your clipboard unless you click"].map((t) =>
-          h("span", {}, t),
+      stage,
+      h("footer", { class: "ob-foot" }, back, error, h("span", { class: "spacer" }), next),
+    ),
+  );
+
+  async function forward() {
+    error.textContent = "";
+    try {
+      if (STEPS[s.step] === "prefs") await savePrefs();
+      if (STEPS[s.step] === "done") {
+        next.disabled = true;
+        await ipc.finishOnboarding(s.watch);
+        stops.forEach((f) => f());
+        await done();
+        return;
+      }
+      await go(s.step + 1);
+    } catch (e) {
+      error.textContent = message(e);
+      next.disabled = false;
+    }
+  }
+
+  /** Settings take effect before the last step, so the test there is real. */
+  async function savePrefs() {
+    const fresh = (await ipc.overview()).config;
+    await ipc.saveConfig({
+      ...fresh,
+      clipboard: s.watch ? "watch" : "shortcut",
+      sounds: s.sounds,
+      autostart: s.autostart,
+    });
+    if (fresh.network !== s.network) await ipc.setNetwork(s.network);
+    s.saved = true;
+  }
+
+  async function go(n: number) {
+    if (n < 0 || n >= STEPS.length) return;
+    const dir = n >= s.step ? 1 : -1;
+    stops.forEach((f) => f());
+    stops = [];
+    const old = stage.firstElementChild;
+    if (old) await move(old, { opacity: 0, x: -28 * dir }, { duration: 0.18, ease: EASE_IN });
+    s.step = n;
+
+    const step = STEPS[n];
+    const panel = BUILD[step]();
+    clear(stage, panel);
+
+    stepText.textContent = `Step ${n + 1} of ${STEPS.length}`;
+    void move(bar, { scaleX: (n + 1) / STEPS.length }, { duration: 0.6, ease: EASE_OUT });
+    back.style.visibility = n === 0 ? "hidden" : "visible";
+    clear(next, NEXT_LABEL[step], icon(step === "done" ? "check" : "arrowRight", 16));
+
+    void move(panel, { opacity: [0, 1], x: [36 * dir, 0] }, SPRING);
+    void rise(panel.querySelectorAll(".ob-copy > *"), { y: 12, delay: 0.04, gap: 0.05 });
+    void move(panel.querySelector(".ob-visual"), { opacity: [0, 1], scale: [0.96, 1] }, { ...SPRING, delay: 0.08 });
+    ENTER[step]?.(panel);
+  }
+
+  const NEXT_LABEL: Record<Step, string> = {
+    hello: "Get started",
+    how: "Continue",
+    clipboard: "Continue",
+    book: "Continue",
+    prefs: "Save and continue",
+    done: "Open my address book",
+  };
+
+  const panel = (copy: (Node | string)[], visual: Node) =>
+    h("div", { class: "ob-panel" }, h("div", { class: "ob-copy" }, ...copy), h("div", { class: "ob-visual" }, visual));
+
+  // ---- Steps ---------------------------------------------------------------
+
+  const BUILD: Record<Step, () => HTMLElement> = {
+    hello: () =>
+      panel(
+        [
+          h("h1", {}, "Know what you copied."),
+          h(
+            "p",
+            { class: "lead" },
+            "Kenning names the crypto addresses you copy and tells you when one only looks like an address you know. The rest of the time it stays quiet.",
+          ),
+          h(
+            "ul",
+            { class: "ob-facts" },
+            (
+              [
+                ["fileCheck", "Open source, MIT"],
+                ["power", "Runs on this computer"],
+                ["user", "No account, no telemetry"],
+                ["globe", "Network off unless you turn it on"],
+              ] as [IconName, string][]
+            ).map(([i, t]) => h("li", {}, icon(i, 16), t)),
+          ),
+        ],
+        h(
+          "div",
+          { class: "ob-hello" },
+          h("img", { class: "ob-logo", src: iconUrl, alt: "" }),
+          h(
+            "div",
+            { class: "ob-spec" },
+            h("small", {}, "Your Binance"),
+            addressWithDiff(group(KNOWN), spans(KNOWN, POISON)),
+            h("small", {}, "You copied"),
+            addressWithDiff(group(POISON), spans(POISON, KNOWN)),
+          ),
         ),
       ),
-      h("h2", { style: "font-size:15px;margin-top:8px" }, "When should Kenning look at your clipboard?"),
-      option(false, `Only when I press ${overview.config.shortcut}`, " Recommended to start. Kenning reads nothing until you ask."),
-      option(true, "Every time I copy", " Kenning checks each copy. Single addresses only; nothing else is read further or stored."),
-      h(
-        "p",
-        { class: "muted" },
-        "You can change this any time from the tray icon. Next, add the addresses you use to your book: Kenning recognises lookalikes of the names you give it.",
+
+    how: () =>
+      panel(
+        [
+          h("h1", {}, "Two signals, never alike."),
+          bullet("checkCircle", "mine", "A badge for addresses you know", "It appears in the corner for a few seconds with the name you gave it, and never takes focus from what you are doing."),
+          bullet("alert", "look", "A window when one only looks familiar", "Both addresses in full, every difference marked, and one button that puts the right one back. It stays until you choose."),
+        ],
+        h(
+          "div",
+          { class: "ob-how" },
+          h(
+            "div",
+            { class: "ob-badge" },
+            h("span", { class: "tile" }, icon("checkCircle", 20)),
+            h("span", { class: "t" }, h("b", {}, "Binance deposits"), h("code", {}, "0x28C6 c062 … 1d60")),
+            h("i", { class: "bar" }),
+          ),
+          h(
+            "div",
+            { class: "ob-look" },
+            h("div", { class: "top" }, icon("alert", 18), h("b", {}, "This is not your Binance address.")),
+            addressWithDiff(group(POISON), spans(POISON, KNOWN)),
+            h("span", { class: "fix" }, icon("copy", 14), "Copy the correct address"),
+          ),
+        ),
       ),
-      error,
-      h(
-        "div",
-        {},
+
+    clipboard: () => {
+      const visual = h("div", { class: "ob-mode" });
+      const cards = h("div", { class: "ob-choices" });
+      const paint = () => {
+        clear(
+          cards,
+          choice(false, "keyboard", `Only when I press ${c.shortcut}`, "Recommended to start. Kenning reads nothing until you ask, then checks what is on the clipboard."),
+          choice(true, "clipboard", "Every time I copy", "Kenning checks each copy as it happens. Only single addresses are looked at; other text is ignored and never stored."),
+        );
+        drawMode(visual);
+      };
+      const choice = (value: boolean, ic: IconName, title: string, text: string) =>
         h(
           "button",
           {
-            class: "btn primary",
-            onclick: async () => {
-              try {
-                await ipc.finishOnboarding(watch);
-                await done();
-              } catch (e) {
-                clear(error, h("div", { class: "notice error" }, message(e)));
-              }
+            class: "ob-choice",
+            "aria-pressed": s.watch === value ? "true" : "false",
+            onclick: () => {
+              if (s.watch === value) return;
+              s.watch = value;
+              paint();
+              void move(visual.firstElementChild, { opacity: [0, 1], scale: [0.94, 1] }, SPRING);
             },
           },
-          "Start",
-        ),
-      ),
-    ),
-  );
+          h("span", { class: "ic" }, icon(ic, 20)),
+          h("span", {}, h("strong", {}, title), h("span", { class: "muted" }, text)),
+        );
+      paint();
+      return panel(
+        [
+          h("h1", {}, "When should Kenning look?"),
+          h("p", { class: "lead" }, "Pick one. You can switch any time from the tray icon."),
+          cards,
+          h("p", { class: "muted small" }, "Content that password managers mark as private is skipped before it is read, in both modes."),
+        ],
+        visual,
+      );
+    },
+
+    book: () => {
+      const list = h("ul", { class: "ob-book" });
+      const label = h("input", { type: "text", placeholder: "Name, e.g. Binance deposits", "aria-label": "Name" });
+      const address = h("input", { type: "text", placeholder: "Address", "aria-label": "Address", spellcheck: "false" });
+      const preview = h("div", { class: "ob-preview" });
+      const add = h("button", { class: "btn primary", disabled: true }, icon("plusCircle", 16), "Add");
+      let found: Recognition | null = null;
+
+      const paintList = () => {
+        if (!s.added.length) {
+          clear(list, h("li", { class: "empty-row" }, "Names you add appear here."));
+          return;
+        }
+        clear(
+          list,
+          s.added.map((a) => h("li", {}, h("span", { class: "ic" }, icon("checkCircle", 16)), h("b", {}, a.label), h("code", {}, shortAddr(a.address)), h("small", {}, a.chain))),
+        );
+      };
+      const check = async () => {
+        const text = address.value.trim();
+        found = null;
+        add.disabled = true;
+        if (!text) return clear(preview);
+        try {
+          const r = (await ipc.recognizeText(text))[0];
+          if (!r) return clear(preview, h("span", { class: "bad" }, "Not an address Kenning knows how to read."));
+          found = r;
+          add.disabled = !label.value.trim();
+          clear(preview, h("span", { class: "chain" }, CHAIN_NAME[r.address.chain]), h("span", { class: "addr" }, r.grouped));
+        } catch (e) {
+          clear(preview, h("span", { class: "bad" }, message(e)));
+        }
+      };
+      const save = async () => {
+        if (!found || !label.value.trim()) return;
+        try {
+          await ipc.addEntry(found.address.text, label.value.trim(), "me", null);
+          s.added.unshift({ label: label.value.trim(), address: found.address.text, chain: CHAIN_NAME[found.address.chain] });
+          label.value = address.value = "";
+          clear(preview);
+          add.disabled = true;
+          paintList();
+          void move(list.firstElementChild, { opacity: [0, 1], y: [-12, 0], scale: [0.97, 1] }, POP);
+          label.focus();
+        } catch (e) {
+          clear(preview, h("span", { class: "bad" }, message(e)));
+        }
+      };
+      address.addEventListener("input", () => void check());
+      label.addEventListener("input", () => (add.disabled = !found || !label.value.trim()));
+      for (const el of [label, address]) el.addEventListener("keydown", (e) => e.key === "Enter" && void save());
+      add.addEventListener("click", () => void save());
+      paintList();
+
+      return panel(
+        [
+          h("h1", {}, "Name the addresses you use."),
+          h("p", { class: "lead" }, "Kenning catches lookalikes of the addresses it knows, so start with the ones you send to most."),
+          h("div", { class: "ob-form" }, label, address, preview, h("div", { class: "row" }, add, h(
+            "button",
+            {
+              class: "btn ghost",
+              onclick: async () => {
+                try {
+                  const r = await ipc.importCsv("me");
+                  if (r) {
+                    s.added.unshift({ label: `${r.added + r.updated} imported`, address: "", chain: "CSV" });
+                    paintList();
+                    void move(list.firstElementChild, { opacity: [0, 1], y: [-12, 0] }, POP);
+                  }
+                } catch (e) {
+                  clear(preview, h("span", { class: "bad" }, message(e)));
+                }
+              },
+            },
+            icon("upload", 16),
+            "Import CSV or Safe export",
+          ))),
+          h("p", { class: "muted small" }, "You can skip this and add addresses later in the address book."),
+        ],
+        h("div", { class: "ob-bookwrap" }, h("div", { class: "ob-bookhead" }, icon("book", 16), "Your address book"), list),
+      );
+    },
+
+    prefs: () => {
+      const toggle = (key: "sounds" | "autostart" | "network", ic: IconName, title: string, text: string) => {
+        const input = h("input", {
+          type: "checkbox",
+          role: "switch",
+          checked: s[key],
+          onchange: (e: Event) => {
+            s[key] = (e.target as HTMLInputElement).checked;
+            if (key === "network") paintHosts();
+          },
+        });
+        return h("label", { class: "ob-toggle" }, h("span", { class: "ic" }, icon(ic, 18)), h("span", {}, h("strong", {}, title), h("span", { class: "muted" }, text)), input, h("i", { class: "switch" }));
+      };
+      const hosts = h("div", { class: "ob-hosts" });
+      const paintHosts = () => {
+        clear(
+          hosts,
+          h("div", { class: "ob-bookhead" }, icon(s.network ? "globe" : "power", 16), s.network ? "Kenning will ask only these hosts" : "Everything stays on this computer"),
+          s.network
+            ? h("ul", {}, overview.hosts.map(([chain, host]) => h("li", {}, h("b", {}, chain), h("code", {}, host))))
+            : h(
+                "ul",
+                {},
+                ["book.toml", "history.json", "journal.jsonl", "config.toml"].map((f) => h("li", {}, h("b", {}, f), h("code", {}, overview.home))),
+              ),
+        );
+        void rise(hosts.querySelectorAll("li"), { y: 6, gap: 0.04 });
+      };
+      paintHosts();
+      return panel(
+        [
+          h("h1", {}, "A few preferences."),
+          toggle("sounds", "volume", "Soft sounds", "A short chime for a known address, a lower two-note sound for a lookalike."),
+          toggle("autostart", "power", "Start with Windows", "Kenning waits in the tray from the moment you sign in."),
+          toggle("network", "globe", "On-chain lookups", "Shows whether an address was ever used. Only the address is sent, to one public provider per chain."),
+        ],
+        hosts,
+      );
+    },
+
+    done: () => {
+      const hint = h("p", { class: "ob-try-hint muted" });
+      const tryCopy = (text: string, what: string) => async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          hint.textContent = s.watch
+            ? `Copied ${what}. Watch the ${what === "a lookalike" ? "middle of the screen" : "corner of the screen"}.`
+            : `Copied ${what}. Now press ${c.shortcut}.`;
+        } catch {
+          hint.textContent = `Copy this yourself: ${text}`;
+        }
+        void move(hint, { opacity: [0, 1], y: [6, 0] }, SPRING);
+      };
+      return panel(
+        [
+          h("h1", {}, "You are set."),
+          h("p", { class: "lead" }, "Try it now. These buttons copy a test address, the way you would from a wallet or an exchange."),
+          h(
+            "div",
+            { class: "ob-try" },
+            h("button", { class: "btn", onclick: tryCopy(SAMPLE, "USDC") }, icon("checkCircle", 16), "Copy a known address"),
+            h("button", { class: "btn", onclick: tryCopy(SAMPLE_LOOKALIKE, "a lookalike") }, icon("alert", 16), "Copy a lookalike"),
+          ),
+          hint,
+          h("p", { class: "muted small" }, "Kenning lives in the tray. Right-click its icon for settings, pause and the address book."),
+        ],
+        h("div", { class: "ob-done" }, h("div", { class: "ring" }), h("div", { class: "seal" }, icon("check", 56))),
+      );
+    },
+  };
+
+  // ---- Entrances that are more than a fade -------------------------------
+
+  const ENTER: Partial<Record<Step, (panel: HTMLElement) => void>> = {
+    hello: (p) => {
+      void move(p.querySelector(".ob-logo"), { scale: [0.6, 1], rotate: [-8, 0], opacity: [0, 1] }, { ...POP, delay: 0.1 });
+      void rise(p.querySelectorAll(".ob-spec > *"), { y: 8, delay: 0.35, gap: 0.08 });
+      const diffs = p.querySelectorAll(".addr .diff");
+      later(() => {
+        diffs.forEach((d) => d.classList.add("lit"));
+        void move(diffs, { y: [-3, 0], opacity: [0.3, 1] }, { ...POP, delay: stagger(0.04) });
+      }, 900);
+    },
+    how: (p) => {
+      const badge = p.querySelector<HTMLElement>(".ob-badge")!;
+      const look = p.querySelector<HTMLElement>(".ob-look")!;
+      const cycle = () => {
+        void move(badge, { opacity: [0, 1], x: [24, 0] }, SPRING);
+        void move(badge.querySelector(".bar"), { scaleX: [1, 0] }, { duration: 3.2, ease: "linear" });
+        draw(badge.querySelector("svg"), { delay: 0.1 });
+        later(() => void move(badge, { opacity: 0, x: 14 }, { duration: 0.24, ease: EASE_IN }), 3300);
+      };
+      cycle();
+      every(cycle, 4200);
+      void move(look, { opacity: [0, 1], y: [18, 0] }, { ...SPRING, delay: 0.3 });
+      void move(look.querySelectorAll(".diff"), { opacity: [0.2, 1] }, { duration: 0.3, delay: stagger(0.04, { startDelay: 0.7 }) });
+    },
+    clipboard: () => undefined,
+    done: (p) => {
+      draw(p.querySelector(".seal svg"), { delay: 0.2, duration: 0.7 });
+      void move(p.querySelector(".seal"), { scale: [0.5, 1] }, { ...POP, delay: 0.05 });
+      const ring = p.querySelector(".ring");
+      const pulse = () => void move(ring, { scale: [0.8, 1.5], opacity: [0.5, 0] }, { duration: 1.6, ease: EASE_OUT });
+      pulse();
+      every(pulse, 2200);
+    },
+  };
+
+  /** The right-hand picture for the clipboard step: keys or a clipboard. */
+  function drawMode(visual: HTMLElement) {
+    stops.forEach((f) => f());
+    stops = [];
+    if (!s.watch) {
+      const keys = c.shortcut.split("+").map((k) => h("kbd", {}, k));
+      clear(visual, h("div", { class: "keys" }, keys), h("p", {}, "Press to check what you copied."));
+      const press = () =>
+        keys.forEach((k, i) =>
+          later(() => void move(k, { y: [0, 4, 0] }, { duration: 0.32, ease: "easeInOut" }), i * 90),
+        );
+      later(press, 500);
+      every(press, 2400);
+    } else {
+      const sheet = h("div", { class: "clip" }, icon("clipboard", 44));
+      const ping = h("span", { class: "ping" });
+      clear(visual, h("div", { class: "clipwrap" }, ping, sheet), h("p", {}, "Every copy is checked as it happens."));
+      const tick = () => {
+        void move(sheet, { scale: [1, 0.92, 1] }, { duration: 0.4 });
+        void move(ping, { scale: [0.6, 1.6], opacity: [0.55, 0] }, { duration: 1.1, ease: EASE_OUT });
+      };
+      later(tick, 400);
+      every(tick, 1800);
+    }
+  }
+
+  void go(0);
+}
+
+// ---- Helpers ---------------------------------------------------------------
+
+function bullet(ic: IconName, tone: string, title: string, text: string) {
+  return h("div", { class: `ob-bullet ${tone}` }, h("span", { class: "ic" }, icon(ic, 18)), h("div", {}, h("strong", {}, title), h("p", { class: "muted" }, text)));
+}
+
+/** "0x" and groups of four, the way Rust formats them. */
+function group(addr: string): string {
+  return ["0x", ...(addr.slice(2).match(/.{1,4}/g) ?? [])].join(" ");
+}
+
+/** Matching prefix and suffix (ignoring case) against `other`, as spans. */
+function spans(addr: string, other: string): Span[] {
+  const a = addr.slice(2);
+  const b = other.slice(2);
+  let p = 0;
+  while (p < a.length && a[p].toLowerCase() === b[p]?.toLowerCase()) p++;
+  let q = 0;
+  while (q < a.length - p && a.at(-1 - q)!.toLowerCase() === b.at(-1 - q)?.toLowerCase()) q++;
+  return [
+    { text: "0x" + a.slice(0, p), same: true },
+    { text: a.slice(p, a.length - q), same: false },
+    { text: a.slice(a.length - q), same: true },
+  ];
+}
+
+function shortAddr(a: string): string {
+  return a ? `${a.slice(0, 8)}…${a.slice(-4)}` : "";
 }

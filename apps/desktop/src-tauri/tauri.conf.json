@@ -21,12 +21,17 @@
         "img-src": "'self' data:",
         "connect-src": "ipc: http://ipc.localhost"
       },
-      "capabilities": ["default"]
+      "capabilities": [
+        "default"
+      ]
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": [
+      "nsis",
+      "msi"
+    ],
     "category": "Utility",
     "shortDescription": "Know what you copied.",
     "longDescription": "Kenning names every crypto address you copy and tells you when one only looks like an address you know. Local-only, no account, no telemetry.",
@@ -38,7 +43,22 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "nsis": { "installMode": "currentUser" }
-    }
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "installer/nsis-header.bmp",
+        "sidebarImage": "installer/nsis-sidebar.bmp",
+        "startMenuFolder": "Kenning",
+        "languages": [
+          "English"
+        ]
+      },
+      "wix": {
+        "bannerPath": "installer/wix-banner.bmp",
+        "dialogImagePath": "installer/wix-dialog.bmp"
+      }
+    },
+    "publisher": "Kenning contributors",
+    "homepage": "https://github.com/PTK030/kenning"
   }
 }

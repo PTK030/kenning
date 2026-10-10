@@ -46,13 +46,15 @@ npm install
 npx tauri dev
 ```
 
-The tag icon appears in the system tray. The first launch asks one question: check the clipboard only when you press `Ctrl+Alt+K` (the default), or on every copy. Add the addresses you use under **Address book**, then copy one from anywhere.
+The tag icon appears in the system tray. The first launch walks you through six short steps: how Kenning speaks, when it reads the clipboard (only on `Ctrl+Alt+K`, or on every copy), your first addresses, a few preferences, and a live test with a known address and a lookalike.
 
-To build an installer (`.msi` and `.exe` in `target/release/bundle`):
+To build the installers:
 
 ```bash
 npx tauri build
 ```
+
+This produces `target/release/bundle/nsis/Kenning_0.1.0_x64-setup.exe` (per-user, no admin rights needed) and `target/release/bundle/msi/Kenning_0.1.0_x64_en-US.msi`. Neither is code-signed yet, so Windows SmartScreen asks once before running them. Installer artwork comes from `apps/desktop/scripts/make-installer-art.py`.
 
 ### CLI
 

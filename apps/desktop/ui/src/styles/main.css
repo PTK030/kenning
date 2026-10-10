@@ -1,4 +1,5 @@
 @import "./base.css";
+@import "./onboarding.css";
 
 html,
 body,
@@ -12,6 +13,7 @@ body,
 }
 
 nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -37,7 +39,17 @@ nav {
   border-radius: 6px;
 }
 
+nav .pill {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+
 nav a {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -56,12 +68,12 @@ nav a[aria-current="page"] .icon {
   color: var(--brand);
 }
 
-nav a:hover {
+nav a:not([aria-current="page"]):hover {
   background: var(--line);
 }
 
 nav a[aria-current="page"] {
-  background: var(--brand-soft);
+  background: transparent;
   color: var(--brand);
   font-weight: 600;
 }
@@ -240,37 +252,6 @@ td.actions {
   color: var(--ink-2);
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
-}
-
-.welcome {
-  max-width: 620px;
-  margin: 30px auto;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.welcome h1 {
-  font-size: 26px;
-}
-
-.welcome .lead {
-  font-size: 16px;
-  color: var(--ink-2);
-}
-
-.trust-line {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.trust-line span {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  font-size: 12.5px;
 }
 
 dl.facts-list {

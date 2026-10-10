@@ -37,7 +37,7 @@ fn window<'a>(app: &'a AppHandle, label: &str, url: &str) -> WebviewWindowBuilde
 /// and asked for the badge (see `commands::get_badge`), so it never flashes
 /// an empty frame.
 fn create_badge(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    window(app, BADGE, "badge.html")
+    let w = window(app, BADGE, "badge.html")
         .title("Kenning")
         .inner_size(BADGE_W, BADGE_H)
         .decorations(false)
@@ -50,7 +50,9 @@ fn create_badge(app: &AppHandle) -> tauri::Result<WebviewWindow> {
         .focused(false)
         .focusable(false)
         .visible(false)
-        .build()
+        .build()?;
+    crate::platform::disable_transitions(&w);
+    Ok(w)
 }
 
 fn place_badge(app: &AppHandle, w: &WebviewWindow) {
@@ -138,8 +140,8 @@ pub fn hide_badge(app: &AppHandle) {
     let _ = app.emit_to(BADGE, "badge-hide", ());
     let app = app.clone();
     std::thread::spawn(move || {
-        // Let the fade-out run before hiding.
-        std::thread::sleep(Duration::from_millis(180));
+        // Let the exit animation (240 ms, see badge.ts) finish before hiding.
+        std::thread::sleep(Duration::from_millis(300));
         if current_generation(&app) != generation {
             return;
         }

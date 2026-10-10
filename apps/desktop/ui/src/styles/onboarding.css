@@ -1,0 +1,693 @@
+/* First run. Copy on the left, a dark picture of the thing on the right.
+   The picture stays dark in both themes, like the brand's graphite. */
+
+main.onboarding {
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ob {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 8px;
+  padding: 20px 32px 22px;
+}
+
+.ob-top {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.ob-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: 16px;
+}
+
+.ob-brand img {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.ob-count {
+  justify-self: end;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ob-progress {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.ob-progress span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.ob-stage {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  overflow: hidden;
+}
+
+.ob-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  min-height: 0;
+}
+
+.ob-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ob-copy h1 {
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.ob-copy p {
+  margin: 0;
+}
+
+.ob-copy .lead {
+  font-size: 15px;
+  color: var(--ink-2);
+  max-width: 34em;
+}
+
+.small {
+  font-size: 12.5px;
+}
+
+.ob-visual {
+  --v-bg: #16202a;
+  --v-bg-2: #1f2b38;
+  --v-ink: #e6edf3;
+  --v-ink-2: #9fb0c0;
+  --v-line: #2d3b4a;
+  --v-look: #ff8f8f;
+  --v-look-soft: rgb(255 123 123 / 16%);
+  --v-mine: #5ad07a;
+  position: relative;
+  height: min(100%, 400px);
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  padding: 26px;
+  overflow: hidden;
+  border-radius: 20px;
+  color: var(--v-ink);
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgb(58 85 201 / 45%), transparent 60%),
+    linear-gradient(180deg, var(--v-bg-2), var(--v-bg));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
+}
+
+.ob-visual code {
+  background: none;
+  padding: 0;
+}
+
+.ob-visual .addr .same {
+  color: var(--v-ink-2);
+}
+
+.ob-visual .addr .diff {
+  display: inline-block;
+  color: var(--v-look);
+  background: var(--v-look-soft);
+  text-decoration: none;
+  transition:
+    color 300ms,
+    background 300ms;
+}
+
+.ob-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.ob-foot .spacer {
+  flex: 1;
+}
+
+.ob-error {
+  color: var(--look);
+  font-size: 12.5px;
+}
+
+.btn.big {
+  padding: 10px 20px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.btn.ghost:hover {
+  background: var(--bg-2);
+  color: var(--ink);
+}
+
+/* Step 1: hello */
+.ob-facts {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.ob-facts li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+}
+
+.ob-facts .icon {
+  color: var(--brand);
+}
+
+.ob-hello {
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+  width: 100%;
+}
+
+.ob-logo {
+  width: 92px;
+  height: 92px;
+  border-radius: 22px;
+  box-shadow: 0 18px 40px -12px rgb(58 85 201 / 70%);
+}
+
+.ob-spec {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 4%);
+  box-shadow: inset 0 0 0 1px var(--v-line);
+}
+
+.ob-spec small {
+  color: var(--v-ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.ob-spec .addr {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.ob-spec .addr .diff:not(.lit) {
+  color: var(--v-ink-2);
+  background: none;
+}
+
+/* Step 2: how it speaks */
+.ob-bullet {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.ob-bullet .ic {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.ob-bullet.mine .ic {
+  color: var(--mine);
+  background: var(--mine-soft);
+}
+
+.ob-bullet.look .ic {
+  color: var(--look);
+  background: var(--look-soft);
+}
+
+.ob-bullet p {
+  margin: 2px 0 0;
+}
+
+.ob-how {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: space-between;
+}
+
+.ob-badge {
+  position: relative;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 250px;
+  padding: 11px 12px 13px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  color: #16202a;
+  box-shadow: 0 14px 30px -12px rgb(0 0 0 / 60%);
+}
+
+.ob-badge .tile {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #1f7a3a;
+  background: #e7f4eb;
+}
+
+.ob-badge .t {
+  display: grid;
+  font-size: 12.5px;
+}
+
+.ob-badge code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #4b5764;
+}
+
+.ob-badge .bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: #1f7a3a;
+  transform-origin: left center;
+}
+
+.ob-look {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--v-bg);
+  border-top: 4px solid var(--v-look);
+  box-shadow: 0 20px 40px -16px rgb(0 0 0 / 70%);
+}
+
+.ob-look .top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ob-look .top .icon {
+  color: var(--v-look);
+}
+
+.ob-look .addr {
+  font-size: 11.5px;
+}
+
+.ob-look .fix {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #3a55c9;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Step 3: clipboard mode */
+.ob-choices {
+  display: grid;
+  gap: 10px;
+}
+
+.ob-choice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  transition:
+    border-color 160ms,
+    background 160ms,
+    box-shadow 160ms;
+}
+
+.ob-choice:hover {
+  border-color: var(--line-strong);
+}
+
+.ob-choice[aria-pressed="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+
+.ob-choice .ic {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--bg-2);
+  color: var(--ink-2);
+  transition:
+    background 160ms,
+    color 160ms;
+}
+
+.ob-choice[aria-pressed="true"] .ic {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
+.ob-choice strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.ob-mode {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+  color: var(--v-ink-2);
+}
+
+.ob-mode p {
+  margin: 0;
+}
+
+.keys {
+  display: flex;
+  gap: 10px;
+}
+
+kbd {
+  min-width: 64px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2b3a4b, #223040);
+  color: var(--v-ink);
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 4px 0 #0c1218;
+}
+
+.clipwrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.clip {
+  width: 110px;
+  height: 110px;
+  display: grid;
+  place-items: center;
+  border-radius: 28px;
+  background: #3a55c9;
+  color: #fff;
+  box-shadow: 0 20px 40px -14px rgb(58 85 201 / 80%);
+}
+
+.ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  border: 2px solid #8aa4ff;
+  opacity: 0;
+}
+
+/* Step 4: first addresses */
+.ob-form {
+  display: grid;
+  gap: 8px;
+}
+
+.ob-form .row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ob-preview {
+  min-height: 20px;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+.ob-preview .chain {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.ob-preview .bad {
+  color: var(--look);
+}
+
+.ob-bookwrap,
+.ob-hosts {
+  align-self: stretch;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ob-bookhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--v-ink-2);
+}
+
+.ob-book,
+.ob-hosts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+}
+
+.ob-book li,
+.ob-hosts li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 5%);
+  box-shadow: inset 0 0 0 1px var(--v-line);
+  font-size: 12.5px;
+}
+
+.ob-hosts li {
+  grid-template-columns: 110px 1fr;
+}
+
+.ob-book li code,
+.ob-hosts li code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--v-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ob-book li small {
+  grid-column: 2 / -1;
+  color: var(--v-ink-2);
+}
+
+.ob-book li .ic {
+  display: grid;
+  color: var(--v-mine);
+}
+
+.ob-book li.empty-row {
+  display: block;
+  padding: 30px 12px;
+  text-align: center;
+  color: var(--v-ink-2);
+  background: none;
+}
+
+/* Step 5: preferences */
+.ob-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ob-toggle .ic {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--bg-2);
+  color: var(--ink-2);
+}
+
+.ob-toggle strong {
+  display: block;
+}
+
+.ob-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  transition: background 200ms;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ob-toggle:has(input:checked) .switch {
+  background: var(--brand);
+}
+
+.ob-toggle:has(input:checked) .switch::after {
+  transform: translateX(16px);
+}
+
+.ob-toggle:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Step 6: done */
+.ob-try {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ob-try-hint {
+  min-height: 20px;
+}
+
+.ob-done {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.ob-done .seal {
+  width: 120px;
+  height: 120px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #1f7a3a;
+  color: #fff;
+  box-shadow: 0 24px 50px -16px rgb(31 122 58 / 80%);
+}
+
+.ob-done .ring {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid #5ad07a;
+  opacity: 0;
+}
+
+@media (max-width: 760px) {
+  .ob-panel {
+    grid-template-columns: 1fr;
+  }
+  .ob-visual {
+    display: none;
+  }
+}

@@ -17,3 +17,29 @@ pub fn taskbar_is_light() -> bool {
 pub fn taskbar_is_light() -> bool {
     false
 }
+
+/// Turn off the system's own show and hide animation for a window, so the
+/// page's animation is the only one and the two never fight.
+#[cfg(windows)]
+#[allow(unsafe_code)]
+pub fn disable_transitions(w: &tauri::WebviewWindow) {
+    use windows_sys::Win32::Graphics::Dwm::{DWMWA_TRANSITIONS_FORCEDISABLED, DwmSetWindowAttribute};
+
+    let Ok(hwnd) = w.hwnd() else {
+        return;
+    };
+    let on: i32 = 1;
+    // SAFETY: `hwnd` is a live window owned by this process, and the
+    // attribute takes a 4-byte BOOL that outlives the call.
+    unsafe {
+        DwmSetWindowAttribute(
+            hwnd.0,
+            DWMWA_TRANSITIONS_FORCEDISABLED as u32,
+            (&raw const on).cast(),
+            size_of::<i32>() as u32,
+        );
+    }
+}
+
+#[cfg(not(windows))]
+pub fn disable_transitions(_w: &tauri::WebviewWindow) {}

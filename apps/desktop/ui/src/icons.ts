@@ -9,6 +9,30 @@ type Shape =
   | ["rect", number, number, number, number, number];
 
 const ICONS = {
+  keyboard: [
+    ["rect", 2, 4, 20, 16, 2],
+    ["path", "M6 8h.01"],
+    ["path", "M10 8h.01"],
+    ["path", "M14 8h.01"],
+    ["path", "M18 8h.01"],
+    ["path", "M8 12h.01"],
+    ["path", "M12 12h.01"],
+    ["path", "M16 12h.01"],
+    ["path", "M7 16h10"],
+  ],
+  clipboard: [
+    ["rect", 8, 2, 8, 4, 1],
+    ["path", "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"],
+  ],
+  arrowRight: [["path", "M5 12h14"], ["path", "m12 5 7 7-7 7"]],
+  arrowLeft: [["path", "m12 19-7-7 7-7"], ["path", "M19 12H5"]],
+  volume: [
+    ["path", "M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"],
+    ["path", "M16 9a5 5 0 0 1 0 6"],
+    ["path", "M19.4 18.4a9 9 0 0 0 0-12.8"],
+  ],
+  power: [["path", "M12 2v10"], ["path", "M18.4 6.6a9 9 0 1 1-12.77.04"]],
+  upload: [["path", "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"], ["path", "m17 8-5-5-5 5"], ["path", "M12 3v12"]],
   check: [["path", "M20 6 9 17l-5-5"]],
   checkCircle: [["circle", 12, 12, 10], ["path", "m8.5 12.5 2.5 2.5 4.5-5"]],
   users: [

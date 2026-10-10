@@ -7,7 +7,10 @@ $env:KENNING_HOME = "$env:TEMP\kenning-manual"
 cd apps/desktop; npx tauri dev
 ```
 
-- [ ] First launch opens the welcome screen; "Start" with "Every time I copy" selected.
+- [ ] First launch opens the six-step onboarding. Back and Continue slide between steps; the progress bar follows.
+- [ ] Step 3: pick "Every time I copy". Step 4: add an address with a name; it appears in the list on the right.
+- [ ] Step 6: "Copy a known address" shows the USDC badge; "Copy a lookalike" opens the lookalike window.
+- [ ] The badge glides in from the right, its icon draws itself, and it slides back out; a second copy while it shows swaps the content without replaying the entrance.
 - [ ] Tray menu shows "Network: off" and "Clipboard: watched".
 - [ ] Add an address in the book; copy it from anywhere: corner badge with a check icon, soft chime, countdown bar, focus stays in your app.
 - [ ] Hovering the badge stops the bar; leaving resumes it; ✕ closes it.

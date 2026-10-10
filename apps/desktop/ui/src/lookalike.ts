@@ -6,6 +6,7 @@ import { addressWithDiff, CHAIN_NAME } from "./address";
 import { $, clear, h } from "./dom";
 import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
+import { draw, move, POP, rise, SPRING, stagger } from "./motion";
 import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { KnownKind, LookalikeView } from "./types";
@@ -109,6 +110,31 @@ function render(view: LookalikeView | null) {
   );
   copyButton.focus();
   if (view.sounds) playFor("lookalike");
+  choreograph(view.variant % 3);
+}
+
+/** Three entrances, so the window never becomes routine. Each ends the
+ *  same way: the differing characters light up one run after another. */
+function choreograph(variant: number) {
+  const sign = root.querySelector(".sign");
+  const rows = root.querySelectorAll(".row");
+  if (variant === 0) {
+    void move(root, { opacity: [0, 1], y: [-18, 0] }, SPRING);
+    void move(sign, { rotate: [0, -12, 10, -6, 4, 0] }, { duration: 0.6, delay: 0.15 });
+    void rise(rows, { y: 12, delay: 0.08, gap: 0.08 });
+  } else if (variant === 1) {
+    void move(root, { opacity: [0, 1], scale: [0.95, 1] }, SPRING);
+    void move(sign, { scale: [0.4, 1.12, 1] }, { ...POP, delay: 0.05 });
+    void rise(rows, { y: -12, delay: 0.1, gap: 0.08 });
+  } else {
+    void move(root, { opacity: [0, 1], x: [-24, 0] }, SPRING);
+    void move(sign, { scale: [0.6, 1], rotate: [-20, 0] }, { ...POP, delay: 0.05 });
+    void move(rows, { opacity: [0, 1], x: [-14, 0] }, { ...SPRING, delay: 0.1 });
+  }
+  draw(sign?.querySelector("svg") ?? null, { delay: 0.12, duration: 0.6 });
+  void rise(root.querySelectorAll(".head > div:last-child > *"), { y: 6, delay: 0.06 });
+  void move(root.querySelectorAll(".addr .diff"), { opacity: [0.25, 1], y: [-3, 0] }, { ...POP, delay: stagger(0.035, { startDelay: 0.35 }) });
+  void rise(root.querySelector(".actions"), { y: 8, delay: 0.45 });
 }
 
 document.addEventListener("keydown", (e) => {
