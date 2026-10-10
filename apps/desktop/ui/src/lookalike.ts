@@ -6,7 +6,7 @@ import { addressWithDiff, chainChip, detailLine } from "./address";
 import { $, clear, h } from "./dom";
 import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
-import { draw, move, POP, rise, SPRING, stagger } from "./motion";
+import { draw, move, POP, rise, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import { DEFAULT_KEYS, keycaps, matches } from "./shortcuts";
 import type { Keys } from "./types";
@@ -80,9 +80,9 @@ function render(view: LookalikeView | null) {
   clear(
     actions,
     copyButton,
-    h("button", { class: "link", onclick: showMineForm }, "This is my address"),
+    h("button", { class: "btn secondary", onclick: showMineForm }, "This is my address"),
     h("span", { class: "spacer" }),
-    h("button", { class: "link muted", title: `Dismiss (${keys.dismiss})`, onclick: () => ipc.dismissLookalike() }, "Dismiss"),
+    h("button", { class: "link dismiss", title: `Dismiss (${keys.dismiss})`, onclick: () => ipc.dismissLookalike() }, "Dismiss"),
   );
 
   const knownName = m.known_label ? m.known_label : "";
@@ -129,24 +129,28 @@ function render(view: LookalikeView | null) {
  *  same way: the differing characters light up one run after another. */
 function choreograph(variant: number) {
   const sign = root.querySelector(".sign");
-  const rows = root.querySelectorAll(".row");
+  const card = root.querySelector(".rows");
   if (variant === 0) {
-    void move(root, { opacity: [0, 1], y: [-18, 0] }, SPRING);
-    void move(sign, { rotate: [0, -12, 10, -6, 4, 0] }, { duration: 0.6, delay: 0.15 });
-    void rise(rows, { y: 12, delay: 0.08, gap: 0.08 });
+    void move(root, { opacity: [0, 1], y: [-14, 0] }, SPRING);
+    void move(sign, { rotate: [0, -10, 8, -4, 0] }, { duration: 0.55, delay: 0.15 });
+    void move(card, { opacity: [0, 1], y: [10, 0] }, { ...SPRING, delay: 0.08 });
   } else if (variant === 1) {
-    void move(root, { opacity: [0, 1], scale: [0.95, 1] }, SPRING);
-    void move(sign, { scale: [0.4, 1.12, 1] }, { ...POP, delay: 0.05 });
-    void rise(rows, { y: -12, delay: 0.1, gap: 0.08 });
+    void move(root, { opacity: [0, 1], scale: [0.97, 1] }, SPRING);
+    void move(sign, { scale: [0.6, 1] }, { ...POP, delay: 0.05 });
+    void move(card, { opacity: [0, 1], y: [-10, 0] }, { ...SPRING, delay: 0.1 });
   } else {
-    void move(root, { opacity: [0, 1], x: [-24, 0] }, SPRING);
-    void move(sign, { scale: [0.6, 1], rotate: [-20, 0] }, { ...POP, delay: 0.05 });
-    void move(rows, { opacity: [0, 1], x: [-14, 0] }, { ...SPRING, delay: 0.1 });
+    void move(root, { opacity: [0, 1], x: [-18, 0] }, SPRING);
+    void move(sign, { scale: [0.7, 1], rotate: [-12, 0] }, { ...POP, delay: 0.05 });
+    void move(card, { opacity: [0, 1], x: [-10, 0] }, { ...SPRING, delay: 0.1 });
   }
-  draw(sign?.querySelector("svg") ?? null, { delay: 0.12, duration: 0.6 });
+  draw(sign?.querySelector("svg") ?? null, { delay: 0.12, duration: 0.5 });
   void rise(root.querySelectorAll(".head > div:last-child > *"), { y: 6, delay: 0.06 });
-  void move(root.querySelectorAll(".addr .diff"), { opacity: [0.25, 1], y: [-3, 0] }, { ...POP, delay: stagger(0.035, { startDelay: 0.35 }) });
-  void rise(root.querySelector(".actions"), { y: 8, delay: 0.45 });
+  // The differences land by colour alone, one run after another: moving
+  // them would re-render the dotted underline and make it jump at the end.
+  root.classList.remove("lit");
+  root.querySelectorAll<HTMLElement>(".addr .diff").forEach((d, i) => (d.style.transitionDelay = `${i * 30}ms`));
+  setTimeout(() => root.classList.add("lit"), 380);
+  void rise(root.querySelector(".actions"), { y: 8, delay: 0.4 });
 }
 
 document.addEventListener("keydown", (e) => {

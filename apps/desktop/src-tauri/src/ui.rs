@@ -176,9 +176,12 @@ pub fn show_lookalike(app: &AppHandle, r: Recognition) {
         let _ = w.set_focus();
         return;
     }
+    // Sized to its content: on-chain lines add a row under each address.
+    let network = st.kenning.lock().unwrap().config().network;
+    let height = if network { 440.0 } else { 392.0 };
     let built = window(app, LOOKALIKE, "lookalike.html")
         .title("Kenning: not the address you know")
-        .inner_size(640.0, 430.0)
+        .inner_size(640.0, height)
         // Kenning draws its own title bar (ui/src/titlebar.ts).
         .decorations(false)
         .resizable(false)
