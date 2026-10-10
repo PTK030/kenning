@@ -11,7 +11,7 @@ MIT · local-only · no account · no telemetry · network: off · never writes 
 
 ```
 $ ken 0x28c6c0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1d60
-▲ This is not your Binance address.  lookalike
+! This is not your Binance address.  lookalike
   Matches 6 + 4 characters, 30 differ.
 
   copied  0x 28C6 C0aa AAaA AAaa AaAa AAaa AAaa aaaa AAaA 1d60

@@ -33,6 +33,8 @@ pub struct Config {
     /// How long the corner badge stays, in seconds (2 to 7).
     pub badge_seconds: u32,
     pub autostart: bool,
+    /// Soft sounds for the badge and the lookalike window.
+    pub sounds: bool,
     /// Set once the user has finished onboarding.
     pub onboarded: bool,
     pub lookalike: Rules,
@@ -48,6 +50,7 @@ impl Default for Config {
             shortcut: "Ctrl+Alt+K".into(),
             badge_seconds: 4,
             autostart: false,
+            sounds: true,
             onboarded: false,
             lookalike: Rules::default(),
         }

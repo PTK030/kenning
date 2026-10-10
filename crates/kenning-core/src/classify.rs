@@ -94,6 +94,8 @@ struct Known {
 #[derive(Clone, Debug, Serialize)]
 pub struct LookalikeMatch {
     pub known: Address,
+    /// `known` in groups of 4, like [`Recognition::grouped`].
+    pub known_grouped: String,
     pub known_kind: KnownKind,
     pub known_label: Option<String>,
     pub known_last_seen: Option<Timestamp>,
@@ -243,6 +245,7 @@ impl Recognizer {
                         k.kind,
                         LookalikeMatch {
                             known: k.address.clone(),
+                            known_grouped: k.address.grouped(),
                             known_kind: k.kind,
                             known_label: k.label.clone(),
                             known_last_seen: k.last_seen,

@@ -1,0 +1,297 @@
+@import "./base.css";
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 10px;
+  background: var(--bg-2);
+  border-right: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 16px;
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.brand img {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 120ms;
+}
+
+nav a .icon {
+  color: var(--ink-2);
+}
+
+nav a[aria-current="page"] .icon {
+  color: var(--brand);
+}
+
+nav a:hover {
+  background: var(--line);
+}
+
+nav a[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.facts {
+  margin-top: auto;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+main {
+  overflow: auto;
+  padding: 26px 30px 40px;
+}
+
+main > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+main > header h1 {
+  font-size: 24px;
+}
+
+main > header .spacer {
+  flex: 1;
+}
+
+section + section {
+  margin-top: 26px;
+}
+
+section > h2 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+tr:hover td {
+  background: var(--bg-2);
+}
+
+td .addr {
+  font-size: 12.5px;
+}
+
+td.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  background: var(--bg);
+}
+
+.card + .card {
+  margin-top: 10px;
+}
+
+.card.s-lookalike-card {
+  border-color: var(--look);
+}
+
+.card .top {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.card .top strong {
+  font-size: 15px;
+}
+
+.card .addr {
+  display: block;
+  margin-top: 8px;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px 14px;
+  align-items: center;
+  max-width: 720px;
+}
+
+.form .full {
+  grid-column: 1 / -1;
+}
+
+.form label {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.option:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.option input {
+  margin-top: 3px;
+}
+
+.option strong {
+  display: block;
+}
+
+.notice {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.notice.error {
+  border-color: var(--look);
+  color: var(--look);
+  background: var(--look-soft);
+}
+
+.empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--ink-2);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.welcome {
+  max-width: 620px;
+  margin: 30px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.welcome h1 {
+  font-size: 26px;
+}
+
+.welcome .lead {
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+.trust-line {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trust-line span {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+}
+
+dl.facts-list {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+dl.facts-list dt {
+  font-weight: 600;
+}
+
+dl.facts-list dd {
+  margin: 0;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  background: var(--bg-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}

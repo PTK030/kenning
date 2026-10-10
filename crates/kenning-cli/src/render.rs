@@ -22,11 +22,11 @@ const DIFF: Style = Style::new()
 
 pub fn symbol(state: State) -> &'static str {
     match state {
-        State::Mine | State::Team | State::Contact => "●",
+        State::Mine | State::Team | State::Contact => "✓",
         State::Public => "◆",
-        State::Seen => "○",
-        State::New => "◇",
-        State::Lookalike => "▲",
+        State::Seen => "↺",
+        State::New => "+",
+        State::Lookalike => "!",
     }
 }
 
@@ -118,7 +118,7 @@ pub fn spans(out: &mut impl Write, address: &Address, spans: &[Span]) -> std::io
     let mut i = 0usize;
     for span in spans {
         for ch in span.text.chars() {
-            if i >= start && (i - start) % 4 == 0 && i > 0 {
+            if i >= start && (i - start).is_multiple_of(4) && i > 0 {
                 write!(out, " ")?;
             }
             if span.same {

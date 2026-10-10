@@ -31,14 +31,14 @@ pub fn extract(text: &str) -> Vec<Found> {
         if !(25..=90).contains(&token.len()) {
             continue;
         }
-        if let Ok(address) = chain::parse(token) {
-            if !out.iter().any(|f| f.address.key() == address.key()) {
-                out.push(Found {
-                    address,
-                    start,
-                    end: i,
-                });
-            }
+        if let Ok(address) = chain::parse(token)
+            && !out.iter().any(|f| f.address.key() == address.key())
+        {
+            out.push(Found {
+                address,
+                start,
+                end: i,
+            });
         }
     }
     out

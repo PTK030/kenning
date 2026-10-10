@@ -256,10 +256,10 @@ impl Kenning {
 }
 
 fn expand_home(path: &Path) -> PathBuf {
-    if let Ok(rest) = path.strip_prefix("~") {
-        if let Some(d) = directories::BaseDirs::new() {
-            return d.home_dir().join(rest);
-        }
+    if let Ok(rest) = path.strip_prefix("~")
+        && let Some(d) = directories::BaseDirs::new()
+    {
+        return d.home_dir().join(rest);
     }
     path.to_owned()
 }
