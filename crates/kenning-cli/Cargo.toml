@@ -1,0 +1,18 @@
+[package]
+name = "kenning-cli"
+description = "ken: know what you copied"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ken"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+kenning-core = { path = "../kenning-core" }

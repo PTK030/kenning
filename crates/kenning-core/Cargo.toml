@@ -1,0 +1,23 @@
+[package]
+name = "kenning-core"
+description = "Address recognition and lookalike detection for Kenning. No network I/O."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+bech32 = "0.12.0"
+bs58 = { version = "0.5.1", default-features = false, features = ["alloc", "check"] }
+directories = "6.0.0"
+jiff = { version = "0.2.38", features = ["serde"] }
+kenning-labels = { path = "../kenning-labels" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+thiserror = "2.0.21"
+tiny-keccak = { version = "2.0.2", features = ["keccak"] }
+toml = "1.1.8"
