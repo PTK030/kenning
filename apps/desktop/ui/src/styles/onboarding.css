@@ -598,8 +598,19 @@ main.onboarding {
   margin: 0;
   padding: 0;
   display: grid;
+  align-content: start;
   gap: 8px;
   overflow: auto;
+}
+
+/* The book list scrolls once it is long. A new entry slides in from
+   12px above; the padding gives that slide room inside the list (and the
+   negative margin keeps the list where it was), so no scrollbar flashes
+   while it moves. */
+.ob-book {
+  padding: 14px 2px;
+  margin: -14px -2px;
+  overflow-x: hidden;
 }
 
 .ob-book li,
