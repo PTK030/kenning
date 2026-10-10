@@ -5,6 +5,7 @@ import { short, STATE_WORD } from "./address";
 import { $, clear, h } from "./dom";
 import { icon, STATE_ICON } from "./icons";
 import { ipc, on } from "./ipc";
+import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { BadgeView } from "./types";
 
@@ -46,6 +47,7 @@ function render(view: BadgeView | null) {
         h("div", { class: "headline" }, h("span", { class: "name" }, r.headline), h("span", { class: "word" }, STATE_WORD[r.state])),
         h("div", { class: "detail" }, r.detail),
         h("div", { class: "detail" }, h("span", { class: "addr" }, short(r.address.text))),
+        onchainLine(r.address.text),
       ),
       close,
       h("div", { class: "track" }, bar),

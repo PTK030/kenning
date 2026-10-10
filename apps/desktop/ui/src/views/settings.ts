@@ -2,6 +2,42 @@ import { clear, h } from "../dom";
 import { ipc, message } from "../ipc";
 import type { Config, Overview } from "../types";
 
+function networkSection(c: Config): HTMLElement {
+  const rpc = h("input", {
+    type: "text",
+    value: c.solana_rpc ?? "",
+    placeholder: "https://api.mainnet-beta.solana.com (default)",
+    style: "width:100%",
+    "aria-label": "Solana RPC",
+  });
+  rpc.addEventListener("input", () => (c.solana_rpc = rpc.value.trim() || null));
+  return h(
+    "section",
+    {},
+    h("h2", {}, "Network"),
+    h(
+      "label",
+      { class: "option", style: "max-width:720px" },
+      h("input", {
+        type: "checkbox",
+        checked: c.network,
+        onchange: (e: Event) => (c.network = (e.target as HTMLInputElement).checked),
+      }),
+      h(
+        "span",
+        {},
+        h("strong", {}, "Look addresses up on chain"),
+        h(
+          "span",
+          { class: "muted" },
+          " Shows whether an address has ever been used, how many transactions it has and whether it is a verified contract. A lookalike that was never used is a strong sign. Only the address is sent, to the hosts listed on “What it reads”. Off by default.",
+        ),
+      ),
+    ),
+    h("div", { class: "form", style: "margin-top:12px" }, h("label", {}, "Solana RPC"), rpc),
+  );
+}
+
 export function settingsView(main: HTMLElement, overview: Overview, refresh: () => Promise<void>) {
   const c: Config = structuredClone(overview.config);
   const notice = h("div");
@@ -134,6 +170,7 @@ export function settingsView(main: HTMLElement, overview: Overview, refresh: () 
         num("min_total_public", "Total, public"),
       ),
     ),
+    networkSection(c),
     h("section", {}, h("h2", {}, "Files"), h("div", { class: "muted" }, overview.home)),
   );
 }

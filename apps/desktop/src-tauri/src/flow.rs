@@ -9,8 +9,8 @@ use tauri::{AppHandle, Manager};
 
 use crate::clipboard::{self, Content};
 use crate::state::{AppState, Badge};
-use crate::tray;
 use crate::ui;
+use crate::{onchain, tray};
 
 /// A clipboard change in watch mode. Silent unless the clipboard holds
 /// exactly one address.
@@ -88,20 +88,26 @@ pub fn on_shortcut(app: &AppHandle) {
 /// Route a recognition to the right surface: lookalikes get a window,
 /// everything else a quiet badge.
 pub fn present(app: &AppHandle, r: Recognition) {
+    // On-chain facts (when the network is on) fill in after the window shows.
+    let mut lookup = vec![r.address.clone()];
+    if let Some(m) = &r.lookalike {
+        lookup.push(m.known.clone());
+    }
     if r.state == State::Lookalike {
         ui::hide_badge(app);
         ui::show_lookalike(app, r);
-        return;
+    } else {
+        let seconds = badge_seconds(app, r.state);
+        ui::show_badge(
+            app,
+            Badge::Recognition {
+                recognition: Box::new(r),
+            },
+            seconds,
+        );
+        tray::flash(app);
     }
-    let seconds = badge_seconds(app, r.state);
-    ui::show_badge(
-        app,
-        Badge::Recognition {
-            recognition: Box::new(r),
-        },
-        seconds,
-    );
-    tray::flash(app);
+    onchain::spawn_lookup(app, lookup);
 }
 
 pub fn info(app: &AppHandle, text: &str) {

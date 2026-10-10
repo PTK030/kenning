@@ -43,11 +43,27 @@ export function trustView(main: HTMLElement, overview: Overview) {
       h(
         "dd",
         {},
-        h(
-          "p",
-          { style: "margin-top:0" },
-          "Nothing. Kenning's recognition engine has no network code; a build check rejects any networking library in it. There are no update checks, analytics or crash reports.",
-        ),
+        overview.config.network
+          ? h(
+              "div",
+              {},
+              h(
+                "p",
+                { style: "margin-top:0" },
+                "You turned on on-chain lookups. For each address Kenning shows, it sends that address, and only that address, to one of these hosts:",
+              ),
+              h(
+                "ul",
+                {},
+                overview.hosts.map(([host, why]) => h("li", {}, h("code", {}, host), " ", h("span", { class: "muted" }, why))),
+              ),
+              h("p", {}, "Answers are cached for an hour. Turn this off in Settings or from the tray menu."),
+            )
+          : h(
+              "p",
+              { style: "margin-top:0" },
+              "Nothing. The network is off. Kenning's recognition engine has no network code at all; a build check rejects any networking library in it. There are no update checks, analytics or crash reports.",
+            ),
       ),
       h("dt", {}, "Public labels"),
       h(

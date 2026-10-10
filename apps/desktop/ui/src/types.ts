@@ -102,6 +102,8 @@ export interface Config {
   badge_seconds: number;
   autostart: boolean;
   sounds: boolean;
+  network: boolean;
+  solana_rpc?: string | null;
   onboarded: boolean;
   lookalike: Rules;
 }
@@ -117,7 +119,25 @@ export interface Overview {
   public_label_count: number;
   history_count: number;
   warnings: string[];
+  hosts: [string, string][];
 }
+
+export interface Onchain {
+  network: string;
+  source: string;
+  active: boolean;
+  transactions: number | null;
+  transactions_capped: boolean;
+  contract: boolean;
+  verified: boolean | null;
+  name: string | null;
+  fetched_at: string;
+}
+
+export type Fact =
+  | { state: "pending" }
+  | { state: "ok"; summary: string; active: boolean; onchain: Onchain }
+  | { state: "error"; message: string };
 
 export interface JournalRecord {
   at: string;

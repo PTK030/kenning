@@ -17,8 +17,12 @@ body {
   --accent: var(--ink-2);
   --accent-soft: var(--bg-2);
 
+  /* Anchored to the bottom: the window is tall enough for an on-chain
+     line, and the space above stays transparent when there is none. */
   position: absolute;
-  inset: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -27,7 +31,9 @@ body {
   background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 96%, var(--accent) 4%), var(--bg));
   border: 1px solid color-mix(in srgb, var(--line) 70%, var(--accent) 30%);
   border-radius: 14px;
-  box-shadow: var(--shadow);
+  /* The window is transparent and only 8px larger than the card, so the
+     shadow must fit inside 8px or it gets cut into a dark halo. */
+  box-shadow: 0 2px 6px -1px rgb(0 0 0 / 22%);
   cursor: default;
   opacity: 0;
   transform: translateY(8px) scale(0.985);

@@ -6,6 +6,7 @@ import { addressWithDiff, CHAIN_NAME } from "./address";
 import { $, clear, h } from "./dom";
 import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
+import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { KnownKind, LookalikeView } from "./types";
 
@@ -94,13 +95,13 @@ function render(view: LookalikeView | null) {
         "div",
         { class: "row copied" },
         h("div", { class: "who" }, "You copied", h("small", {}, "differences marked")),
-        addressWithDiff(r.grouped, m.candidate_spans),
+        h("div", {}, addressWithDiff(r.grouped, m.candidate_spans), onchainLine(r.address.text)),
       ),
       h(
         "div",
         { class: "row known" },
         h("div", { class: "who" }, WHO[m.known_kind], knownName && h("small", {}, knownName)),
-        addressWithDiff(m.known_grouped, m.known_spans),
+        h("div", {}, addressWithDiff(m.known_grouped, m.known_spans), onchainLine(m.known.text)),
       ),
     ),
     actions,

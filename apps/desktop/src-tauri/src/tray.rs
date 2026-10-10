@@ -98,7 +98,15 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let item = |id: &str, text: &str| MenuItem::with_id(app, id, text, true, None::<&str>);
 
     let menu = Menu::new(app)?;
-    menu.append(&info("network", "Network: off")?)?;
+    let network = st.kenning.lock().unwrap().config().network;
+    menu.append(&item(
+        "network",
+        if network {
+            "Network: on (turn off)"
+        } else {
+            "Network: off"
+        },
+    )?)?;
     menu.append(&info("clipboard", &clipboard_text)?)?;
     menu.append(&PredefinedMenuItem::separator(app)?)?;
     menu.append(&item("check", "Check clipboard now")?)?;
@@ -123,6 +131,20 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
 fn on_menu(app: &AppHandle, event: MenuEvent) {
     match event.id().as_ref() {
         "check" => flow::on_shortcut(app),
+        "network" => {
+            let st = app.state::<AppState>();
+            let on = !st.kenning.lock().unwrap().config().network;
+            if on {
+                // Turning the network on is a decision; explain it first.
+                ui::open_main(app, "settings");
+            } else {
+                let mut config = st.kenning.lock().unwrap().config().clone();
+                config.network = false;
+                let _ = st.kenning.lock().unwrap().set_config(config);
+                st.onchain.reset();
+                refresh(app);
+            }
+        }
         "pause" => {
             let st = app.state::<AppState>();
             st.paused.fetch_xor(true, Ordering::SeqCst);

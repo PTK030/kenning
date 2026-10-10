@@ -1,5 +1,6 @@
 import { addressPlain, addressWithDiff, CHAIN_NAME, stateChip } from "../address";
 import { h } from "../dom";
+import { onchainLine } from "../onchain";
 import type { Recognition } from "../types";
 
 /** A recognition as a card: state, headline, detail, full address. */
@@ -11,6 +12,7 @@ export function recognitionCard(r: Recognition): HTMLElement {
     h("div", { class: "top" }, stateChip(r.state), h("strong", {}, r.headline)),
     h("div", { class: "muted" }, r.detail, " · ", CHAIN_NAME[r.address.chain]),
     m ? addressWithDiff(r.grouped, m.candidate_spans) : addressPlain(r.grouped),
+    onchainLine(r.address.text),
     m &&
       h(
         "div",

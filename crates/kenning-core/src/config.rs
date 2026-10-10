@@ -35,6 +35,13 @@ pub struct Config {
     pub autostart: bool,
     /// Soft sounds for the badge and the lookalike window.
     pub sounds: bool,
+    /// On-chain lookups (transaction count, contract, verified). Off by
+    /// default; when on, only the address itself is sent to the providers
+    /// listed in `kenning-net`.
+    pub network: bool,
+    /// Custom Solana RPC URL (for example a Helius endpoint with your key).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub solana_rpc: Option<String>,
     /// Set once the user has finished onboarding.
     pub onboarded: bool,
     pub lookalike: Rules,
@@ -51,6 +58,8 @@ impl Default for Config {
             badge_seconds: 4,
             autostart: false,
             sounds: true,
+            network: false,
+            solana_rpc: None,
             onboarded: false,
             lookalike: Rules::default(),
         }
@@ -96,5 +105,6 @@ mod tests {
         let c = Config::default();
         assert_eq!(c.clipboard, ClipboardMode::Shortcut);
         assert!(!c.autostart);
+        assert!(!c.network);
     }
 }

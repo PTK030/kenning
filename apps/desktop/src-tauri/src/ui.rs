@@ -15,7 +15,7 @@ pub const MAIN: &str = "main";
 
 /// Logical size of the badge.
 const BADGE_W: f64 = 400.0;
-const BADGE_H: f64 = 104.0;
+const BADGE_H: f64 = 128.0;
 /// Gap between the badge and the screen edge / taskbar.
 const BADGE_MARGIN: f64 = 12.0;
 

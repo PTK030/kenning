@@ -59,7 +59,7 @@ async function render() {
     h(
       "div",
       { class: "facts" },
-      h("span", {}, "Network: off"),
+      h("span", {}, c.network ? "Network: on" : "Network: off"),
       h("span", {}, c.clipboard === "watch" ? (overview.paused ? "Clipboard: paused" : "Clipboard: watched") : `Clipboard: ${c.shortcut} only`),
       h("span", {}, `v${overview.version} · MIT`),
     ),

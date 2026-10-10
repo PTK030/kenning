@@ -8,6 +8,7 @@ mod commands;
 mod flow;
 mod hotkey;
 mod icon;
+mod onchain;
 mod platform;
 mod state;
 mod tray;
@@ -64,6 +65,9 @@ fn main() {
             commands::open_book_file,
             commands::reload,
             commands::open_main,
+            commands::get_onchain,
+            commands::lookup_onchain,
+            commands::set_network,
         ])
         .setup(move |app| {
             let handle = app.handle().clone();

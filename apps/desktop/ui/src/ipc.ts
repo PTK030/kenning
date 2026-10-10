@@ -9,6 +9,7 @@ import type {
   BadgeView,
   BookView,
   Config,
+  Fact,
   ImportSummary,
   JournalRecord,
   LookalikeView,
@@ -46,6 +47,10 @@ export const ipc = {
   finishOnboarding: (watch: boolean) => invoke<Overview>("finish_onboarding", { watch }),
   clearHistory: () => invoke<void>("clear_history"),
   openMain: (tab: string) => invoke<void>("open_main", { tab }),
+
+  getOnchain: (addresses: string[]) => invoke<Record<string, Fact>>("get_onchain", { addresses }),
+  lookupOnchain: (address: string) => invoke<Fact>("lookup_onchain", { address }),
+  setNetwork: (on: boolean) => invoke<Overview>("set_network", { on }),
 };
 
 export function on<T>(event: string, handler: (payload: T) => void): Promise<UnlistenFn> {

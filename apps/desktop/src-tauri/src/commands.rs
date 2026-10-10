@@ -13,6 +13,7 @@ use tauri_plugin_autostart::ManagerExt as _;
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
+use crate::onchain::{self, Fact};
 use crate::state::{AppState, BadgeView};
 use crate::{clipboard, hotkey, tray, ui};
 
@@ -34,6 +35,8 @@ pub struct Overview {
     public_label_count: usize,
     history_count: usize,
     warnings: Vec<String>,
+    /// Hosts contacted when the network is on, and why.
+    hosts: Vec<(&'static str, &'static str)>,
 }
 
 #[derive(Serialize)]
@@ -65,6 +68,7 @@ pub fn overview(state: State<AppState>) -> Overview {
         public_label_count: k.labels().len(),
         history_count: k.history().len(),
         warnings: k.warnings().to_vec(),
+        hosts: kenning_net::HOSTS.to_vec(),
     }
 }
 
@@ -243,8 +247,36 @@ pub fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Re
         eprintln!("kenning: autostart: {e}");
     }
     state.kenning.lock().unwrap().set_config(config).map_err(err)?;
+    state.onchain.reset();
     tray::refresh(&app);
     Ok(overview(state))
+}
+
+/// Facts already known for these addresses (never starts a lookup).
+#[tauri::command]
+pub fn get_onchain(
+    state: State<AppState>,
+    addresses: Vec<String>,
+) -> std::collections::HashMap<String, Fact> {
+    addresses
+        .into_iter()
+        .filter_map(|a| state.onchain.get(&a).map(|f| (a, f)))
+        .collect()
+}
+
+/// Look one address up now (Check view). Fails when the network is off.
+#[tauri::command]
+pub async fn lookup_onchain(app: AppHandle, address: String) -> Res<Fact> {
+    let address = kenning_core::parse(&address).map_err(err)?;
+    onchain::lookup_now(&app, &address)
+}
+
+/// Turn the network on or off (tray menu and settings).
+#[tauri::command]
+pub fn set_network(app: AppHandle, state: State<AppState>, on: bool) -> Res<Overview> {
+    let mut config = state.kenning.lock().unwrap().config().clone();
+    config.network = on;
+    save_config(app, state, config)
 }
 
 #[tauri::command]

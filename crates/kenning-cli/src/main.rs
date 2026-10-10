@@ -32,6 +32,11 @@ struct Cli {
     #[arg(long, global = true)]
     json: bool,
 
+    /// Also ask the chain about each address (transactions, contract).
+    /// Sends only the address to the providers listed by `ken paths`.
+    #[arg(long, global = true)]
+    online: bool,
+
     /// Kenning directory (default: ~/.kenning, or $KENNING_HOME).
     #[arg(long, global = true, value_name = "DIR")]
     home: Option<PathBuf>,
@@ -298,6 +303,15 @@ fn run(cli: Cli) -> Result<u8, Fail> {
                     b.path().map(|p| p.display().to_string()).unwrap_or_default()
                 )?;
             }
+            let state = if k.config().network {
+                "on"
+            } else {
+                "off (use --online per command)"
+            };
+            writeln!(out, "\nnetwork  {state}")?;
+            for (host, why) in kenning_net::HOSTS {
+                writeln!(out, "  {host:<30} {DIM}{why}{DIM:#}")?;
+            }
             Ok(0)
         }
         Command::Serve { .. } => {
@@ -335,19 +349,52 @@ fn cmd_recognize(cli: &Cli) -> Result<u8, Fail> {
     for r in &results {
         k.journal(Action::Checked, r)?;
     }
+    // On-chain facts only with --online, or when the network is turned on
+    // in settings.
+    let onchain: Vec<Option<Result<kenning_net::Onchain, String>>> = if cli.online || k.config().network {
+        let net = kenning_net::Net::new(
+            kenning_net::Endpoints::with_solana_rpc(k.config().solana_rpc.as_deref()),
+            Some(k.home().join("net-cache.json")),
+        );
+        results
+            .iter()
+            .map(|r| Some(net.lookup(&r.address).map_err(|e| e.to_string())))
+            .collect()
+    } else {
+        vec![None; results.len()]
+    };
     if cli.json {
-        if results.len() == 1 {
-            print_json(&results[0])?;
+        let items: Vec<_> = results
+            .iter()
+            .zip(&onchain)
+            .map(|(r, o)| {
+                let mut v = serde_json::to_value(r).expect("serializable");
+                if let Some(o) = o {
+                    v["onchain"] = match o {
+                        Ok(o) => serde_json::to_value(o).expect("serializable"),
+                        Err(e) => serde_json::json!({ "error": e }),
+                    };
+                }
+                v
+            })
+            .collect();
+        if items.len() == 1 {
+            print_json(&items[0])?;
         } else {
-            print_json(&results)?;
+            print_json(&items)?;
         }
     } else {
         let mut out = stdout().lock();
-        for (i, r) in results.iter().enumerate() {
+        for (i, (r, o)) in results.iter().zip(&onchain).enumerate() {
             if i > 0 {
                 writeln!(out)?;
             }
             render::card(&mut out, r)?;
+            match o {
+                Some(Ok(o)) => writeln!(out, "  {DIM}on chain:{DIM:#} {}", o.summary())?,
+                Some(Err(e)) => writeln!(out, "  {DIM}on chain: lookup failed: {e}{DIM:#}")?,
+                None => {}
+            }
         }
     }
     Ok(worst(results.iter().map(|r| r.state)))

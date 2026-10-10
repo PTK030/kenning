@@ -3,6 +3,8 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize};
 use std::time::Instant;
 
 use kenning_core::{AddressKey, Kenning, Recognition};
+
+use crate::onchain::OnchainState;
 use serde::Serialize;
 
 /// What the corner badge shows.
@@ -36,6 +38,7 @@ pub struct AppState {
     /// Last address seen on the clipboard. Apps often write the clipboard
     /// more than once per copy; the repeat must not count as a second copy.
     pub last_copy: Mutex<Option<(AddressKey, Instant)>>,
+    pub onchain: OnchainState,
 }
 
 impl AppState {
@@ -48,6 +51,7 @@ impl AppState {
             lookalike: Mutex::new(None),
             lookalike_variant: AtomicUsize::new(0),
             last_copy: Mutex::new(None),
+            onchain: OnchainState::default(),
         }
     }
 }
