@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kenning: know what you copied</title>
+    <meta
+      name="description"
+      content="Kenning names every crypto address you copy and tells you when one only looks like an address you know. Open source, local-only, no account."
+    />
+    <meta name="theme-color" content="#3A55C9" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/jetbrains-mono-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <div class="announce">
+      <p>
+        New in 0.1: on-chain lookups, off until you turn them on.
+        <a href="#trust">See exactly what gets sent</a>
+      </p>
+    </div>
+
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="Kenning home">
+        <img src="assets/logo.svg" alt="" width="32" height="32" />
+        <span>Kenning</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#recognise">How it works</a>
+        <a href="#trust">Trust</a>
+        <a href="https://github.com/PTK030/kenning/blob/main/docs/detection-rules.md">Detection rules</a>
+        <a href="https://github.com/PTK030/kenning">GitHub</a>
+      </nav>
+      <a class="button small" href="https://github.com/PTK030/kenning/releases">Download</a>
+    </header>
+
+    <main id="main">
+      <!-- Hero: the address itself is the picture. -->
+      <section class="hero" id="top">
+        <div class="hero-copy">
+          <h1>Know what you copied.</h1>
+          <p class="lead">
+            Kenning names every crypto address you copy and tells you when one only looks like an address you
+            know. It stays quiet the rest of the time.
+          </p>
+          <div class="actions">
+            <a class="button" href="https://github.com/PTK030/kenning/releases">Download for Windows</a>
+            <button class="command" type="button" data-copy="cargo install --git https://github.com/PTK030/kenning kenning-cli">
+              <code>cargo install --git https://github.com/PTK030/kenning kenning-cli</code>
+              <span class="command-hint" aria-live="polite">Copy</span>
+            </button>
+          </div>
+          <p class="fine">Free and open source under MIT. Windows today, macOS and Linux next.</p>
+        </div>
+
+        <figure class="specimen" aria-label="A copied address compared with the one you know">
+          <div class="spec-row known">
+            <span class="spec-who">Your Binance</span>
+            <span class="spec-addr" data-addr="0x28C6c06298d514Db089934071355E5743bf21d60" data-other="0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60"></span>
+          </div>
+          <div class="spec-row copied">
+            <span class="spec-who">You copied</span>
+            <span class="spec-addr" data-addr="0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60" data-other="0x28C6c06298d514Db089934071355E5743bf21d60"></span>
+          </div>
+          <figcaption class="verdict">
+            <strong>This is not your Binance address.</strong>
+            <span>The first 6 and last 4 characters match. The 30 in between do not.</span>
+            <span class="fix">Copy the correct address</span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- Recognition -->
+      <section class="block" id="recognise" aria-labelledby="recognise-title">
+        <h2 id="recognise-title">Every address, by name.</h2>
+        <div class="grid">
+          <article class="card paper">
+            <h3>Your names</h3>
+            <p>Label your wallets, deposit addresses and multisigs once. Kenning shows the name every time you copy them.</p>
+            <ul class="mini-book" aria-label="Example address book">
+              <li><span>Binance deposits</span><code>0x28C6…1d60</code></li>
+              <li><span>Cold wallet</span><code>bc1q85…tp8</code></li>
+              <li><span>Payroll Safe</span><code>0x5aAe…BeAed</code></li>
+            </ul>
+          </article>
+          <article class="card ice">
+            <h3>Public labels, with sources</h3>
+            <p>Routers, bridges and stablecoins are recognised out of the box. Every label links to where it came from.</p>
+            <div class="mini-label">
+              <strong>Uniswap V3: Router 2</strong>
+              <span>source: docs.uniswap.org</span>
+            </div>
+          </article>
+          <article class="card ice">
+            <h3>Four chains</h3>
+            <p>EVM with EIP-55 checksums, Solana, Bitcoin from legacy to taproot, and Tron. Typos in a checksum are caught before you send.</p>
+            <ul class="chains" aria-label="Supported chains">
+              <li><b>EVM</b><code>0x5aAe b605…</code></li>
+              <li><b>Solana</b><code>EPjF Wdd5…</code></li>
+              <li><b>Bitcoin</b><code>bc1p y3m7…</code></li>
+              <li><b>Tron</b><code>TR7N Hqje…</code></li>
+            </ul>
+          </article>
+          <article class="card paper">
+            <h3>In every app</h3>
+            <p>Kenning watches what you copy, so it works the same in your wallet, an exchange, a block explorer, a terminal or a chat.</p>
+            <p class="mini-apps">Phantom, Rabby, Ledger Live, Safe, Etherscan, Telegram, your terminal</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Quiet -->
+      <section class="block" aria-labelledby="quiet-title">
+        <h2 id="quiet-title">Quiet until it matters.</h2>
+        <div class="grid">
+          <article class="card graphite">
+            <h3>A badge, then nothing</h3>
+            <p>Known addresses get a small badge in the corner for a few seconds. It never takes focus from what you are doing.</p>
+            <div class="mini-badge" aria-hidden="true">
+              <span class="tick">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m8.5 12.5 2.5 2.5 4.5-5" /></svg>
+              </span>
+              <span><b>Binance</b> my deposits<br /><code>0x28C6c0…1d60</code></span>
+              <i class="countdown"></i>
+            </div>
+          </article>
+          <article class="card paper">
+            <h3>A window when it looks wrong</h3>
+            <p>If a copied address shares its start and end with one you know, you see both in full, with every difference marked.</p>
+            <div class="mini-diff" aria-hidden="true">
+              <code>0x 28C6 c0<mark>62 98d5 14Db</mark>…</code>
+              <code>0x 28C6 C0<mark>aa AAaA AAaa</mark>…</code>
+            </div>
+          </article>
+          <article class="card paper">
+            <h3>One click to fix it</h3>
+            <p>“Copy the correct address” puts yours back on the clipboard. If the new address is yours too, say so once and Kenning remembers.</p>
+            <span class="mini-button" aria-hidden="true">Copy the correct address</span>
+          </article>
+          <article class="card ice">
+            <h3>A record for audits</h3>
+            <p>A local journal of what was checked, by whom and when. Useful when a second signer asks how you verified a payout.</p>
+            <ol class="mini-log" aria-label="Example journal">
+              <li><time>09:14</time> ania checked Payroll Safe</li>
+              <li><time>09:15</time> lookalike shown, Binance</li>
+              <li><time>09:15</time> copied correct address</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <!-- Trust -->
+      <section class="block" id="trust" aria-labelledby="trust-title">
+        <h2 id="trust-title">Trust, built in.</h2>
+        <p class="block-lead">
+          A tool that reads your clipboard should be easy to check. These are properties of the code, not promises.
+        </p>
+        <div class="grid">
+          <article class="card paper">
+            <h3>Open source, MIT</h3>
+            <p>Read every line on GitHub, build it yourself and compare. The rules for spotting lookalikes are a public document with tests.</p>
+            <pre class="mini-code" aria-label="Running the tests"><span class="x">$</span> cargo test --workspace
+<span class="k">ok</span> 49 core, 17 lookalike cases, 8 network, 7 CLI</pre>
+          </article>
+          <article class="card paper">
+            <h3>Local only</h3>
+            <p>Recognition runs on your machine. The recognition engine contains no network code, and the build fails if anyone adds it.</p>
+            <pre class="mini-code" aria-label="The build check"><span class="x">$</span> cargo deny check bans
+<span class="k">bans ok</span>  reqwest, hyper, tokio, rustls: not allowed</pre>
+          </article>
+          <article class="card paper">
+            <h3>Your clipboard stays yours</h3>
+            <p>Kenning writes to it only when you click. Content that password managers mark as private is skipped before it is read.</p>
+            <ul class="mini-rules" aria-label="Clipboard rules">
+              <li><b>Reads</b><span>on your shortcut, or each copy if you choose</span></li>
+              <li><b>Writes</b><span>only when you click</span></li>
+              <li><b>Stores</b><span>validated addresses, never text</span></li>
+            </ul>
+          </article>
+          <article class="card graphite">
+            <h3>Network off by default</h3>
+            <p>Turn on on-chain lookups if you want them. Only the address is sent, to four public providers listed in the app.</p>
+            <div class="mini-toggle" aria-hidden="true"><span class="switch"></span> Network: off</div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Facts -->
+      <section class="facts" aria-label="Measured on Windows 11">
+        <div><b>8 MB</b><span>memory at rest</span></div>
+        <div><b>45 ms</b><span>from copy to badge</span></div>
+        <div><b>4</b><span>chains recognised</span></div>
+        <div><b>0</b><span>accounts, trackers or servers</span></div>
+      </section>
+
+      <!-- CTA -->
+      <section class="cta" aria-labelledby="cta-title">
+        <h2 id="cta-title">Name the addresses you use. Kenning handles the rest.</h2>
+        <div class="actions">
+          <a class="button light" href="https://github.com/PTK030/kenning/releases">Download for Windows</a>
+          <a class="button ghost" href="https://github.com/PTK030/kenning">View the source</a>
+        </div>
+      </section>
+
+      <!-- Education: a real sequence, so it is numbered. -->
+      <section class="learn" aria-labelledby="learn-title">
+        <h2 id="learn-title">New to address poisoning?</h2>
+        <ol class="steps">
+          <li>
+            <h3>You send to someone you know</h3>
+            <p>A friend, a client, your exchange. Their address now sits in your wallet history.</p>
+            <code class="step-addr">0x28C6 c062 … 3bf2 1d60</code>
+          </li>
+          <li>
+            <h3>Someone sends you a tiny transfer</h3>
+            <p>It comes from an address generated to share the same first and last characters. That takes minutes on a graphics card.</p>
+            <code class="step-addr">0x28C6 c0aa … AAaA 1d60</code>
+          </li>
+          <li>
+            <h3>You copy from your history</h3>
+            <p>Both addresses look right at a glance. Checking the first and last four characters no longer tells them apart.</p>
+            <code class="step-addr warn">Two addresses, one look</code>
+          </li>
+        </ol>
+        <p class="learn-close">
+          Kenning compares every address you copy with the ones you know, and tells you which one you have.
+          <a href="https://github.com/PTK030/kenning/blob/main/docs/detection-rules.md">Read the detection rules</a>
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-brand">
+        <img src="assets/logo.svg" alt="" width="28" height="28" />
+        <span>Kenning</span>
+        <p>Know what you copied.</p>
+      </div>
+      <nav aria-label="Product">
+        <h2>Product</h2>
+        <a href="https://github.com/PTK030/kenning/releases">Download</a>
+        <a href="https://github.com/PTK030/kenning#cli">Command line</a>
+        <a href="https://github.com/PTK030/kenning/blob/main/docs/detection-rules.md">Detection rules</a>
+      </nav>
+      <nav aria-label="Project">
+        <h2>Project</h2>
+        <a href="https://github.com/PTK030/kenning">GitHub</a>
+        <a href="https://github.com/PTK030/kenning/issues">Report an issue</a>
+        <a href="https://github.com/PTK030/kenning/blob/main/LICENSE">MIT licence</a>
+      </nav>
+      <p class="footer-note">This page loads no third-party scripts, fonts or trackers.</p>
+    </footer>
+
+    <script src="main.js" defer></script>
+  </body>
+</html>
