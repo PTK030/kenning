@@ -11,7 +11,7 @@ Kenning
 
 Know what you copied: Kenning names every crypto address you copy and tells you when one only looks like an address you know.
 
-<a href="site/index.html"><img src="docs/images/landing.png" alt="Kenning compares a copied address with the one you know and marks every difference" /></a>
+<a href="site/"><img src="docs/images/landing.png" alt="Kenning compares a copied address with the one you know and marks every difference" /></a>
 
 <a href="docs/images/lookalike-window.png"><img src="docs/images/lookalike-window.png" alt="The lookalike window: both addresses in full, differences marked, one button to copy the correct address" width="640" /></a>
 
@@ -121,13 +121,22 @@ cargo deny --manifest-path crates/kenning-core/Cargo.toml check
 node apps/desktop/scripts/check-contrast.mjs
 ```
 
+The landing page is React with Motion and Lenis, built to static files:
+
+```bash
+cd site
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # site/dist
+```
+
 ```
 crates/kenning-core     recognition, lookalikes, book, history, journal (no network code)
 crates/kenning-net      optional on-chain lookups
 crates/kenning-cli      the `ken` binary
 crates/kenning-labels   built-in public labels, each with a source
 apps/desktop            tray app: Tauri 2, TypeScript, no UI framework
-site                    landing page, static, no third-party requests
+site                    landing page: React, Motion, Lenis; builds to static files, no third-party requests
 tests/lookalikes        public test corpus for the detection rules
 ```
 
