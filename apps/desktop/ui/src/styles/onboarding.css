@@ -1273,3 +1273,90 @@ body.immersive #app {
 .sheet-card p {
   margin: 0;
 }
+
+/* ---- Intro: the first two seconds -------------------------------------- */
+
+.intro {
+  position: fixed;
+  inset: 38px 0 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  cursor: default;
+}
+
+.intro-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+
+.intro-markwrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+}
+
+.intro-mark {
+  overflow: visible;
+}
+
+.intro-mark rect,
+.intro-mark circle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.intro-address {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  translate: -50% -50%;
+  display: flex;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+
+.intro-address span {
+  display: inline-block;
+  min-width: 0.62em;
+  text-align: center;
+}
+
+.intro-glow {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(58 85 201 / 28%), transparent 65%);
+  pointer-events: none;
+}
+
+.intro-word {
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.intro-word span {
+  display: inline-block;
+}
+
+.intro-tagline {
+  margin: -10px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}

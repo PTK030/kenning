@@ -14,6 +14,7 @@ import type { Overview, Recognition } from "../types";
 import { group, KNOWN, POISON, shortAddr, spans } from "./demo";
 import { sandbox } from "./sandbox";
 import { keysStep } from "./keys";
+import { playIntro } from "./intro";
 import iconUrl from "../../../src-tauri/icons/128x128@2x.png";
 
 /** A real stablecoin contract, recognised by its public label. */
@@ -136,6 +137,8 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
 
   // Enter continues and the left arrow goes back, except while typing.
   const onKey = (e: KeyboardEvent) => {
+    // A key during the intro only skips it.
+    if (document.querySelector(".intro")) return;
     const typing = (e.target as HTMLElement | null)?.closest("input, textarea, select, button");
     if (e.key === "Enter" && !typing) {
       e.preventDefault();
@@ -498,7 +501,8 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     }
   }
 
-  void go(0);
+  // The intro plays over the stage; the first step enters as it leaves.
+  void playIntro(main, { sounds: c.sounds, leaving: () => void go(0) });
 }
 
 // ---- Helpers ---------------------------------------------------------------
