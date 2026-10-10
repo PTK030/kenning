@@ -99,6 +99,7 @@ export interface Config {
   journal: boolean;
   clipboard: "shortcut" | "watch";
   shortcut: string;
+  keys: Keys;
   badge_seconds: number;
   autostart: boolean;
   sounds: boolean;
@@ -106,6 +107,15 @@ export interface Config {
   solana_rpc?: string | null;
   onboarded: boolean;
   lookalike: Rules;
+}
+
+/** Shortcuts inside Kenning's windows (config.toml `[keys]`). */
+export interface Keys {
+  fix: string;
+  dismiss: string;
+  add: string;
+  find: string;
+  help: string;
 }
 
 export interface Overview {

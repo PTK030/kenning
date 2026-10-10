@@ -15,6 +15,7 @@ import { group, KNOWN, POISON, shortAddr, spans } from "./demo";
 import { sandbox } from "./sandbox";
 import { keysStep } from "./keys";
 import { playIntro } from "./intro";
+import { cue } from "../sound";
 import iconUrl from "../../../src-tauri/icons/128x128@2x.png";
 
 /** A real stablecoin contract, recognised by its public label. */
@@ -111,6 +112,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     if (busy || n < 0 || n >= STEPS.length) return;
     busy = true;
     const dir = n >= s.step ? 1 : -1;
+    if (s.sounds && s.step !== n && document.querySelector(".ob-panel")) cue(dir > 0 ? "step" : "back");
     stops.forEach((f) => f());
     stops = [];
     const old = stage.firstElementChild;
@@ -240,7 +242,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     },
 
     keys: () => {
-      const k = keysStep({ shortcut: c.shortcut, later, own: (stop) => stops.push(stop) });
+      const k = keysStep({ config: c, sounds: () => s.sounds, later, own: (stop) => stops.push(stop) });
       return panel(k.copy, k.visual);
     },
 
@@ -264,6 +266,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
             onclick: () => {
               if (s.watch === value) return;
               s.watch = value;
+              if (s.sounds) cue("on");
               paint();
               void move(visual.firstElementChild, { opacity: [0, 1], scale: [0.94, 1] }, SPRING);
             },
@@ -325,6 +328,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           clear(preview);
           add.disabled = true;
           paintList();
+          if (s.sounds) cue("tick");
           void move(list.firstElementChild, { opacity: [0, 1], y: [-12, 0], scale: [0.97, 1] }, POP);
           label.focus();
         } catch (e) {
@@ -375,6 +379,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           checked: s[key],
           onchange: (e: Event) => {
             s[key] = (e.target as HTMLInputElement).checked;
+            if (s.sounds || key === "sounds") cue(s[key] ? "on" : "off");
             if (key === "network") paintHosts();
           },
         });

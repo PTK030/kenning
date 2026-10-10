@@ -229,6 +229,9 @@ pub fn journal(state: State<AppState>, limit: Option<usize>) -> Res<Vec<journal:
 /// Save settings and apply the parts that live outside the config file.
 #[tauri::command]
 pub fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Res<Overview> {
+    if let Some(clash) = config.keys.clash(&config.shortcut) {
+        return Err(format!("Two shortcuts would do different things: {clash}."));
+    }
     let old_shortcut = state.kenning.lock().unwrap().config().shortcut.clone();
     if config.shortcut != old_shortcut
         && let Err(e) = hotkey::register(&app, &config.shortcut)

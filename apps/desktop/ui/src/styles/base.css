@@ -265,6 +265,49 @@ textarea {
   vertical-align: -1px;
 }
 
+/* Keycaps for shortcuts, in every window. */
+.keycaps {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.keycaps kbd {
+  min-width: 26px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    0 2px 0 var(--line-strong);
+  transition:
+    background 160ms,
+    color 160ms,
+    box-shadow 160ms,
+    transform 160ms;
+}
+
+.btn .keycaps,
+.link .keycaps {
+  margin-left: 8px;
+}
+
+.btn.primary .keycaps kbd {
+  background: rgb(255 255 255 / 18%);
+  color: inherit;
+  box-shadow: none;
+}
+
+.link .keycaps kbd {
+  font-size: 10.5px;
+  padding: 1px 5px;
+}
+
 /* Title bar (main and lookalike windows). */
 .titlebar {
   flex: none;

@@ -1,9 +1,11 @@
-// The "?" sheet in the main window: every shortcut, grouped by where it
-// works, over a blurred backdrop. Esc, "?" or a click outside closes it.
+// The shortcut sheet in the main window: every shortcut, grouped by where
+// it works, over a blurred backdrop. The help shortcut, Esc or a click
+// outside closes it.
 
 import { h } from "./dom";
 import { EASE_IN, move, rise, SPRING } from "./motion";
 import { keycaps, shortcuts } from "./shortcuts";
+import type { Config } from "./types";
 
 let open: HTMLElement | null = null;
 
@@ -11,9 +13,9 @@ export function sheetOpen(): boolean {
   return open !== null;
 }
 
-export function toggleSheet(globalShortcut: string) {
+export function toggleSheet(config: Config) {
   if (open) return void closeSheet();
-  const list = shortcuts(globalShortcut);
+  const list = shortcuts(config);
   const groups = ["Anywhere", "Lookalike window", "Kenning window"] as const;
   const card = h(
     "div",
@@ -24,10 +26,16 @@ export function toggleSheet(globalShortcut: string) {
         "section",
         {},
         h("h3", {}, g),
-        list.filter((s) => s.where === g).map((s) => h("div", { class: "keys-row" }, keycaps(s.keys), h("span", {}, s.what))),
+        list.filter((s) => s.where === g).map((s) => h("div", { class: "keys-row" }, keycaps(s.combo), h("span", {}, s.what))),
       ),
     ),
-    h("p", { class: "muted small" }, "Press ? or Esc to close."),
+    h(
+      "p",
+      { class: "muted small" },
+      "Change any of them in ",
+      h("a", { href: "#settings", onclick: () => void closeSheet() }, "Settings"),
+      ".",
+    ),
   );
   const overlay = h("div", { class: "sheet-overlay", onclick: (e: Event) => e.target === overlay && closeSheet() }, card);
   document.body.appendChild(overlay);

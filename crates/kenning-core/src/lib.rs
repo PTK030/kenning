@@ -21,7 +21,7 @@ pub mod message;
 pub use book::{Book, Entry, Owner};
 pub use chain::{Address, AddressKey, Chain, ParseError, parse};
 pub use classify::{KnownKind, LookalikeMatch, Recognition, Recognizer, State};
-pub use config::{ClipboardMode, Config};
+pub use config::{ClipboardMode, Config, Keys};
 pub use error::{Error, Result};
 pub use history::{Contact, History};
 pub use kenning::{Kenning, default_home};

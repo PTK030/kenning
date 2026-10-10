@@ -30,6 +30,9 @@ pub struct Config {
     pub clipboard: ClipboardMode,
     /// Global shortcut, in the format the desktop app understands.
     pub shortcut: String,
+    /// Keys inside Kenning's own windows (the global `shortcut` works in
+    /// every app; these only while a Kenning window has focus).
+    pub keys: Keys,
     /// How long the corner badge stays, in seconds (2 to 7).
     pub badge_seconds: u32,
     pub autostart: bool,
@@ -55,6 +58,7 @@ impl Default for Config {
             journal: true,
             clipboard: ClipboardMode::Shortcut,
             shortcut: "Ctrl+Alt+K".into(),
+            keys: Keys::default(),
             badge_seconds: 4,
             autostart: false,
             sounds: true,
@@ -64,6 +68,69 @@ impl Default for Config {
             lookalike: Rules::default(),
         }
     }
+}
+
+/// Shortcuts inside Kenning's windows. Every one has a modifier, so a key
+/// pressed by accident while typing never acts on a warning.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Keys {
+    /// Lookalike window: put the address you know back on the clipboard.
+    pub fix: String,
+    /// Lookalike window: close it without changing anything.
+    pub dismiss: String,
+    /// Main window: add an address to the book.
+    pub add: String,
+    /// Main window: search the book.
+    pub find: String,
+    /// Main window: list every shortcut.
+    pub help: String,
+}
+
+impl Default for Keys {
+    fn default() -> Self {
+        Keys {
+            fix: "Ctrl+Enter".into(),
+            dismiss: "Ctrl+D".into(),
+            add: "Ctrl+N".into(),
+            find: "Ctrl+F".into(),
+            help: "Ctrl+/".into(),
+        }
+    }
+}
+
+impl Keys {
+    /// The first pair of shortcuts (the global one included) that use the
+    /// same keys, described for the user.
+    pub fn clash(&self, global: &str) -> Option<String> {
+        let all = [
+            ("Check what you copied", global),
+            ("Copy the correct address", &self.fix),
+            ("Dismiss", &self.dismiss),
+            ("Add an address", &self.add),
+            ("Search the book", &self.find),
+            ("Show shortcuts", &self.help),
+        ];
+        for (i, (a, ka)) in all.iter().enumerate() {
+            for (b, kb) in &all[i + 1..] {
+                if normalize(ka) == normalize(kb) {
+                    return Some(format!("“{a}” and “{b}” both use {ka}"));
+                }
+            }
+        }
+        None
+    }
+}
+
+/// "alt + ctrl+k" and "Ctrl+Alt+K" are the same keys.
+fn normalize(combo: &str) -> String {
+    let mut parts: Vec<String> = combo
+        .split('+')
+        .map(|p| p.trim().to_ascii_lowercase())
+        .filter(|p| !p.is_empty())
+        .collect();
+    parts.sort();
+    parts.join("+")
 }
 
 impl Config {
@@ -98,6 +165,22 @@ mod tests {
         assert_eq!(c.lookalike.min_prefix, 4);
         assert_eq!(c.lookalike.min_suffix, Rules::default().min_suffix);
         assert!(c.history);
+    }
+
+    #[test]
+    fn default_keys_do_not_clash() {
+        let c = Config::default();
+        assert_eq!(c.keys.clash(&c.shortcut), None);
+    }
+
+    #[test]
+    fn clash_ignores_order_and_case() {
+        let keys = Keys {
+            dismiss: "alt + ctrl+k".into(),
+            ..Keys::default()
+        };
+        let clash = keys.clash("Ctrl+Alt+K").unwrap();
+        assert!(clash.contains("Dismiss"), "{clash}");
     }
 
     #[test]

@@ -94,7 +94,7 @@ body {
   margin-top: auto;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -140,4 +140,15 @@ body {
 
 .addr .diff {
   display: inline-block;
+}
+
+/* The window takes focus so keys reach it, but has no visible ring. */
+#lookalike:focus {
+  outline: none;
+}
+
+.actions .keycaps kbd {
+  min-width: 0;
+  padding: 1px 5px;
+  font-size: 10.5px;
 }

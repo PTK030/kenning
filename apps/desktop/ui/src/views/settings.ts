@@ -1,6 +1,7 @@
 import { clear, h } from "../dom";
 import { ipc, message } from "../ipc";
 import type { Config, Overview } from "../types";
+import { shortcutSection } from "./shortcutSettings";
 
 function networkSection(c: Config): HTMLElement {
   const rpc = h("input", {
@@ -68,9 +69,6 @@ export function settingsView(main: HTMLElement, overview: Overview, refresh: () 
       h("span", {}, h("strong", {}, title), h("span", { class: "muted" }, text)),
     );
 
-  const shortcut = h("input", { type: "text", value: c.shortcut, "aria-label": "Shortcut" });
-  shortcut.addEventListener("input", () => (c.shortcut = shortcut.value.trim()));
-
   const seconds = h("input", { type: "range", min: 2, max: 7, value: c.badge_seconds, "aria-label": "Badge seconds" });
   const secondsLabel = h("span", {}, `${c.badge_seconds} s`);
   seconds.addEventListener("input", () => {
@@ -115,12 +113,11 @@ export function settingsView(main: HTMLElement, overview: Overview, refresh: () 
       h(
         "div",
         { class: "form", style: "margin-top:12px" },
-        h("label", {}, "Shortcut"),
-        h("div", { class: "inline" }, shortcut, h("span", { class: "muted" }, "e.g. Ctrl+Alt+K, Ctrl+Shift+Space")),
         h("label", {}, "Badge stays"),
         h("div", { class: "inline" }, seconds, secondsLabel),
       ),
     ),
+    shortcutSection(c),
     h(
       "section",
       {},

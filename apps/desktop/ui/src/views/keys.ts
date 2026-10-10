@@ -2,15 +2,23 @@
 // keycaps, a recognised combination names its action, and the shortcut is
 // ticked off. The global check (Ctrl+Alt+K) is caught by Windows before
 // the page sees it, so Kenning reports it back and the real badge shows.
+// Every shortcut can be changed later in Settings.
 
 import { clear, h } from "../dom";
 import { icon } from "../icons";
 import { on } from "../ipc";
 import { draw, EASE_IN, EASE_OUT, move, rise } from "../motion";
-import { keycaps, keyName, shortcuts, type Shortcut } from "../shortcuts";
+import { comboOf, keycaps, keyOf, normalize, shortcuts, type Shortcut } from "../shortcuts";
+import { cue } from "../sound";
+import type { Config } from "../types";
 
-export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: number) => void; own: (stop: () => void) => void }) {
-  const list = shortcuts(opts.shortcut);
+export function keysStep(opts: {
+  config: Config;
+  sounds: () => boolean;
+  later: (fn: () => void, ms: number) => void;
+  own: (stop: () => void) => void;
+}) {
+  const list = shortcuts(opts.config);
   const tried = new Set<string>();
   const rows = new Map<string, HTMLElement>();
 
@@ -26,15 +34,15 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
         list
           .filter((s) => s.where === g)
           .map((s) => {
-            const row = h("div", { class: "keys-row" }, keycaps(s.keys), h("span", {}, s.what), h("span", { class: "tick" }));
+            const row = h("div", { class: "keys-row" }, keycaps(s.combo), h("span", {}, s.what), h("span", { class: "tick" }));
             rows.set(s.id, row);
             return row;
           }),
       ),
     ),
   );
-  const count = h("p", { class: "keys-count muted" });
-  const paintCount = () => (count.textContent = `${tried.size} of ${list.length} tried`);
+  const count = h("span");
+  const paintCount = () => (count.textContent = `${tried.size} of ${list.length} tried.`);
   paintCount();
 
   // ---- The keys on the right -------------------------------------------
@@ -82,6 +90,7 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
     say(h("strong", {}, s.what));
     if (!tried.has(s.id)) {
       tried.add(s.id);
+      if (opts.sounds()) opts.later(() => cue("tick"), 90);
       const row = rows.get(s.id)!;
       row.classList.add("done");
       const tick = row.querySelector(".tick")!;
@@ -117,14 +126,18 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
     e.stopPropagation();
     if (e.repeat) return;
     clearTimeout(idle);
-    const k = keyName(e.key);
+    const k = keyOf(e);
     if (e.ctrlKey && k !== "Ctrl" && !held.has("Ctrl")) press("Ctrl");
     press(k);
-    const hit = list.find((s) => s.matches(held));
+    if (opts.sounds()) cue("key");
+    const combo = comboOf(e);
+    if (!combo) return;
+    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-5]$/.test(k);
+    const hit = tabs ? list.find((s) => s.id === "tabs") : list.find((s) => s.editable && normalize(s.combo) === normalize(combo));
     if (hit) recognise(hit);
   };
   const up = (e: KeyboardEvent) => {
-    release(keyName(e.key));
+    release(keyOf(e));
     if (!e.ctrlKey) release("Ctrl");
     if (!e.altKey) release("Alt");
     if (!e.shiftKey) release("Shift");
@@ -141,10 +154,11 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
   });
   const unlisten = on<null>("shortcut", () => {
     const s = list.find((x) => x.id === "check")!;
-    s.keys.forEach(press);
+    const keys = s.combo.split("+");
+    keys.forEach(press);
     recognise(s);
     opts.later(() => {
-      s.keys.forEach(release);
+      keys.forEach(release);
       settle();
     }, 220);
   });
@@ -161,7 +175,7 @@ export function keysStep(opts: { shortcut: string; later: (fn: () => void, ms: n
       h("h1", {}, "Your keys."),
       h("p", { class: "lead" }, "Press each one now and watch it light up."),
       table,
-      count,
+      h("p", { class: "keys-count muted" }, count, " You can change any of them in Settings."),
     ],
     visual: hud,
   };

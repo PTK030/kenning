@@ -8,11 +8,15 @@ import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
 import { draw, move, POP, rise, SPRING, stagger } from "./motion";
 import { titlebar } from "./titlebar";
+import { DEFAULT_KEYS, keycaps, matches } from "./shortcuts";
+import type { Keys } from "./types";
 import { onchainLine } from "./onchain";
 import { playFor } from "./sound";
 import type { KnownKind, LookalikeView } from "./types";
 
 const root = $("#lookalike");
+/** The window's keys, from the config (Ctrl+Enter and Ctrl+D by default). */
+let keys: Keys = DEFAULT_KEYS;
 $("#chrome").replaceWith(
   titlebar({ title: "Not the address you know", sign: "alert", onClose: () => ipc.dismissLookalike() }).el,
 );
@@ -45,6 +49,7 @@ function render(view: LookalikeView | null) {
     },
     icon("copy", 16),
     "Copy the correct address",
+    keycaps(keys.fix),
   );
 
   const actions = h("div", { class: "actions" });
@@ -76,7 +81,7 @@ function render(view: LookalikeView | null) {
     copyButton,
     h("button", { class: "link", onclick: showMineForm }, "This is my address"),
     h("span", { class: "spacer" }),
-    h("button", { class: "link muted", onclick: () => ipc.dismissLookalike() }, "Dismiss"),
+    h("button", { class: "link muted", title: `Dismiss (${keys.dismiss})`, onclick: () => ipc.dismissLookalike() }, "Dismiss"),
   );
 
   const knownName = m.known_label ? m.known_label : "";
@@ -112,7 +117,9 @@ function render(view: LookalikeView | null) {
     actions,
     error,
   );
-  copyButton.focus();
+  // Focus the window, not the button: a stray Enter while you were typing
+  // must not act on a warning. The fix has its own key.
+  root.focus();
   if (view.sounds) playFor("lookalike");
   choreograph(view.variant % 3);
 }
@@ -142,8 +149,20 @@ function choreograph(variant: number) {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") void ipc.dismissLookalike();
+  if ((e.target as HTMLElement | null)?.closest("input")) return;
+  if (matches(e, keys.fix)) {
+    e.preventDefault();
+    root.querySelector<HTMLButtonElement>(".actions .primary")?.click();
+  } else if (matches(e, keys.dismiss)) {
+    e.preventDefault();
+    void ipc.dismissLookalike();
+  }
 });
 
 void on<null>("lookalike", () => void ipc.getLookalike().then(render));
-void ipc.getLookalike().then(render);
+root.tabIndex = -1;
+void ipc
+  .overview()
+  .then((o) => (keys = { ...DEFAULT_KEYS, ...o.config.keys }))
+  .catch(() => undefined)
+  .finally(() => void ipc.getLookalike().then(render));

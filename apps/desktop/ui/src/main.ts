@@ -13,6 +13,7 @@ import { icon, type IconName } from "./icons";
 import { move, rise, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import { closeSheet, sheetOpen, toggleSheet } from "./shortcutSheet";
+import { keycaps, matches } from "./shortcuts";
 
 type View = (main: HTMLElement, overview: Overview, refresh: () => Promise<void>) => Promise<void> | void;
 
@@ -74,7 +75,7 @@ async function render() {
       h("span", {}, c.clipboard === "watch" ? (overview.paused ? "Clipboard: paused" : "Clipboard: watched") : `Clipboard: ${c.shortcut} only`),
       h("span", {}, `Version ${overview.version}`),
       h("span", {}, "MIT licence"),
-      h("button", { class: "keys-hint", onclick: () => toggleSheet(c.shortcut) }, h("kbd", {}, "?"), "Shortcuts"),
+      h("button", { class: "keys-hint", onclick: () => toggleSheet(c) }, "Shortcuts", keycaps(c.keys.help)),
     ),
   );
   const pill = h("div", { class: "pill", "aria-hidden": "true" });
@@ -104,7 +105,8 @@ async function render() {
 
 window.addEventListener("hashchange", () => void render());
 
-// Keyboard: Ctrl+1…5 sections, Ctrl+N add, Ctrl+F check, ? shortcuts.
+// Keyboard: Ctrl+1…5 sections, and the add / search / help keys from the
+// config (Ctrl+N, Ctrl+F, Ctrl+/ unless changed in Settings).
 /** An input to focus once the next render is done, and the button that
  *  reveals it if it is folded away (the book's add form). */
 let pendingFocus: { selector: string; opener?: string } | null = null;
@@ -125,20 +127,22 @@ function openWith(tab: string, selector: string, opener?: string) {
 
 document.addEventListener("keydown", (e) => {
   if (!overview?.config.onboarded || currentTab() === "welcome") return;
-  const typing = (e.target as HTMLElement | null)?.closest("input, textarea, select");
-  const key = e.key.toLowerCase();
-  if (e.ctrlKey && !e.altKey && /^[1-5]$/.test(key)) {
+  // Recording a new shortcut in Settings: leave the keys to the recorder.
+  if (document.querySelector(".recorder.recording")) return;
+  const keys = overview.config.keys;
+  const digit = /^Digit([1-5])$/.exec(e.code);
+  if (digit && e.ctrlKey && !e.altKey && !e.shiftKey) {
     e.preventDefault();
-    location.hash = TABS[Number(key) - 1].id;
-  } else if (e.ctrlKey && !e.altKey && key === "n") {
+    location.hash = TABS[Number(digit[1]) - 1].id;
+  } else if (matches(e, keys.add)) {
     e.preventDefault();
     openWith("book", 'main input[aria-label="Address"]', "main > header .btn.primary");
-  } else if (e.ctrlKey && !e.altKey && key === "f") {
+  } else if (matches(e, keys.find)) {
     e.preventDefault();
-    openWith("check", "main textarea");
-  } else if (e.key === "?" && !typing) {
+    openWith("book", 'main input[aria-label="Filter"]');
+  } else if (matches(e, keys.help)) {
     e.preventDefault();
-    toggleSheet(overview.config.shortcut);
+    toggleSheet(overview.config);
   } else if (e.key === "Escape" && sheetOpen()) {
     void closeSheet();
   }

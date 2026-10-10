@@ -60,3 +60,61 @@ export function playFor(state: State) {
     // No audio device: stay silent.
   }
 }
+
+/** A short breath of filtered noise sweeping upward: moving on. */
+function breath(start: number, length: number, gain: number, from: number, to: number) {
+  const a = audio();
+  const t = a.currentTime + start;
+  const frames = Math.ceil(a.sampleRate * length);
+  const buffer = a.createBuffer(1, frames, a.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+  const src = a.createBufferSource();
+  src.buffer = buffer;
+  const band = a.createBiquadFilter();
+  band.type = "bandpass";
+  band.Q.value = 1.4;
+  band.frequency.setValueAtTime(from, t);
+  band.frequency.exponentialRampToValueAtTime(to, t + length);
+  const out = a.createGain();
+  out.gain.setValueAtTime(0, t);
+  out.gain.linearRampToValueAtTime(gain, t + length * 0.35);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + length);
+  src.connect(band).connect(out).connect(a.destination);
+  src.start(t);
+  src.stop(t + length + 0.02);
+}
+
+export type Cue = "step" | "back" | "key" | "tick" | "on" | "off";
+
+/** Small interface sounds for the onboarding and settings, quieter than
+ *  the recognition sounds above so those keep their meaning. */
+export function cue(name: Cue) {
+  try {
+    switch (name) {
+      case "step": // forward: a soft rising breath
+        breath(0, 0.22, 0.05, 700, 2400);
+        break;
+      case "back": // backward: the same breath, falling
+        breath(0, 0.2, 0.045, 2200, 650);
+        break;
+      case "key": // a key going down: low and short
+        note(220, 0, 0.07, 0.04);
+        break;
+      case "tick": // something done: two light notes up
+        note(1046.5, 0, 0.16, 0.028); // C6
+        note(1568.0, 0.07, 0.24, 0.024); // G6
+        break;
+      case "on":
+        note(784.0, 0, 0.1, 0.026); // G5
+        note(1046.5, 0.05, 0.14, 0.024); // C6
+        break;
+      case "off":
+        note(784.0, 0, 0.1, 0.024); // G5
+        note(587.33, 0.05, 0.14, 0.022); // D5
+        break;
+    }
+  } catch {
+    // No audio device: stay silent.
+  }
+}

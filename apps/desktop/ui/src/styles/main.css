@@ -282,3 +282,80 @@ code {
   padding: 1px 5px;
   border-radius: 4px;
 }
+
+/* Settings: shortcuts with a recorder. */
+.shortcut-list {
+  display: grid;
+  gap: 2px;
+  max-width: 720px;
+}
+
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.shortcut-row:hover {
+  background: var(--bg-2);
+}
+
+.shortcut-row .what {
+  display: grid;
+}
+
+.shortcut-row .what .muted {
+  font-size: 12px;
+}
+
+.recorder,
+.shortcut-row .fixed {
+  min-width: 150px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 4px 8px;
+  border: 1px dashed transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.shortcut-row .fixed {
+  cursor: default;
+}
+
+.recorder:hover {
+  border-color: var(--line-strong);
+}
+
+.recorder.recording {
+  border-color: var(--brand);
+  border-style: solid;
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+
+.rec-hint {
+  color: var(--brand);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.shortcut-error {
+  grid-column: 1 / -1;
+  color: var(--look);
+  font-size: 12.5px;
+}
+
+.shortcut-error:empty {
+  display: none;
+}
+
+.shortcut-error .keycaps {
+  margin-right: 4px;
+}

@@ -8,7 +8,7 @@ import { addressWithDiff, detailLine, metaChip } from "../address";
 import { clear, h } from "../dom";
 import { icon, type IconName } from "../icons";
 import { draw, EASE_IN, move, POP, rise, SPRING, stagger } from "../motion";
-import { playFor } from "../sound";
+import { cue, playFor } from "../sound";
 import type { State } from "../types";
 import { group, KNOWN, POISON, shortAddr, spans } from "./demo";
 
@@ -54,6 +54,7 @@ export function sandbox(opts: {
     const li = items.get(task)!;
     li.classList.remove("now");
     li.classList.add("done");
+    if (opts.sounds()) opts.later(() => cue("tick"), 420);
     const mark = li.querySelector(".mark")!;
     mark.replaceChildren(icon("check", 14));
     void move(mark, { scale: [0.4, 1] }, POP);
