@@ -32,9 +32,12 @@ export function Hero() {
     px.set((e.clientX - r.left) / r.width - 0.5);
     py.set((e.clientY - r.top) / r.height - 0.5);
   };
-  const glowX = useTransform(px, [-0.5, 0.5], [10, 90]);
-  const glowY = useTransform(py, [-0.5, 0.5], [0, 80]);
-  const glow = useMotionTemplate`radial-gradient(900px circle at ${glowX}% ${glowY}%, rgb(58 85 201 / 34%), transparent 62%)`;
+  // A faint light that drifts after the pointer: a narrow range of travel,
+  // a slow spring, and low opacity, so it reads as atmosphere, not a spotlight.
+  const lazy = { stiffness: 40, damping: 20, mass: 1 };
+  const glowX = useSpring(useTransform(px, [-0.5, 0.5], [35, 65]), lazy);
+  const glowY = useSpring(useTransform(py, [-0.5, 0.5], [25, 55]), lazy);
+  const glow = useMotionTemplate`radial-gradient(1200px circle at ${glowX}% ${glowY}%, rgb(58 85 201 / 12%), transparent 70%)`;
 
   return (
     <section className="hero" id="top" ref={ref} onPointerMove={onPointerMove}>
