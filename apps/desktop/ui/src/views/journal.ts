@@ -4,6 +4,7 @@ import { icon, type IconName } from "../icons";
 import { ipc, message } from "../ipc";
 import { rise } from "../motion";
 import type { JournalRecord, Overview, State } from "../types";
+import { segmented } from "../segmented";
 import { toast } from "../toast";
 
 /** One record in words: what happened, to which address. The tile carries
@@ -57,26 +58,17 @@ export async function journalView(main: HTMLElement, overview: Overview, refresh
   const records = await ipc.journal(500);
   let filter = FILTERS[0];
   const list = h("div");
-  const tabs = h("div", { class: "segmented", role: "tablist", "aria-label": "Show" });
+  const tabs = segmented(
+    "Show",
+    FILTERS.map((f) => ({ value: f, label: f.label })),
+    filter,
+    (f) => {
+      filter = f;
+      draw(true);
+    },
+  );
 
   const draw = (animate = false) => {
-    clear(
-      tabs,
-      FILTERS.map((f) =>
-        h(
-          "button",
-          {
-            role: "tab",
-            "aria-selected": String(f === filter),
-            onclick: () => {
-              filter = f;
-              draw(true);
-            },
-          },
-          f.label,
-        ),
-      ),
-    );
     const shown = records.filter(filter.keep);
     if (!records.length) return clear(list, emptyJournal());
     if (!shown.length) return clear(list, h("div", { class: "empty" }, "Nothing of this kind yet."));
