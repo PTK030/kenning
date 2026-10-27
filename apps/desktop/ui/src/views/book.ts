@@ -5,7 +5,7 @@ import { menuFor } from "../contextMenu";
 import { clear, h } from "../dom";
 import { icon, STATE_ICON, type IconName } from "../icons";
 import { ipc, message } from "../ipc";
-import { move, rise, SPRING } from "../motion";
+import { EASE_IN, EASE_OUT, move, rise } from "../motion";
 import type { BookView, Entry, Overview, Owner } from "../types";
 import { toast } from "../toast";
 import { recognitionCard } from "./card";
@@ -41,11 +41,30 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
   filter.addEventListener("input", () => draw());
 
   const addArea = h("div");
+  // The form opens its own room and slides down into it; it leaves the same
+  // way, reversed and a little quicker (an exit only confirms a decision).
   const openAdd = () => {
     if (addArea.firstChild) return addArea.querySelector<HTMLElement>("input")?.focus();
-    const form = addForm(refresh, () => clear(addArea));
+    const form = addForm(refresh, closeAdd);
     clear(addArea, form);
-    void move(form, { opacity: [0, 1], y: [-8, 0] }, SPRING);
+    addArea.style.overflow = "hidden";
+    const full = addArea.scrollHeight;
+    void move(form, { opacity: [0, 1], y: [-8, 0] }, { duration: 0.28, ease: EASE_OUT });
+    void move(addArea, { height: [0, full] }, { duration: 0.28, ease: EASE_OUT }).then(() => {
+      addArea.style.height = "";
+      addArea.style.overflow = "";
+    });
+  };
+  const closeAdd = async () => {
+    const form = addArea.firstElementChild;
+    if (!form) return;
+    addArea.style.overflow = "hidden";
+    const full = addArea.offsetHeight;
+    void move(form, { opacity: [1, 0], y: [0, -8] }, { duration: 0.2, ease: EASE_IN });
+    await move(addArea, { height: [full, 0] }, { duration: 0.2, ease: EASE_IN });
+    clear(addArea);
+    addArea.style.height = "";
+    addArea.style.overflow = "";
   };
 
   const more = h("button", { class: "btn icon-btn", title: "More", "aria-label": "More actions" }, icon("more", 18));
@@ -266,7 +285,7 @@ function emptyBook(overview: Overview, ctx: Ctx): HTMLElement {
   );
 }
 
-function addForm(refresh: () => Promise<void>, close: () => void): HTMLElement {
+function addForm(refresh: () => Promise<void>, close: () => Promise<void>): HTMLElement {
   const address = h("input", { type: "text", placeholder: "Paste an address", "aria-label": "Address", class: "addr" });
   const label = h("input", { type: "text", placeholder: "e.g. Binance deposits", "aria-label": "Name" });
   const owner = dropdown({ label: "Whose address", choices: OWNER_CHOICES, value: "me" });
@@ -284,7 +303,7 @@ function addForm(refresh: () => Promise<void>, close: () => void): HTMLElement {
     try {
       await ipc.addEntry(address.value.trim(), label.value, owner.value, note.value || null);
       toast(`Saved “${label.value.trim()}”`);
-      close();
+      await close();
       await refresh();
     } catch (e) {
       clear(error, h("div", { class: "notice error" }, message(e)));
