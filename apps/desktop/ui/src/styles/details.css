@@ -29,10 +29,14 @@ body {
   --fix: #3a55c9;
 
   color: var(--ink);
+  /* One colour per window, taken from the state (below): the edge, the
+     title-bar sign, the light and the tile all say the same thing. */
   background:
-    radial-gradient(90% 60% at 0% 0%, rgb(138 164 255 / 7%), transparent 60%),
+    radial-gradient(90% 60% at 0% 0%, color-mix(in srgb, var(--tone) 8%, transparent), transparent 60%),
     var(--bg);
-  border-top: 3px solid var(--brand);
+  border-top: 3px solid var(--tone);
+  --sign: var(--tone);
+  transition: border-color 300ms ease;
 }
 
 .titlebar {
@@ -71,28 +75,35 @@ body {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
 }
 
-/* The state sets the tone of the tile and the word: symbol, word and
-   colour together, never colour alone. */
-#details {
+/* The state sets the window's one colour: symbol, word and colour
+   together, never colour alone. Blue is information (a public label, an
+   address from your history); green is yours; amber is new; red is only
+   ever a lookalike, so red keeps meaning "stop". */
+body {
   --tone: var(--brand);
   --tone-soft: rgb(138 164 255 / 12%);
 }
 
-#details.k-mine,
-#details.k-team,
-#details.k-contact {
+body.k-mine,
+body.k-team,
+body.k-contact {
   --tone: var(--mine);
   --tone-soft: var(--mine-soft);
 }
 
-#details.k-new {
+body.k-new {
   --tone: var(--new);
   --tone-soft: var(--new-soft);
 }
 
-#details.k-seen {
-  --tone: var(--ink-2);
-  --tone-soft: rgb(255 255 255 / 5%);
+body.k-seen {
+  --tone: #8aa4ff;
+  --tone-soft: rgb(138 164 255 / 10%);
+}
+
+body.k-lookalike {
+  --tone: #ff8f8f;
+  --tone-soft: rgb(255 123 123 / 14%);
 }
 
 .title {

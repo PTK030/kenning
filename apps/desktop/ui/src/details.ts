@@ -101,6 +101,9 @@ function render(next: DetailsView | null, fresh = true) {
   }
   const r = view.recognition;
   root.className = `k-${r.state}`;
+  // The whole window takes the state's colour (details.css), title bar too.
+  for (const c of [...document.body.classList]) if (c.startsWith("k-")) document.body.classList.remove(c);
+  document.body.classList.add(`k-${r.state}`);
   const known = r.state === "mine" || r.state === "team" || r.state === "contact";
 
   const error = h("div", { class: "error", role: "alert" });

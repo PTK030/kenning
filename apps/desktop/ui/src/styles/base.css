@@ -474,10 +474,12 @@ textarea {
   border-radius: 5px;
 }
 
+/* The title bar's sign: red in the lookalike window (its default), the
+   state's colour in the details window (--sign, details.css). */
 .tb-sign {
   display: grid;
   place-items: center;
-  color: var(--look);
+  color: var(--sign, var(--look));
 }
 
 .tb-title {
