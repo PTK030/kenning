@@ -1,4 +1,5 @@
-import { chainChip, metaChip } from "../address";
+import { chainChip, metaChip, OWNER_CHOICES } from "../address";
+import { dropdown } from "../dropdown";
 import { confirmSheet } from "../confirmSheet";
 import { menuFor } from "../contextMenu";
 import { clear, h } from "../dom";
@@ -268,13 +269,7 @@ function emptyBook(overview: Overview, ctx: Ctx): HTMLElement {
 function addForm(refresh: () => Promise<void>, close: () => void): HTMLElement {
   const address = h("input", { type: "text", placeholder: "Paste an address", "aria-label": "Address", class: "addr" });
   const label = h("input", { type: "text", placeholder: "e.g. Binance deposits", "aria-label": "Name" });
-  const owner = h(
-    "select",
-    { "aria-label": "Owner" },
-    h("option", { value: "me" }, "Mine"),
-    h("option", { value: "team" }, "My team's"),
-    h("option", { value: "contact" }, "Someone I pay or receive from"),
-  );
+  const owner = dropdown({ label: "Whose address", choices: OWNER_CHOICES, value: "me" });
   const note = h("input", { type: "text", placeholder: "Optional", "aria-label": "Note" });
   const preview = h("div", { class: "full" });
   const error = h("div", { class: "full" });
@@ -287,7 +282,7 @@ function addForm(refresh: () => Promise<void>, close: () => void): HTMLElement {
 
   const save = async () => {
     try {
-      await ipc.addEntry(address.value.trim(), label.value, owner.value as Owner, note.value || null);
+      await ipc.addEntry(address.value.trim(), label.value, owner.value, note.value || null);
       toast(`Saved “${label.value.trim()}”`);
       close();
       await refresh();
@@ -311,7 +306,7 @@ function addForm(refresh: () => Promise<void>, close: () => void): HTMLElement {
       h("label", {}, "Name"),
       label,
       h("label", {}, "Whose"),
-      owner,
+      owner.el,
       h("label", {}, "Note"),
       note,
       error,

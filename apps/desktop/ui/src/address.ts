@@ -2,7 +2,7 @@
 
 import { h } from "./dom";
 import { icon, STATE_ICON, type IconName } from "./icons";
-import type { Chain, Span, State } from "./types";
+import type { Chain, Owner, Span, State } from "./types";
 
 /** The grouped address with differing characters marked. `grouped` comes
  *  from Rust (spaces between groups); `spans` cover the same characters
@@ -60,6 +60,13 @@ export const STATE_WORD: Record<State, string> = {
   new: "New",
   lookalike: "Lookalike",
 };
+
+/** Whose an address is, for the drop-downs that ask. */
+export const OWNER_CHOICES: { value: Owner; label: string; hint: string; icon: IconName }[] = [
+  { value: "me", label: "Mine", hint: "Your wallets and deposit addresses", icon: STATE_ICON.mine },
+  { value: "team", label: "My team's", hint: "Shared with the people you work with", icon: STATE_ICON.team },
+  { value: "contact", label: "A contact", hint: "Someone you pay or receive from", icon: STATE_ICON.contact },
+];
 
 /** A small labelled chip with an icon: a chain, a token, a count. */
 export function metaChip(ic: IconName, text: string): HTMLElement {

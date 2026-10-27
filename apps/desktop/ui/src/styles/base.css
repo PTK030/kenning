@@ -229,6 +229,149 @@ textarea:focus {
   box-shadow: inset 0 0 0 1px var(--brand);
 }
 
+/* Drop-down (dropdown.ts): a button that looks like the fields around it,
+   with room on the right for its chevron, and a raised list. */
+.dropdown {
+  position: relative;
+  min-width: 0;
+}
+
+.dd-button {
+  width: 100%;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 140ms,
+    background 140ms,
+    box-shadow 140ms;
+}
+
+.dd-button:hover {
+  border-color: var(--line-strong);
+}
+
+.dd-button:focus-visible,
+.dd-button[aria-expanded="true"] {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+.dd-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.dd-value .icon {
+  color: var(--ink-2);
+}
+
+.dd-chevron {
+  flex: none;
+  margin-left: 4px;
+  color: var(--ink-2);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dd-button[aria-expanded="true"] .dd-chevron {
+  transform: rotate(180deg);
+}
+
+.dd-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: max(100%, 260px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: var(--elev-2);
+  transform-origin: 50% 0;
+}
+
+.dropdown.up .dd-list {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: 50% 100%;
+}
+
+.dropdown.end .dd-list {
+  left: auto;
+  right: 0;
+}
+
+.dd-list[hidden] {
+  display: none;
+}
+
+.dd-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.dd-list li:hover,
+.dd-list li:focus-visible {
+  outline: none;
+  background: var(--surface-raised);
+}
+
+.dd-ic {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--ink-2);
+}
+
+.dd-list li[aria-selected="true"] .dd-ic {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.dd-text {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+}
+
+.dd-hint {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.dd-tick {
+  flex: none;
+  color: var(--brand);
+  visibility: hidden;
+}
+
+.dd-list li[aria-selected="true"] .dd-tick {
+  visibility: visible;
+}
+
 /* A slider in the brand's colours: a thin track, a white knob that lifts. */
 input[type="range"] {
   appearance: none;

@@ -9,6 +9,7 @@ type Shape =
   | ["rect", number, number, number, number, number];
 
 const ICONS = {
+  chevronDown: [["path", "m6 9 6 6 6-6"]],
   more: [
     ["circle", 5, 12, 1],
     ["circle", 12, 12, 1],

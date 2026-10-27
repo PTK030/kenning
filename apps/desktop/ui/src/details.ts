@@ -3,13 +3,14 @@
 // Esc, the close button or clicking elsewhere closes it. A lookalike never
 // lands here: it gets its own warning window.
 
-import { addressPlain, chainChip, detailLine, STATE_WORD } from "./address";
+import { addressPlain, chainChip, detailLine, OWNER_CHOICES, STATE_WORD } from "./address";
+import { dropdown } from "./dropdown";
 import { $, clear, h } from "./dom";
 import { icon, STATE_ICON } from "./icons";
 import { ipc, message, on, win } from "./ipc";
 import { draw, move, POP, rise, settling, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
-import type { Contact, DetailsView, Fact, LabelKind, Owner, Source } from "./types";
+import type { Contact, DetailsView, Fact, LabelKind, Source } from "./types";
 import "./guard";
 
 const root = $("#details");
@@ -115,22 +116,16 @@ function render(next: DetailsView | null, fresh = true) {
   const actions = h("div", { class: "actions" });
   const showAddForm = () => {
     const name = h("input", { type: "text", placeholder: "Name for this address", "aria-label": "Name for this address", value: r.label ?? "" });
-    const owner = h(
-      "select",
-      { "aria-label": "Whose address" },
-      h("option", { value: "me" }, "Mine"),
-      h("option", { value: "team" }, "Team"),
-      h("option", { value: "contact" }, "Contact"),
-    );
+    const owner = dropdown({ label: "Whose address", choices: OWNER_CHOICES, value: "me" });
     const save = () =>
       ipc
-        .addDetailsAddress(name.value, owner.value as Owner)
+        .addDetailsAddress(name.value, owner.value)
         .then((v) => render(v, false))
         .catch(fail);
     name.addEventListener("keydown", (e) => {
       if (e.key === "Enter") void save();
     });
-    clear(actions, h("div", { class: "add-form" }, name, owner, h("button", { class: "btn primary", onclick: save }, "Save")));
+    clear(actions, h("div", { class: "add-form" }, name, owner.el, h("button", { class: "btn primary", onclick: save }, "Save")));
     fit(false);
     name.focus();
     name.select();
