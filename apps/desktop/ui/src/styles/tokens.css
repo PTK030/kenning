@@ -1,12 +1,18 @@
 /* Colour tokens from the brand brief. Brand: muted blue on graphite neutrals.
    State colours are a separate system (ANSI Z535 / ISO 3864 convention) and
    red never appears in the brand itself. Every text/background pair below
-   meets WCAG 2.2 contrast 4.5:1 (checked by scripts/check-contrast.mjs). */
+   meets WCAG 2.2 contrast 4.5:1 (checked by scripts/check-contrast.mjs).
+
+   Each colour is written once as light-dark(light, dark). Which one applies
+   follows `color-scheme` where the colour is used: the system theme for the
+   main window, and always dark for the windows and pictures that set
+   `color-scheme: dark` (lookalike, details, the onboarding's visuals). */
 
 /* Fonts ship with the app (OFL); nothing is fetched. Inter for the UI,
-   Bricolage Grotesque for headings, JetBrains Mono for addresses. */
+   Bricolage Grotesque for headings (with its width axis, as on the site),
+   JetBrains Mono for addresses. */
 @import "@fontsource-variable/inter/wght.css";
-@import "@fontsource-variable/bricolage-grotesque/wght.css";
+@import "@fontsource-variable/bricolage-grotesque/standard.css";
 @import "@fontsource/jetbrains-mono/latin-400.css";
 @import "@fontsource/jetbrains-mono/latin-600.css";
 
@@ -17,46 +23,63 @@
   --font-display: "Bricolage Grotesque Variable", var(--font-ui);
   --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
 
-  --brand: #3a55c9;
-  --brand-ink: #ffffff;
-  --brand-soft: #ebeffb;
-  --ink: #16202a;
-  --ink-2: #4b5764;
-  --bg: #ffffff;
-  --bg-2: #f6f8fa;
-  --line: #d9dfe5;
-  --line-strong: #b8c1ca;
+  --ink: light-dark(#16202a, #e6edf3);
+  --ink-2: light-dark(#4b5764, #9ba8b5);
 
-  --mine: #1f7a3a;
-  --mine-soft: #e7f4eb;
-  --new: #b45309;
-  --new-soft: #fdf1e2;
-  --look: #b91c1c;
-  --look-soft: #fdecec;
+  /* Brand. `--brand` is for links, focus and small accents; the primary
+     action is always the full brand blue with white text, in both themes. */
+  --brand: light-dark(#3a55c9, #8aa4ff);
+  --brand-ink: light-dark(#ffffff, #0e1319);
+  --brand-soft: light-dark(#ebeffb, #1d2740);
+  --brand-strong: #3a55c9;
+  --brand-strong-hover: #4a64d4;
+  --on-brand: #ffffff;
 
-  --radius: 10px;
-  --shadow: 0 6px 24px rgb(22 32 42 / 14%), 0 1px 3px rgb(22 32 42 / 10%);
+  /* Surfaces, quietest to most raised: the base under the sidebar and title
+     bar, the page, cards on the page, things raised inside a card, and
+     fields sunk into it. */
+  --surface-base: light-dark(#eceff3, #0e1319);
+  --surface: light-dark(#f4f6f9, #121a22);
+  --surface-card: light-dark(#ffffff, #18212b);
+  --surface-raised: light-dark(#f0f3f7, #1f2a36);
+  --surface-sunken: light-dark(#f6f8fa, #0f151c);
+  --line: light-dark(#dde3e9, #26313d);
+  --line-strong: light-dark(#b8c1ca, #3b4756);
+
+  /* Older names, still used across the views. */
+  --bg: var(--surface-card);
+  --bg-2: var(--surface-sunken);
+
+  --mine: light-dark(#1f7a3a, #5ad07a);
+  --mine-soft: light-dark(#e7f4eb, #15291c);
+  --new: light-dark(#b45309, #f5b04e);
+  --new-soft: light-dark(#fdf1e2, #2e2213);
+  --look: light-dark(#b91c1c, #ff7b7b);
+  --look-soft: light-dark(#fdecec, #3a1a1c);
+
+  /* Depth: a hairline and a shadow that pools under the object rather than
+     haloing around it. Cards sit low; dialogs and alerts sit high. */
+  --hairline: light-dark(rgb(22 32 42 / 7%), rgb(255 255 255 / 6%));
+  --shade: light-dark(rgb(22 32 42 / 16%), rgb(0 0 0 / 55%));
+  --shade-strong: light-dark(rgb(22 32 42 / 28%), rgb(0 0 0 / 65%));
+  --elev-1:
+    0 0 0 1px var(--hairline),
+    0 1px 2px var(--shade),
+    0 10px 24px -18px var(--shade);
+  --elev-2:
+    0 0 0 1px var(--hairline),
+    0 30px 60px -20px var(--shade-strong);
+  --shadow: var(--elev-2);
+
+  --radius: 12px;
+  --radius-sm: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --brand: #8aa4ff;
-    --brand-ink: #0e1319;
-    --brand-soft: #1d2740;
-    --ink: #e6edf3;
-    --ink-2: #9ba8b5;
-    --bg: #161d25;
-    --bg-2: #0e1319;
-    --line: #2a3440;
-    --line-strong: #3b4756;
+/* Development builds can pin a theme (Ctrl+Shift+L in the main window). */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
 
-    --mine: #5ad07a;
-    --mine-soft: #15291c;
-    --new: #f5b04e;
-    --new-soft: #2e2213;
-    --look: #ff7b7b;
-    --look-soft: #3a1a1c;
-
-    --shadow: 0 8px 28px rgb(0 0 0 / 45%), 0 1px 3px rgb(0 0 0 / 40%);
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }

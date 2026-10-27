@@ -2,6 +2,7 @@ import { CHAIN_NAME, metaChip, short } from "../address";
 import { clear, h } from "../dom";
 import { ipc, message } from "../ipc";
 import type { BookView, Entry, Overview, Owner } from "../types";
+import { toast } from "../toast";
 import { recognitionCard } from "./card";
 
 const OWNER_WORD: Record<Owner, string> = { me: "Yours", team: "Team", contact: "Contact" };
@@ -32,8 +33,7 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
       "header",
       {},
       h("h1", {}, "Address book"),
-      metaChip("user", `${overview.book_count} yours`),
-      metaChip("landmark", `${overview.public_label_count} public labels built in`),
+      h("p", { class: "lead" }, metaChip("user", `${overview.book_count} yours`), metaChip("landmark", `${overview.public_label_count} public labels built in`)),
       h("span", { class: "spacer" }),
       h("button", { class: "btn primary", onclick: openAdd }, "Add address"),
     ),
@@ -50,7 +50,8 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
             try {
               const s = await ipc.importCsv("me");
               if (s) {
-                say(`Imported: ${s.added} new, ${s.updated} updated${s.skipped.length ? `, ${s.skipped.length} rows skipped (${s.skipped.map(([n, why]) => `row ${n}: ${why}`).join("; ")})` : ""}.`);
+                // A toast, not the notice: the refresh below redraws the view.
+                toast(`Imported: ${s.added} new, ${s.updated} updated${s.skipped.length ? `, ${s.skipped.length} rows skipped (${s.skipped.map(([n, why]) => `row ${n}: ${why}`).join("; ")})` : ""}.`);
                 await refresh();
               }
             } catch (e) {

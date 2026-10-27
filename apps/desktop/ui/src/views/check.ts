@@ -30,8 +30,8 @@ export function checkView(main: HTMLElement, overview: Overview) {
       {},
       h("h1", {}, "Check"),
       h(
-        "span",
-        { class: "muted" },
+        "p",
+        { class: "lead" },
         overview.config.network
           ? "Nothing you paste here is stored. Each address is also looked up on chain."
           : "Nothing you paste here is stored.",

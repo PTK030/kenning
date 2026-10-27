@@ -18,7 +18,9 @@ body {
 }
 
 body {
-  background: var(--bg);
+  background: var(--surface);
+  /* Native checkboxes, radios and sliders take the brand colour. */
+  accent-color: var(--brand-strong);
 }
 
 h1,
@@ -29,10 +31,12 @@ h3 {
   letter-spacing: -0.01em;
 }
 
+/* Headlines: Bricolage, a little narrower, as on the site. */
 h1,
 .display {
   font-family: var(--font-display);
-  font-weight: 650;
+  font-weight: 680;
+  font-stretch: 88%;
   letter-spacing: -0.02em;
 }
 
@@ -146,19 +150,21 @@ textarea {
   padding: 7px 14px;
   border-radius: 7px;
   border: 1px solid var(--line-strong);
-  background: var(--bg);
+  background: var(--surface-card);
   cursor: pointer;
   font-weight: 500;
 }
 
 .btn:hover {
-  background: var(--bg-2);
+  background: var(--surface-raised);
 }
 
+/* The one action per screen: full brand blue, white text, both themes. */
 .btn.primary {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: var(--brand-ink);
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
+  color: var(--on-brand);
+  font-weight: 600;
 }
 
 .btn.primary:hover {
@@ -188,7 +194,7 @@ textarea {
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--bg-2);
+  background: var(--surface-sunken);
   transition:
     border-color 140ms,
     background 140ms,
@@ -210,8 +216,56 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--brand);
-  background: var(--bg);
+  background: var(--surface-card);
   box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+/* A slider in the brand's colours: a thin track, a white knob that lifts. */
+input[type="range"] {
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px var(--brand-strong),
+    0 2px 6px rgb(0 0 0 / 30%);
+  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+input[type="range"]:focus-visible {
+  outline: none;
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 4px var(--brand-strong),
+    0 0 0 8px color-mix(in srgb, var(--brand-strong) 30%, transparent);
+}
+
+/* Number fields: no spinner arrows; they are small and fiddly. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
 }
 
 ::placeholder {
@@ -343,10 +397,8 @@ textarea {
   min-width: 190px;
   padding: 5px;
   border-radius: 10px;
-  background: var(--bg);
-  box-shadow:
-    0 0 0 1px var(--line),
-    0 12px 28px -10px rgb(0 0 0 / 45%);
+  background: var(--surface-card);
+  box-shadow: var(--elev-2);
   transform-origin: 0 0;
 }
 
@@ -390,7 +442,7 @@ textarea {
   gap: 8px;
   height: 38px;
   padding: 0 4px 0 12px;
-  background: var(--bg-2);
+  background: var(--surface-base);
   border-bottom: 1px solid var(--line);
   user-select: none;
   -webkit-user-select: none;
@@ -490,15 +542,15 @@ textarea {
 }
 
 .btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--ink) 6%, var(--bg));
-  border-color: color-mix(in srgb, var(--ink) 22%, var(--bg));
+  background: var(--surface-raised);
+  border-color: color-mix(in srgb, var(--ink) 22%, var(--surface-card));
 }
 
 .btn.primary:hover:not(:disabled) {
   filter: none;
-  background: color-mix(in srgb, var(--brand) 86%, #fff);
-  border-color: color-mix(in srgb, var(--brand) 86%, #fff);
-  box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--brand) 80%, transparent);
+  background: var(--brand-strong-hover);
+  border-color: var(--brand-strong-hover);
+  box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--brand-strong) 90%, transparent);
   transform: translateY(-1px);
 }
 
@@ -506,6 +558,22 @@ textarea {
 .btn:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent);
   outline-offset: 2px;
+}
+
+/* An icon-only button, square, quiet until pointed at. */
+.btn.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.btn.icon-btn:hover:not(:disabled) {
+  background: var(--surface-raised);
+  border-color: transparent;
+  color: var(--ink);
 }
 
 .btn:active:not(:disabled) {
@@ -522,6 +590,15 @@ textarea {
 
 .link:hover {
   text-decoration-color: currentColor;
+}
+
+/* A quiet link (Remove, Clear): grey until pointed at. */
+.link.muted {
+  color: var(--ink-2);
+}
+
+.link.muted:hover {
+  color: var(--ink);
 }
 
 .option {

@@ -436,7 +436,9 @@ main.onboarding {
   gap: 10px;
 }
 
-.ob-choice {
+/* `.choice` and `.toggle` are the same controls, used in Settings. */
+.ob-choice,
+.choice {
   display: flex;
   gap: 12px;
   align-items: flex-start;
@@ -452,17 +454,20 @@ main.onboarding {
     box-shadow 160ms;
 }
 
-.ob-choice:hover {
+.ob-choice:hover,
+.choice:hover {
   border-color: var(--line-strong);
 }
 
-.ob-choice[aria-pressed="true"] {
+.ob-choice[aria-pressed="true"],
+.choice[aria-pressed="true"] {
   border-color: var(--brand);
   background: var(--brand-soft);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
 }
 
-.ob-choice .ic {
+.ob-choice .ic,
+.choice .ic {
   flex: none;
   width: 38px;
   height: 38px;
@@ -476,12 +481,14 @@ main.onboarding {
     color 160ms;
 }
 
-.ob-choice[aria-pressed="true"] .ic {
+.ob-choice[aria-pressed="true"] .ic,
+.choice[aria-pressed="true"] .ic {
   background: var(--brand);
   color: var(--brand-ink);
 }
 
-.ob-choice strong {
+.ob-choice strong,
+.choice strong {
   display: block;
   margin-bottom: 2px;
 }
@@ -660,7 +667,8 @@ main.onboarding {
 }
 
 /* Step 5: preferences */
-.ob-toggle {
+.ob-toggle,
+.toggle {
   transition: border-color 180ms ease, background 180ms ease;
   position: relative;
   display: grid;
@@ -673,7 +681,8 @@ main.onboarding {
   cursor: pointer;
 }
 
-.ob-toggle .ic {
+.ob-toggle .ic,
+.toggle .ic {
   width: 34px;
   height: 34px;
   display: grid;
@@ -683,11 +692,13 @@ main.onboarding {
   color: var(--ink-2);
 }
 
-.ob-toggle strong {
+.ob-toggle strong,
+.toggle strong {
   display: block;
 }
 
-.ob-toggle input {
+.ob-toggle input,
+.toggle input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -715,15 +726,18 @@ main.onboarding {
   transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.ob-toggle:has(input:checked) .switch {
-  background: var(--brand);
+.ob-toggle:has(input:checked) .switch,
+.toggle:has(input:checked) .switch {
+  background: var(--brand-strong);
 }
 
-.ob-toggle:has(input:checked) .switch::after {
+.ob-toggle:has(input:checked) .switch::after,
+.toggle:has(input:checked) .switch::after {
   transform: translateX(16px);
 }
 
-.ob-toggle:has(input:focus-visible) {
+.ob-toggle:has(input:focus-visible),
+.toggle:has(input:focus-visible) {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
@@ -1349,10 +1363,8 @@ body.immersive #app {
   gap: 14px;
   padding: 22px 22px 18px;
   border-radius: 16px;
-  background: var(--bg);
-  box-shadow:
-    0 0 0 1px var(--line),
-    0 30px 60px -20px rgb(0 0 0 / 55%);
+  background: var(--surface-card);
+  box-shadow: var(--elev-2);
 }
 
 .sheet-card > h2,
@@ -1456,7 +1468,8 @@ body.immersive #app {
   color: var(--ink-2);
 }
 
-.ob-toggle:hover {
+.ob-toggle:hover,
+.toggle:hover {
   border-color: var(--line-strong);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
 }

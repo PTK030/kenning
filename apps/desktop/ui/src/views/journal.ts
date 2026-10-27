@@ -20,7 +20,7 @@ export async function journalView(main: HTMLElement, overview: Overview) {
       "header",
       {},
       h("h1", {}, "Journal"),
-      h("span", { class: "muted" }, "A local record of what was checked, by whom and when."),
+      h("p", { class: "lead" }, "A local record of what was checked, by whom and when."),
     ),
     !overview.config.journal && h("div", { class: "notice", style: "margin-bottom:12px" }, "The journal is turned off in Settings."),
     records.length

@@ -13,6 +13,7 @@ import { move, rise, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import { closeSheet, sheetOpen, toggleSheet } from "./shortcutSheet";
 import { keycaps, matches } from "./shortcuts";
+import { toast } from "./toast";
 import "./guard";
 
 type View = (main: HTMLElement, overview: Overview, refresh: () => Promise<void>) => Promise<void> | void;
@@ -125,6 +126,17 @@ function openWith(tab: string, selector: string, opener?: string) {
 }
 
 document.addEventListener("keydown", (e) => {
+  // Development builds only: Ctrl+Shift+L pins the light theme, then the
+  // dark one, then follows the system again.
+  if (import.meta.env.DEV && e.ctrlKey && e.shiftKey && !e.altKey && e.code === "KeyL") {
+    e.preventDefault();
+    const root = document.documentElement;
+    const next = { "": "light", light: "dark", dark: "" }[root.dataset.theme ?? ""] ?? "";
+    if (next) root.dataset.theme = next;
+    else delete root.dataset.theme;
+    toast(`Theme: ${next || "system"} (development)`);
+    return;
+  }
   // Development builds only: Ctrl+Shift+O starts the onboarding over.
   if (import.meta.env.DEV && e.ctrlKey && e.shiftKey && !e.altKey && e.code === "KeyO") {
     e.preventDefault();
