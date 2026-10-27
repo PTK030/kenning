@@ -825,9 +825,23 @@ main > .notice {
   color: var(--ink-2);
 }
 
-.entry .who .label {
-  margin-left: 6px;
-  font-weight: 500;
+.entry .who .line {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The lookalike that was copied, in the warning's colour: never mistaken
+   for the address it imitates. */
+.entry .addr.tone-look {
+  color: var(--look);
+}
+
+/* A check's answer: one quiet word, no pill. */
+.entry .answer {
+  font-size: 12.5px;
   color: var(--ink-2);
 }
 
