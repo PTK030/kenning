@@ -66,7 +66,7 @@ export function Trust() {
           <Terminal
             lines={[
               ["cmd", "$ cargo test --workspace"],
-              ["ok", "ok  49 core, 17 lookalike cases, 8 network, 7 CLI"],
+              ["ok", "ok  53 core, 17 lookalike cases, 11 network, 7 CLI"],
             ]}
           />
           <Check href={CORPUS}>Check the 17 cases</Check>
