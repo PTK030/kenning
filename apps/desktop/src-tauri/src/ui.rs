@@ -37,6 +37,11 @@ const BADGE_LINGER: Duration = Duration::from_secs(30);
 // ElasticOverscroll: no rubber-band on touchpads (the CSS also says so).
 const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,ElasticOverscroll --autoplay-policy=no-user-gesture-required";
 
+/// The graphite of the lookalike and details windows (their CSS `--bg`).
+/// Set on the window and its webview from the start, so the frame before
+/// the page paints is graphite too, not the webview's default white.
+const GRAPHITE: tauri::window::Color = tauri::window::Color(0x14, 0x1b, 0x23, 0xff);
+
 fn window<'a>(app: &'a AppHandle, label: &str, url: &str) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
     WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
         .additional_browser_args(BROWSER_ARGS)
@@ -189,6 +194,7 @@ pub fn show_lookalike(app: &AppHandle, r: Recognition) {
     let height = if network { 440.0 } else { 392.0 };
     let built = window(app, LOOKALIKE, "lookalike.html")
         .title("Kenning: not the address you know")
+        .background_color(GRAPHITE)
         .inner_size(640.0, height)
         // Kenning draws its own title bar (ui/src/titlebar.ts).
         .decorations(false)
@@ -223,6 +229,7 @@ pub fn show_details(app: &AppHandle, view: DetailsView) {
     }
     let built = window(app, DETAILS, "details.html")
         .title("Kenning: address details")
+        .background_color(GRAPHITE)
         .inner_size(DETAILS_W, 420.0)
         // Kenning draws its own title bar (ui/src/titlebar.ts).
         .decorations(false)

@@ -6,6 +6,11 @@
    information, not a warning. The window follows the page's height (see
    details.ts), so nothing here stretches to fill it. */
 
+/* Under the body too, so a resize never shows the webview's own colour. */
+html {
+  background: #141b23;
+}
+
 body {
   color-scheme: dark;
   --brand: #8aa4ff;

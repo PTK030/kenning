@@ -6,6 +6,11 @@
    It is always graphite, like the onboarding: a warning should look the
    same on a light or a dark desktop. */
 
+/* Under the body too, so a resize never shows the webview's own colour. */
+html {
+  background: #141b23;
+}
+
 body {
   color-scheme: dark;
   --brand: #8aa4ff;
