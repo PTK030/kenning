@@ -9,7 +9,7 @@ import { journalView } from "./views/journal";
 import { settingsView } from "./views/settings";
 import { welcomeView } from "./views/welcome";
 import { icon, type IconName } from "./icons";
-import { EASE_IN, move, rise, SPRING } from "./motion";
+import { move, rise, SPRING, stagger } from "./motion";
 import { titlebar } from "./titlebar";
 import { closeSheet, sheetOpen, toggleSheet } from "./shortcutSheet";
 import { keycaps, matches } from "./shortcuts";
@@ -34,6 +34,8 @@ let lastTab = "";
 let lastPillTop: number | null = null;
 /** Set when the onboarding hands over: the panel arrives instead of appearing. */
 let arriving = false;
+/** A gentle ease in and out, for the one change of scene. */
+const HANDOVER = [0.4, 0, 0.2, 1] as const;
 
 function currentTab(): string {
   return location.hash.replace("#", "") || "book";
@@ -57,11 +59,14 @@ async function render() {
     const main = h("main", { class: "onboarding" });
     clear(app, main);
     await welcomeView(main, overview, async () => {
-      // The onboarding steps back first; the panel then arrives (below).
-      await move(main, { opacity: [1, 0], scale: [1, 0.985] }, { duration: 0.3, ease: EASE_IN });
+      // The panel's data is ready before anything moves, so there is no
+      // empty beat between the onboarding leaving and the panel arriving.
+      const next = await ipc.overview();
+      await move(main, { opacity: [1, 0] }, { duration: 0.45, ease: HANDOVER });
+      overview = next;
       arriving = true;
-      location.hash = "book";
-      await refresh();
+      if (currentTab() === "book" && location.hash === "#book") void render();
+      else location.hash = "book";
     });
     return;
   }
@@ -106,9 +111,10 @@ async function render() {
   if (arriving) {
     // After the onboarding: the sidebar slides in as the page rises, while
     // the title bar and the light settle (CSS transitions).
+    // A scene change, once: slow and eased, no spring.
     arriving = false;
-    void move(nav, { opacity: [0, 1], x: [-24, 0] }, SPRING);
-    void rise(main.children, { y: 16, gap: 0.05, delay: 0.08 });
+    void move(nav, { opacity: [0, 1], x: [-12, 0] }, { duration: 0.7, ease: HANDOVER });
+    void move(main.children, { opacity: [0, 1], y: [12, 0] }, { duration: 0.7, ease: HANDOVER, delay: stagger(0.07, { startDelay: 0.15 }) });
   } else if (active.id !== lastTab) void rise(main.children, { y: 10, gap: 0.035 });
   lastTab = active.id;
   focusPending();
