@@ -1,7 +1,7 @@
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useState } from "react";
 import logo from "../assets/logo.svg";
-import { RELEASES, REPO, RULES, ease } from "../links";
+import { RELEASES, REPO, ease } from "../links";
 
 /** Hides while you scroll down, comes back as soon as you scroll up. */
 export function Nav() {
@@ -30,7 +30,7 @@ export function Nav() {
         <a href="#story">Address poisoning</a>
         <a href="#features">Features</a>
         <a href="#trust">Trust</a>
-        <a href={RULES}>Detection rules</a>
+        <a href="#roadmap">Roadmap</a>
         <a href={REPO}>GitHub</a>
       </nav>
       <a className="btn btn-small" href={RELEASES} data-cursor="Download" data-cursor-icon="download">

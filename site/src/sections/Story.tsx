@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Addr } from "../components/Addr";
 import { ArrowIn, ArrowOut, Coins, Copy, Layers, Pointer } from "../components/icons";
 import { KNOWN, POISON, short } from "../address";
-import { ease } from "../links";
+import { STUDY, ease } from "../links";
 
 // Address poisoning is a real sequence, so the acts are numbered.
 const ACTS = [
@@ -38,6 +38,10 @@ export function Story() {
           <h2 id="story-title" className="story-kicker">
             How address poisoning works
           </h2>
+          <p className="story-scale">
+            270 million attempts on Ethereum and BSC in two years, and at least $83.8M lost.{" "}
+            <a href={STUDY}>USENIX Security 2025</a>
+          </p>
           <ol className="acts">
             {ACTS.map((a, i) => (
               <li key={i} className={i === act ? "now" : i < act ? "past" : ""}>
@@ -118,7 +122,7 @@ export function Story() {
                 )}
               </AnimatePresence>
               <motion.li layout className="tx">
-                <TxRow dir="out" what="Sent" amount="2,400 USDT" who={KNOWN} when="3 days ago" />
+                <TxRow dir="out" what="Sent" amount="2,500 USDT" who={KNOWN} when="3 days ago" />
               </motion.li>
               <motion.li layout className="tx">
                 <TxRow dir="out" what="Sent" amount="120 USDT" who="0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed" when="last week" />

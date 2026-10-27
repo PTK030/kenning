@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
+import type { ReactNode } from "react";
 import { Lift, Scrub } from "../components/Reveal";
-import { ease } from "../links";
+import { CLIPBOARD_SRC, CORPUS, DENY, GATE, NETWORK_DOCS, ease } from "../links";
 
 function Terminal({ lines }: { lines: [string, string][] }) {
   return (
@@ -22,12 +23,35 @@ function Terminal({ lines }: { lines: [string, string][] }) {
   );
 }
 
+function Check({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a className="check" href={href}>
+      {children}
+    </a>
+  );
+}
+
 export function Trust() {
   return (
     <section className="trust" id="trust" aria-labelledby="trust-title">
       <h2 id="trust-title" className="visually-hidden">
         Trust
       </h2>
+      <div className="measured">
+        <dl>
+          <div>
+            <dt>8 MB</dt>
+            <dd>in memory at rest</dd>
+          </div>
+          <div>
+            <dt>45 ms</dt>
+            <dd>from copy to badge, about 0.4 s after a quiet spell</dd>
+          </div>
+        </dl>
+        <p>
+          Measured on Windows 11. <a href={GATE}>How it was measured</a>
+        </p>
+      </div>
       <Scrub
         className="scrub"
         text="A tool that reads your clipboard should be easy to check. These are properties of the code, not promises."
@@ -42,6 +66,7 @@ export function Trust() {
               ["ok", "ok  49 core, 17 lookalike cases, 8 network, 7 CLI"],
             ]}
           />
+          <Check href={CORPUS}>Check the 17 cases</Check>
         </Lift>
         <Lift delay={0.1}>
           <h3>Local only</h3>
@@ -52,6 +77,7 @@ export function Trust() {
               ["ok", "bans ok  reqwest, hyper, tokio: not allowed"],
             ]}
           />
+          <Check href={DENY}>Check deny.toml</Check>
         </Lift>
         <Lift delay={0.2}>
           <h3>Your clipboard stays yours</h3>
@@ -63,6 +89,7 @@ export function Trust() {
               ["dim", "stores  validated addresses, never text"],
             ]}
           />
+          <Check href={CLIPBOARD_SRC}>Check the clipboard code</Check>
         </Lift>
         <Lift delay={0.3}>
           <h3>Network off by default</h3>
@@ -74,6 +101,7 @@ export function Trust() {
               ["dim", "mempool.space   api.trongrid.io"],
             ]}
           />
+          <Check href={NETWORK_DOCS}>Check the provider list</Check>
         </Lift>
       </div>
     </section>

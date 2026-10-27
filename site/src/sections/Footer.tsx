@@ -1,5 +1,5 @@
 import logo from "../assets/logo.svg";
-import { RELEASES, REPO, RULES } from "../links";
+import { CLI_DOCS, GATE, ISSUES, RELEASES, REPO, RULES } from "../links";
 
 export function Footer() {
   return (
@@ -12,13 +12,15 @@ export function Footer() {
       <nav aria-label="Product">
         <h2>Product</h2>
         <a href={RELEASES}>Download</a>
-        <a href={`${REPO}#cli`}>Command line</a>
+        <a href={CLI_DOCS}>Command line</a>
         <a href={RULES}>Detection rules</a>
+        <a href={GATE}>How it was measured</a>
       </nav>
       <nav aria-label="Project">
         <h2>Project</h2>
         <a href={REPO}>GitHub</a>
-        <a href={`${REPO}/issues`}>Report an issue</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href={ISSUES}>Report an issue</a>
         <a href={`${REPO}/blob/main/LICENSE`}>MIT licence</a>
       </nav>
       <p className="footer-note">This page loads no third-party scripts, fonts or trackers.</p>

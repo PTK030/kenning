@@ -1,6 +1,5 @@
 import { motion, useMotionValue, useSpring } from "motion/react";
 import type { PointerEvent, ReactNode } from "react";
-import { CopyCommand } from "../components/CopyCommand";
 import { Download } from "../components/icons";
 import { RiseTitle } from "../components/Reveal";
 import { RELEASES, REPO } from "../links";
@@ -35,7 +34,7 @@ function Magnetic({ children, href, className, cursor, icon }: { children: React
 export function Cta() {
   return (
     <section className="cta" aria-labelledby="cta-title">
-      <RiseTitle text="Name the addresses you use. Kenning handles the rest." className="cta-title" />
+      <RiseTitle text="Check the next address you copy." className="cta-title" />
       <div className="cta-actions">
         <Magnetic className="btn btn-light btn-big" href={RELEASES} cursor="Download" icon="download">
           <Download /> Download for Windows
@@ -44,10 +43,10 @@ export function Cta() {
           View the source
         </Magnetic>
       </div>
-      <div className="cta-command">
-        <CopyCommand />
-      </div>
-      <p className="cta-fine">Free and open source under MIT. Windows today, macOS and Linux next.</p>
+      <p className="cta-fine">
+        Version 0.1.0 for Windows 10 and 11, free under the MIT licence. macOS and Linux are{" "}
+        <a href="#roadmap">on the roadmap</a>.
+      </p>
     </section>
   );
 }
