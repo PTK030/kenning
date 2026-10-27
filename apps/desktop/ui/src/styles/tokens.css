@@ -43,6 +43,10 @@
   --surface-card: light-dark(#ffffff, #18212b);
   --surface-raised: light-dark(#f0f3f7, #1f2a36);
   --surface-sunken: light-dark(#f6f8fa, #0f151c);
+  /* A field being typed in: still sunk into its card (never the card's own
+     colour, which would leave an empty outline), with a trace of the brand
+     so it reads as the one that is active. */
+  --field-focus: color-mix(in srgb, var(--brand-strong) 6%, var(--surface-sunken));
   /* Pop-overs (drop-down lists, menus) float above cards, so they must
      not share a card's colour. */
   --surface-pop: light-dark(#ffffff, #222d3a);
