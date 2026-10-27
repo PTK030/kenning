@@ -339,6 +339,289 @@ main > .notice {
   font-weight: 500;
 }
 
+/* ---- Address book ------------------------------------------------------ */
+
+/* Search: the full width, with its icon inside. */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search .icon {
+  position: absolute;
+  left: 13px;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px 10px 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-card);
+  box-shadow: var(--elev-1);
+  transition:
+    border-color 140ms,
+    box-shadow 140ms;
+}
+
+.search input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+.search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+/* The list: one card, rows separated by hairlines, as in Windows Settings. */
+.entries {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  box-shadow: var(--elev-1);
+}
+
+.entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.entry + .entry::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 60px;
+  right: 12px;
+  height: 1px;
+  background: var(--line);
+}
+
+.entry:hover,
+.entry:focus-visible {
+  background: var(--surface-raised);
+}
+
+.entry:hover + .entry::before,
+.entry:hover::before {
+  opacity: 0;
+}
+
+.entry:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Whose it is: a tinted tile, the same icons as the states. */
+.entry .ic {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.owner-me {
+  background: var(--mine-soft);
+  color: var(--mine);
+}
+
+.owner-team {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.owner-contact {
+  background: var(--surface-raised);
+  color: var(--ink-2);
+}
+
+.entry .who {
+  display: grid;
+  min-width: 0;
+}
+
+.entry .who strong {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry .who .addr {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.entry .note {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry .meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.entry .owner {
+  min-width: 52px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* Copy and remove: there, but quiet until the row is pointed at. */
+.entry .acts {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.entry:hover .acts,
+.entry:focus-within .acts {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .entry .owner {
+    display: none;
+  }
+}
+
+/* An empty book: what a name does, and the two ways to start. */
+.book-empty {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  box-shadow: var(--elev-1);
+}
+
+.book-empty .copy {
+  display: grid;
+  gap: 12px;
+}
+
+.book-empty h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 650;
+  font-stretch: 88%;
+}
+
+.book-empty p {
+  margin: 0;
+}
+
+/* The picture: the badge as it appears, on the brand's graphite. */
+.book-empty .pic {
+  color-scheme: dark;
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  padding: 20px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgb(58 85 201 / 45%), transparent 60%),
+    linear-gradient(180deg, #1f2b38, #16202a);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
+}
+
+.pic-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 12px 10px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #1f2b38;
+  color: #e6edf3;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 10%),
+    0 16px 30px -12px rgb(0 0 0 / 70%);
+}
+
+.pic-badge .ic {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgb(90 208 122 / 14%);
+  color: #5ad07a;
+}
+
+.pic-badge b {
+  display: block;
+  font-size: 13px;
+}
+
+.pic-badge code {
+  padding: 0;
+  background: none;
+  color: #9fb0c0;
+  font-size: 11.5px;
+}
+
+.pic-badge .bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #5ad07a;
+  transform-origin: left center;
+  animation: drain 4s linear infinite;
+}
+
+@keyframes drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .book-empty {
+    grid-template-columns: 1fr;
+  }
+  .book-empty .pic {
+    display: none;
+  }
+}
+
+.add-card {
+  margin-bottom: 20px;
+}
+
+.add-card > h2 {
+  margin-bottom: 14px;
+}
+
 /* A question before something that cannot be undone (confirmSheet.ts). */
 .sheet-card.confirm {
   width: min(400px, 100%);

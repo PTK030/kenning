@@ -9,6 +9,26 @@ type Shape =
   | ["rect", number, number, number, number, number];
 
 const ICONS = {
+  more: [
+    ["circle", 5, 12, 1],
+    ["circle", 12, 12, 1],
+    ["circle", 19, 12, 1],
+  ],
+  download: [
+    ["path", "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"],
+    ["path", "m7 10 5 5 5-5"],
+    ["path", "M12 15V3"],
+  ],
+  refresh: [
+    ["path", "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"],
+    ["path", "M21 3v5h-5"],
+    ["path", "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"],
+    ["path", "M8 16H3v5"],
+  ],
+  file: [
+    ["path", "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"],
+    ["path", "M14 2v4a2 2 0 0 0 2 2h4"],
+  ],
   scissors: [
     ["circle", 6, 6, 3],
     ["path", "M8.12 8.12 12 12"],

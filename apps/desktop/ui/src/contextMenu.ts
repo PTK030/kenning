@@ -8,7 +8,7 @@ import { h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { EASE_IN, EASE_OUT, move } from "./motion";
 
-type Item = { label: string; icon: IconName; keys?: string; run: () => void | Promise<void> };
+export type Item = { label: string; icon: IconName; keys?: string; run: () => void | Promise<void> };
 
 let open: HTMLElement | null = null;
 
@@ -78,8 +78,20 @@ document.addEventListener("contextmenu", (e) => {
   e.preventDefault();
   close();
   const items = itemsFor(e);
-  if (!items.length) return;
+  if (items.length) showMenu(items, e.clientX, e.clientY);
+});
 
+/** The same menu, opened by a button: under it, right edges aligned. */
+export function menuFor(button: HTMLElement, items: Item[]) {
+  const wasOpen = open !== null;
+  close();
+  if (wasOpen) return;
+  const r = button.getBoundingClientRect();
+  // Opened from the keyboard or the mouse alike, the first item takes focus.
+  showMenu(items, r.right, r.bottom + 4, true).querySelector<HTMLElement>(".ctx-item")?.focus({ preventScroll: true });
+}
+
+function showMenu(items: Item[], px: number, py: number, alignRight = false) {
   const menu = h(
     "div",
     { class: "ctx-menu", role: "menu" },
@@ -103,13 +115,15 @@ document.addEventListener("contextmenu", (e) => {
   document.body.appendChild(menu);
   // Keep it on screen.
   const r = menu.getBoundingClientRect();
-  const x = Math.min(e.clientX, window.innerWidth - r.width - 6);
-  const y = Math.min(e.clientY, window.innerHeight - r.height - 6);
+  const x = Math.min(alignRight ? px - r.width : px, window.innerWidth - r.width - 6);
+  const y = Math.min(py, window.innerHeight - r.height - 6);
   menu.style.left = `${Math.max(6, x)}px`;
   menu.style.top = `${Math.max(6, y)}px`;
+  if (alignRight) menu.style.transformOrigin = "100% 0";
   open = menu;
   void move(menu, { opacity: [0, 1], scale: [0.97, 1] }, { duration: 0.12, ease: EASE_OUT });
-});
+  return menu;
+}
 
 // Any click elsewhere, a key, scrolling or leaving the window closes it.
 document.addEventListener("pointerdown", (e) => open && !open.contains(e.target as Node) && close(), true);
