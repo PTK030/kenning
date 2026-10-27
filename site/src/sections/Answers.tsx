@@ -1,9 +1,60 @@
-import type { ReactNode } from "react";
+import { useInView, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Addr } from "../components/Addr";
 import { Check, Plus } from "../components/icons";
 import { Lift, RiseTitle } from "../components/Reveal";
 import { KNOWN, POISON } from "../address";
 import { RULES } from "../links";
+
+// Select an address, press the shortcut, read the details window. Then again.
+const STEPS = [
+  { name: "idle", ms: 900 },
+  { name: "selected", ms: 800 },
+  { name: "pressed", ms: 600 },
+  { name: "open", ms: 3800 },
+] as const;
+
+/** The details window, in miniature: what Ctrl+Alt+D does to a selection. */
+function DetailsDemo() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { margin: "-15% 0px" });
+  const reduce = useReducedMotion();
+  const [i, setI] = useState(0);
+
+  useEffect(() => {
+    if (!inView || reduce) return;
+    const t = setTimeout(() => setI((n) => (n + 1) % STEPS.length), STEPS[i].ms);
+    return () => clearTimeout(t);
+  }, [i, inView, reduce]);
+
+  const step = reduce ? STEPS.length - 1 : i;
+  return (
+    <div className="details-demo" ref={ref} data-step={STEPS[step].name}>
+      <p className="dd-line">
+        Pay to{" "}
+        <code>
+          <span className="dd-sel" />
+          0x68b3 4658 … Fc45
+        </code>
+      </p>
+      <div className="dd-keys">
+        <kbd>Ctrl</kbd>
+        <kbd>Alt</kbd>
+        <kbd>D</kbd>
+      </div>
+      <div className="dd-card">
+        <b>Uniswap V3: Router 2</b>
+        <dl>
+          <dt>Kind</dt>
+          <dd>Contract</dd>
+          <dt>History</dt>
+          <dd>Never copied</dd>
+        </dl>
+        <small>From your selection</small>
+      </div>
+    </div>
+  );
+}
 
 function Tile({ kind, title, children, visual, link, i }: { kind: string; title: string; children: ReactNode; visual: ReactNode; link?: ReactNode; i: number }) {
   return (
@@ -94,13 +145,7 @@ export function Answers() {
           i={3}
           kind="details"
           title="Any address, on request."
-          visual={
-            <div className="answer-keys">
-              <kbd>Ctrl</kbd>
-              <kbd>Alt</kbd>
-              <kbd>D</kbd>
-            </div>
-          }
+          visual={<DetailsDemo />}
         >
           Select an address anywhere and press the shortcut to see everything Kenning knows about it. Your clipboard
           is left as it was.
