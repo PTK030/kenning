@@ -110,6 +110,8 @@ main.onboarding {
   --v-look: #ff8f8f;
   --v-look-soft: rgb(255 123 123 / 16%);
   --v-mine: #5ad07a;
+  /* Theme tokens used inside resolve to their dark values. */
+  color-scheme: dark;
   position: relative;
   height: min(100%, 400px);
   min-height: 300px;
@@ -792,26 +794,12 @@ main.onboarding {
   }
 }
 
-/* ---- Immersive: the window goes dark while onboarding runs -------------- */
+/* ---- Immersive: no sidebar, the title bar dissolves, the page is lit ----
+   It follows the system theme like the rest of the window; only the
+   pictures (.ob-visual) stay dark. */
 
 body.immersive {
-  color-scheme: dark;
-  --brand: #8aa4ff;
-  --brand-ink: #0e1319;
-  --brand-soft: #1d2740;
-  --ink: #e6edf3;
-  --ink-2: #9ba8b5;
-  --bg: #121a22;
-  --bg-2: #0e1319;
-  --line: #26313d;
-  --line-strong: #3b4756;
-  --mine: #5ad07a;
-  --mine-soft: #15291c;
-  --new: #f5b04e;
-  --new-soft: #2e2213;
-  --look: #ff7b7b;
-  --look-soft: #3a1a1c;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -896,7 +884,7 @@ body.immersive #app {
 
 .sbx-tasks li.done .mark {
   background: var(--mine);
-  color: #0e1319;
+  color: light-dark(#ffffff, #0e1319);
   box-shadow: none;
 }
 
@@ -1221,7 +1209,7 @@ body.immersive #app {
 
 .keys-row.done .tick {
   background: var(--mine);
-  color: #0e1319;
+  color: light-dark(#ffffff, #0e1319);
   box-shadow: none;
 }
 
@@ -1389,7 +1377,7 @@ body.immersive #app {
   z-index: 20;
   display: grid;
   place-items: center;
-  background: var(--bg);
+  background: var(--surface);
   cursor: default;
 }
 

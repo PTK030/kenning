@@ -128,7 +128,9 @@ function openWith(tab: string, selector: string, opener?: string) {
 document.addEventListener("keydown", (e) => {
   // Development builds only: Ctrl+Shift+L pins the light theme, then the
   // dark one, then follows the system again.
-  if (import.meta.env.DEV && e.ctrlKey && e.shiftKey && !e.altKey && e.code === "KeyL") {
+  const dev = (letter: string) =>
+    import.meta.env.DEV && e.ctrlKey && e.shiftKey && !e.altKey && (e.code === `Key${letter.toUpperCase()}` || e.key.toLowerCase() === letter);
+  if (dev("l")) {
     e.preventDefault();
     const root = document.documentElement;
     const next = { "": "light", light: "dark", dark: "" }[root.dataset.theme ?? ""] ?? "";
@@ -137,12 +139,13 @@ document.addEventListener("keydown", (e) => {
     toast(`Theme: ${next || "system"} (development)`);
     return;
   }
-  // Development builds only: Ctrl+Shift+O starts the onboarding over.
-  if (import.meta.env.DEV && e.ctrlKey && e.shiftKey && !e.altKey && e.code === "KeyO") {
+  // Development builds only: Ctrl+Shift+O opens the onboarding from the
+  // start, and leaves it again (nothing is saved unless it is finished).
+  if (dev("o")) {
     e.preventDefault();
     document.querySelector("main.onboarding")?.remove();
-    if (currentTab() === "welcome") void render();
-    else location.hash = "welcome";
+    document.querySelector(".intro")?.remove();
+    location.hash = currentTab() === "welcome" ? "book" : "welcome";
     return;
   }
   if (!overview?.config.onboarded || currentTab() === "welcome") return;
