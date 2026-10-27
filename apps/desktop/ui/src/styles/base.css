@@ -299,8 +299,8 @@ textarea:focus {
   padding: 4px;
   list-style: none;
   border-radius: 12px;
-  background: var(--surface-card);
-  box-shadow: var(--elev-2);
+  background: var(--surface-pop);
+  box-shadow: var(--elev-pop);
   transform-origin: 50% 0;
 }
 
@@ -341,7 +341,7 @@ textarea:focus {
   right: 4px;
   padding: 0;
   border-radius: 8px;
-  background: var(--surface-raised);
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -363,7 +363,7 @@ textarea:focus {
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: var(--surface-raised);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
   color: var(--ink-2);
 }
 
@@ -570,8 +570,8 @@ textarea {
   min-width: 190px;
   padding: 5px;
   border-radius: 10px;
-  background: var(--surface-card);
-  box-shadow: var(--elev-2);
+  background: var(--surface-pop);
+  box-shadow: var(--elev-pop);
   transform-origin: 0 0;
 }
 

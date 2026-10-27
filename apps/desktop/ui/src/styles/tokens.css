@@ -43,6 +43,9 @@
   --surface-card: light-dark(#ffffff, #18212b);
   --surface-raised: light-dark(#f0f3f7, #1f2a36);
   --surface-sunken: light-dark(#f6f8fa, #0f151c);
+  /* Pop-overs (drop-down lists, menus) float above cards, so they must
+     not share a card's colour. */
+  --surface-pop: light-dark(#ffffff, #222d3a);
   --line: light-dark(#dde3e9, #26313d);
   --line-strong: light-dark(#b8c1ca, #3b4756);
 
@@ -70,6 +73,11 @@
     0 0 0 1px var(--hairline),
     0 30px 60px -20px var(--shade-strong);
   --shadow: var(--elev-2);
+  /* A pop-over: a clear edge and a deep shadow, so it reads as on top. */
+  --elev-pop:
+    0 0 0 1px light-dark(rgb(22 32 42 / 12%), rgb(255 255 255 / 10%)),
+    0 4px 10px -2px var(--shade),
+    0 22px 48px -12px var(--shade-strong);
 
   --radius: 12px;
   --radius-sm: 8px;
