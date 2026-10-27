@@ -17,6 +17,7 @@ mod kenning;
 pub mod labels;
 pub mod lookalike;
 pub mod message;
+pub mod secret;
 
 pub use book::{Book, Entry, Owner};
 pub use chain::{Address, AddressKey, Chain, ParseError, parse};

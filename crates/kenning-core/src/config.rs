@@ -51,6 +51,10 @@ pub struct Config {
     /// Set once the user has finished onboarding.
     pub onboarded: bool,
     pub lookalike: Rules,
+    /// The clipboard guard (desktop): look at every clipboard change for an
+    /// address replaced behind your back, or a recovery phrase or private
+    /// key left on it. Off by default: it reads every change.
+    pub guard: bool,
 }
 
 impl Default for Config {
@@ -70,6 +74,7 @@ impl Default for Config {
             solana_rpc: None,
             onboarded: false,
             lookalike: Rules::default(),
+            guard: false,
         }
     }
 }
