@@ -46,6 +46,8 @@ export function dropdown<T extends string>(opts: { label: string; choices: Choic
   paint();
 
   let open = false;
+  /** Whether it opened upwards, so it closes the same way. */
+  let up = false;
   const outside = (e: PointerEvent) => !el.contains(e.target as Node) && close();
 
   const show = () => {
@@ -55,7 +57,7 @@ export function dropdown<T extends string>(opts: { label: string; choices: Choic
     button.setAttribute("aria-expanded", "true");
     // Below if it fits, else above.
     const r = button.getBoundingClientRect();
-    const up = r.bottom + list.offsetHeight + 8 > window.innerHeight && r.top > list.offsetHeight + 8;
+    up = r.bottom + list.offsetHeight + 8 > window.innerHeight && r.top > list.offsetHeight + 8;
     el.classList.toggle("up", up);
     // Right edges aligned when it would run out of the window.
     el.classList.toggle("end", r.left + list.offsetWidth + 8 > window.innerWidth);
@@ -69,7 +71,8 @@ export function dropdown<T extends string>(opts: { label: string; choices: Choic
     open = false;
     button.setAttribute("aria-expanded", "false");
     document.removeEventListener("pointerdown", outside, true);
-    void move(list, { opacity: 0 }, { duration: 0.1, ease: EASE_IN }).then(() => {
+    // The way it came, reversed: same distance, scale and time.
+    void move(list, { opacity: 0, y: up ? 4 : -4, scale: 0.98 }, { duration: 0.16, ease: EASE_IN }).then(() => {
       if (!open) list.hidden = true;
     });
     if (refocus) button.focus();
