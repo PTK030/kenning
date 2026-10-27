@@ -322,13 +322,18 @@ pub fn add_entry(
     Ok(r)
 }
 
-/// A row of the address book was clicked. Async, so it runs off the main
-/// thread: building the details window from a synchronous command leaves its
-/// WebView2 unloaded on Windows, and the window never shows.
+/// A row of the address book (or, with `from: "journal"`, of the journal)
+/// was clicked. Async, so it runs off the main thread: building the details
+/// window from a synchronous command leaves its WebView2 unloaded on
+/// Windows, and the window never shows.
 #[tauri::command]
-pub async fn show_entry(app: AppHandle, address: String) -> Res<()> {
+pub async fn show_entry(app: AppHandle, address: String, from: Option<String>) -> Res<()> {
     let address = kenning_core::parse(&address).map_err(err)?;
-    crate::flow::show_book_details(&app, address);
+    let source = match from.as_deref() {
+        Some("journal") => clipboard::Source::Journal,
+        _ => clipboard::Source::Book,
+    };
+    crate::flow::show_details_from(&app, address, source);
     Ok(())
 }
 

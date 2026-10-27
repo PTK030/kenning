@@ -7,7 +7,7 @@ import { addressPlain, chainChip, detailLine, STATE_WORD } from "./address";
 import { $, clear, h } from "./dom";
 import { icon, STATE_ICON } from "./icons";
 import { ipc, message, on, win } from "./ipc";
-import { draw, move, POP, rise, SPRING } from "./motion";
+import { draw, move, POP, rise, settling, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import type { Contact, DetailsView, Fact, LabelKind, Owner, Source } from "./types";
 import "./guard";
@@ -31,6 +31,7 @@ const SOURCE_LINE: Record<Source, string> = {
   selection: "From your selection",
   clipboard: "Nothing was selected, so this is from the clipboard",
   book: "From your book",
+  journal: "From your journal",
 };
 
 const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -213,6 +214,7 @@ function whenVisible(run: () => void) {
 }
 
 function enter() {
+  settling();
   void move(root, { opacity: [0, 1], y: [10, 0], scale: [0.985, 1] }, SPRING);
   const tile = root.querySelector(".tile");
   void move(tile, { scale: [0.6, 1] }, { ...POP, delay: 0.04 });

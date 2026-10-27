@@ -38,6 +38,8 @@ pub enum Source {
     Clipboard,
     /// A row of the address book was clicked.
     Book,
+    /// A record of the journal was clicked.
+    Journal,
 }
 
 // Other platforms come later; these stubs keep the crate compiling there.

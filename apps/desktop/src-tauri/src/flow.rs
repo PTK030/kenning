@@ -115,7 +115,7 @@ pub fn on_details_shortcut(app: &AppHandle) {
 
 fn show_details_for(app: &AppHandle, content: Content, source: Source) {
     let none = match source {
-        Source::Selection | Source::Book => "No address in the selection.",
+        Source::Selection | Source::Book | Source::Journal => "No address in the selection.",
         Source::Clipboard => "Nothing selected, and no address on the clipboard.",
     };
     let text = match content {
@@ -165,9 +165,10 @@ fn show_details_for(app: &AppHandle, content: Content, source: Source) {
     onchain::spawn_lookup(app, lookup);
 }
 
-/// A row of the address book was clicked: show its details. Browsing your
-/// own book is not a check, so nothing goes into the journal.
-pub fn show_book_details(app: &AppHandle, address: kenning_core::Address) {
+/// A row of the address book or the journal was clicked: show its details.
+/// Browsing your own records is not a check, so nothing goes into the
+/// journal.
+pub fn show_details_from(app: &AppHandle, address: kenning_core::Address, source: Source) {
     let st = app.state::<AppState>();
     let (r, network) = {
         let k = st.kenning.lock().unwrap();
@@ -178,7 +179,7 @@ pub fn show_book_details(app: &AppHandle, address: kenning_core::Address) {
         app,
         DetailsView {
             recognition: r,
-            source: Source::Book,
+            source,
             network,
         },
     );

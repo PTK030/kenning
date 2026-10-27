@@ -128,7 +128,7 @@ function row(r: JournalRecord): HTMLElement {
   const s = describe(r);
   const at = new Date(r.at);
   // Details of the address the row shows: for a correction, the right one.
-  const details = () => ipc.showEntry(s.address).catch((e) => toast(message(e), "error"));
+  const details = () => ipc.showEntry(s.address, "journal").catch((e) => toast(message(e), "error"));
   // A check keeps its answer, as a plain word; the other actions say it.
   const answer = r.action === "checked" && STATES.has(r.state) ? STATE_WORD[r.state as State] : null;
   return h(

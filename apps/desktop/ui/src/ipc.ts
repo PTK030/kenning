@@ -44,7 +44,7 @@ export const ipc = {
   recognizeText: (text: string) => invoke<Recognition[]>("recognize_text", { text }),
   addEntry: (address: string, label: string, owner: Owner, note: string | null) =>
     invoke<Recognition>("add_entry", { address, label, owner, note }),
-  showEntry: (address: string) => invoke<void>("show_entry", { address }),
+  showEntry: (address: string, from: "book" | "journal" = "book") => invoke<void>("show_entry", { address, from }),
   compareAddresses: (a: string, b: string) => invoke<Comparison>("compare_addresses", { a, b }),
   removeEntry: (address: string) => invoke<boolean>("remove_entry", { address }),
   importCsv: (owner: Owner) => invoke<ImportSummary | null>("import_csv", { owner }),

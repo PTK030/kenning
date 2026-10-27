@@ -20,6 +20,12 @@ body {
   overscroll-behavior: none;
 }
 
+/* During a window's entrance (motion.ts settling()). */
+html.entering,
+html.entering body {
+  overflow: hidden;
+}
+
 body {
   background: var(--surface);
   /* Native checkboxes, radios and sliders take the brand colour. */

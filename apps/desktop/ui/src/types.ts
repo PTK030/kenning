@@ -71,7 +71,7 @@ export interface LookalikeView {
 }
 
 /** Where the details window got the address. */
-export type Source = "selection" | "clipboard" | "book";
+export type Source = "selection" | "clipboard" | "book" | "journal";
 
 export interface DetailsView {
   recognition: Recognition;

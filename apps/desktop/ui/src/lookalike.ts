@@ -6,7 +6,7 @@ import { addressWithDiff, chainChip, detailLine } from "./address";
 import { $, clear, h } from "./dom";
 import { icon } from "./icons";
 import { ipc, message, on } from "./ipc";
-import { draw, move, POP, rise, SPRING } from "./motion";
+import { draw, move, POP, rise, settling, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import { DEFAULT_KEYS, keycaps, matches } from "./shortcuts";
 import type { Keys } from "./types";
@@ -130,6 +130,7 @@ function render(view: LookalikeView | null) {
 function choreograph(variant: number) {
   const sign = root.querySelector(".sign");
   const card = root.querySelector(".rows");
+  settling();
   if (variant === 0) {
     void move(root, { opacity: [0, 1], y: [-14, 0] }, SPRING);
     void move(sign, { rotate: [0, -10, 8, -4, 0] }, { duration: 0.55, delay: 0.15 });

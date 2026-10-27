@@ -63,6 +63,17 @@ export function move(targets: Targets, keyframes: DOMKeyframesDefinition, opts: 
   return controls.finished.then(() => undefined);
 }
 
+let settleTimer = 0;
+
+/** While a window's entrance plays, the page must not scroll: parts that
+ *  slide in from a few pixels outside would briefly overflow a window
+ *  sized to its content and flash a scrollbar. */
+export function settling(ms = 900) {
+  document.documentElement.classList.add("entering");
+  clearTimeout(settleTimer);
+  settleTimer = window.setTimeout(() => document.documentElement.classList.remove("entering"), ms);
+}
+
 /** Children arriving one after another, lifting into place. */
 export function rise(targets: Targets, { y = 10, delay = 0, gap = 0.045 } = {}): Promise<void> {
   return move(targets, { opacity: [0, 1], y: [y, 0] }, { ...SPRING, delay: stagger(gap, { startDelay: delay }) });
