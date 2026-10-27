@@ -482,11 +482,15 @@ textarea {
   color: var(--sign, var(--look));
 }
 
+/* Bricolage keeps a tall gap above its letters, so its line box sits the
+   letters high: trimmed to cap height and baseline, the letters themselves
+   centre on the icons beside them. */
 .tb-title {
   font-family: var(--font-display);
   font-weight: 650;
   font-size: 13.5px;
   letter-spacing: -0.01em;
+  text-box: trim-both cap alphabetic;
 }
 
 .tb-sub {
