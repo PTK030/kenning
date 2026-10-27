@@ -104,6 +104,79 @@ fn evm_verified_contract() {
 }
 
 #[test]
+fn evm_busy_address_asks_the_node() {
+    // Blockscout fails the address record for the busiest contracts; its
+    // node still says there is code at the address.
+    let m = mock(vec![
+        (
+            "GET /api/v2/addresses/0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+            500,
+            r#""Internal server error""#,
+        ),
+        (
+            "RPC eth_getCode",
+            200,
+            r#"{"jsonrpc":"2.0","id":1,"result":"0x6080604052"}"#,
+        ),
+    ]);
+    let o = net(&m.base).lookup(&parse(ROUTER).unwrap()).unwrap();
+    assert!(o.active && o.contract);
+    assert_eq!(o.summary(), "contract · Ethereum via Blockscout");
+}
+
+#[test]
+fn evm_node_that_proves_nothing_is_an_error() {
+    // No code, no nonce, no ether: tokens may still have arrived, so this
+    // must not read as "never used".
+    let m = mock(vec![
+        (
+            "GET /api/v2/addresses/0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+            503,
+            "{}",
+        ),
+        (
+            "RPC eth_getCode",
+            200,
+            r#"{"jsonrpc":"2.0","id":1,"result":"0x"}"#,
+        ),
+        (
+            "RPC eth_getTransactionCount",
+            200,
+            r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#,
+        ),
+        (
+            "RPC eth_getBalance",
+            200,
+            r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#,
+        ),
+    ]);
+    let e = net(&m.base).lookup(&parse(ROUTER).unwrap()).unwrap_err();
+    assert_eq!(e.to_string(), "Blockscout: HTTP 503");
+}
+
+#[test]
+fn evm_failed_counters_keep_the_record() {
+    let m = mock(vec![
+        (
+            "GET /api/v2/addresses/0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+            200,
+            r#"{"is_contract":true,"is_verified":true,"name":"SwapRouter02"}"#,
+        ),
+        (
+            "GET /api/v2/addresses/0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45/counters",
+            500,
+            r#""Internal server error""#,
+        ),
+    ]);
+    let o = net(&m.base).lookup(&parse(ROUTER).unwrap()).unwrap();
+    assert_eq!(o.transactions, None);
+    assert_eq!(
+        o.summary(),
+        "verified contract “SwapRouter02” · Ethereum via Blockscout"
+    );
+}
+
+#[test]
 fn evm_unknown_address_is_never_used() {
     let m = mock(vec![]);
     let o = net(&m.base).lookup(&parse(ROUTER).unwrap()).unwrap();

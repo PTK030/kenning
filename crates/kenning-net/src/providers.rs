@@ -60,11 +60,20 @@ pub(crate) fn blockscout(agent: &Agent, base: &str, address: &Address) -> Result
         name: None,
         fetched_at: Timestamp::now(),
     };
-    let (status, info) = get(agent, BLOCKSCOUT, &format!("{base}/api/v2/addresses/{address}"))?;
-    if status == 404 {
-        return Ok(out);
-    }
-    ok_or_fail(BLOCKSCOUT, status)?;
+    let info = match get(agent, BLOCKSCOUT, &format!("{base}/api/v2/addresses/{address}")) {
+        Ok((404, _)) => return Ok(out),
+        Ok((status, info)) if (200..300).contains(&status) => info,
+        // For the busiest addresses (a token contract, an exchange) the
+        // address record can take Blockscout longer than our timeout, or fail
+        // with a 5xx. Its node still answers at once, on the same host.
+        failed => {
+            let err = match failed {
+                Ok((status, _)) => fail(BLOCKSCOUT, format!("HTTP {status}")),
+                Err(e) => e,
+            };
+            return node_facts(agent, base, address, out).ok_or(err);
+        }
+    };
     out.contract = info["is_contract"].as_bool().unwrap_or(false);
     out.verified = if out.contract {
         info["is_verified"].as_bool()
@@ -73,12 +82,16 @@ pub(crate) fn blockscout(agent: &Agent, base: &str, address: &Address) -> Result
     };
     out.name = info["name"].as_str().filter(|s| !s.is_empty()).map(str::to_owned);
 
-    let (status, counters) = get(
+    // The counters are extra detail, and Blockscout fails them now and then
+    // for busy addresses; the address record above already says enough.
+    let counters = match get(
         agent,
         BLOCKSCOUT,
         &format!("{base}/api/v2/addresses/{address}/counters"),
-    )?;
-    ok_or_fail(BLOCKSCOUT, status)?;
+    ) {
+        Ok((status, counters)) if (200..300).contains(&status) => counters,
+        _ => Value::Null,
+    };
     let txs = number(&counters["transactions_count"]).unwrap_or(0);
     let transfers = number(&counters["token_transfers_count"]).unwrap_or(0);
     // Blockscout computes counters lazily and may answer 0 for busy
@@ -94,6 +107,28 @@ pub(crate) fn blockscout(agent: &Agent, base: &str, address: &Address) -> Result
         || txs > 0
         || transfers > 0;
     Ok(out)
+}
+
+/// What Blockscout's node can prove without the address record: code means
+/// a contract, a nonce or a balance means the address was used. `None` when
+/// it proves nothing, because an address without code, nonce or ether may
+/// still have received tokens, and that is not "never used".
+fn node_facts(agent: &Agent, base: &str, address: &Address, mut out: Onchain) -> Option<Onchain> {
+    let url = format!("{base}/api/eth-rpc");
+    let call = |method: &str| -> Option<String> {
+        let body =
+            json!({"jsonrpc": "2.0", "id": 1, "method": method, "params": [address.as_str(), "latest"]});
+        let (status, body) = post(agent, BLOCKSCOUT, &url, &body).ok()?;
+        ok_or_fail(BLOCKSCOUT, status).ok()?;
+        body["result"].as_str().map(str::to_owned)
+    };
+    let nonzero = |hex: &str| !hex.trim_start_matches("0x").trim_start_matches('0').is_empty();
+
+    out.contract = nonzero(&call("eth_getCode")?);
+    out.active = out.contract
+        || call("eth_getTransactionCount").is_some_and(|n| nonzero(&n))
+        || call("eth_getBalance").is_some_and(|b| nonzero(&b));
+    out.active.then_some(out)
 }
 
 // ---------------------------------------------------------------- Solana
