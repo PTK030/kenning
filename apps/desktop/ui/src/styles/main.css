@@ -15,6 +15,7 @@ body {
    with its cards. A faint blue light in the page's top corner, the same
    recipe as the onboarding, only quieter. */
 #app {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: grid;
@@ -22,6 +23,23 @@ body {
   background:
     radial-gradient(55% 45% at 100% 0%, color-mix(in srgb, var(--brand-strong) 8%, transparent), transparent 70%),
     var(--surface);
+}
+
+/* The onboarding's light (on while body.immersive, see onboarding.css). */
+#app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 60% at 85% 10%, rgb(58 85 201 / 22%), transparent 70%),
+    radial-gradient(60% 50% at 0% 100%, rgb(58 85 201 / 10%), transparent 70%);
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+#app > * {
+  position: relative;
 }
 
 nav {

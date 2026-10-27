@@ -9,7 +9,7 @@ import { journalView } from "./views/journal";
 import { settingsView } from "./views/settings";
 import { welcomeView } from "./views/welcome";
 import { icon, type IconName } from "./icons";
-import { move, rise, SPRING } from "./motion";
+import { EASE_IN, move, rise, SPRING } from "./motion";
 import { titlebar } from "./titlebar";
 import { closeSheet, sheetOpen, toggleSheet } from "./shortcutSheet";
 import { keycaps, matches } from "./shortcuts";
@@ -32,6 +32,8 @@ let overview: Overview;
 /** The tab drawn last, and where its highlight sat, so a change can glide. */
 let lastTab = "";
 let lastPillTop: number | null = null;
+/** Set when the onboarding hands over: the panel arrives instead of appearing. */
+let arriving = false;
 
 function currentTab(): string {
   return location.hash.replace("#", "") || "book";
@@ -55,6 +57,9 @@ async function render() {
     const main = h("main", { class: "onboarding" });
     clear(app, main);
     await welcomeView(main, overview, async () => {
+      // The onboarding steps back first; the panel then arrives (below).
+      await move(main, { opacity: [1, 0], scale: [1, 0.985] }, { duration: 0.3, ease: EASE_IN });
+      arriving = true;
       location.hash = "book";
       await refresh();
     });
@@ -98,7 +103,13 @@ async function render() {
     }
     lastPillTop = link.offsetTop;
   }
-  if (active.id !== lastTab) void rise(main.children, { y: 10, gap: 0.035 });
+  if (arriving) {
+    // After the onboarding: the sidebar slides in as the page rises, while
+    // the title bar and the light settle (CSS transitions).
+    arriving = false;
+    void move(nav, { opacity: [0, 1], x: [-24, 0] }, SPRING);
+    void rise(main.children, { y: 16, gap: 0.05, delay: 0.08 });
+  } else if (active.id !== lastTab) void rise(main.children, { y: 10, gap: 0.035 });
   lastTab = active.id;
   focusPending();
 }

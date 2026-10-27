@@ -446,7 +446,10 @@ textarea {
   border-bottom: 1px solid var(--line);
   user-select: none;
   -webkit-user-select: none;
-  transition: opacity 160ms;
+  transition:
+    opacity 160ms,
+    background-color 500ms ease,
+    border-color 500ms ease;
 }
 
 .titlebar.blurred .tb-mark,

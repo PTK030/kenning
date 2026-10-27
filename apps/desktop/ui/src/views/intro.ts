@@ -1,5 +1,6 @@
 // The first thing Kenning shows, once, before the onboarding: an address
-// resolves out of noise, gives way to the mark drawing itself, the mark
+// resolves out of noise in the middle of the window, gives way to the mark
+// drawing itself, the mark
 // settles onto its tile with a soft chime, and the name rises under it.
 // About two and a half seconds; any click or key skips it.
 
@@ -57,16 +58,18 @@ export async function playIntro(host: HTMLElement, opts: { sounds: boolean; leav
   root.addEventListener("pointerdown", skip);
   document.addEventListener("keydown", skip, { once: true });
 
-  // 1. An address resolves out of noise, left to right.
+  // 1. An address resolves out of noise, from the middle out, so it sits
+  //    centred the whole time (and leaves the way it came, edges first).
+  const mid = (chars.length - 1) / 2;
   await new Promise<void>((done) => {
     const start = performance.now();
     const tick = (now: number) => {
       const t = now - start;
       chars.forEach((c, i) => {
-        const at = 60 + i * 13;
+        const at = 60 + Math.abs(i - mid) * 26;
         c.textContent = t >= at + 120 ? ADDRESS[i] : t >= at ? HEX[Math.floor(Math.random() * HEX.length)] : " ";
       });
-      if (t < 60 + chars.length * 13 + 140 && !skipped) requestAnimationFrame(tick);
+      if (t < 60 + mid * 26 + 140 && !skipped) requestAnimationFrame(tick);
       else {
         chars.forEach((c, i) => (c.textContent = ADDRESS[i]));
         done();
@@ -77,7 +80,6 @@ export async function playIntro(host: HTMLElement, opts: { sounds: boolean; leav
   if (!skipped) await wait(220);
 
   // 2. The address gives way, from the edges in, and the mark draws itself.
-  const mid = (chars.length - 1) / 2;
   chars.forEach((c, i) => void move(c, { opacity: 0, y: -4 }, { duration: 0.28, ease: EASE_IN, delay: (mid - Math.abs(i - mid)) * 0.007 }));
   void move(glow, { opacity: [0, 1], scale: [0.6, 1] }, { duration: 1.2, ease: EASE_OUT, delay: 0.15 });
   await wait(skipped ? 0 : 220);

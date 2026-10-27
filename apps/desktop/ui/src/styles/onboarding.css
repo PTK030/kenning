@@ -810,10 +810,10 @@ body.immersive .titlebar {
   z-index: 2;
 }
 
-body.immersive #app {
-  background:
-    radial-gradient(70% 60% at 85% 10%, rgb(58 85 201 / 22%), transparent 70%),
-    radial-gradient(60% 50% at 0% 100%, rgb(58 85 201 / 10%), transparent 70%);
+/* The onboarding's stronger light, laid over the page's own: it fades out
+   as the window becomes the panel instead of switching off (main.css). */
+body.immersive #app::before {
+  opacity: 1;
 }
 
 .ob {
@@ -1406,9 +1406,11 @@ body.immersive #app {
   transform-origin: center;
 }
 
+/* Alone on screen at first, so in the middle of the window (the stage is
+   centred), not at the height of the mark that replaces it. */
 .intro-address {
   position: absolute;
-  top: 48px;
+  top: 50%;
   left: 50%;
   translate: -50% -50%;
   display: flex;
