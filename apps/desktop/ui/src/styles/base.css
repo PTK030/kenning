@@ -320,40 +320,19 @@ textarea:focus {
 }
 
 .dd-list li {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
+  transition: background 120ms ease;
 }
 
+.dd-list li:hover,
 .dd-list li:focus-visible {
   outline: none;
-}
-
-/* The one highlight that glides to the choice under the pointer or keys. */
-.dd-list .dd-hl {
-  position: absolute;
-  top: 0;
-  left: 4px;
-  right: 4px;
-  padding: 0;
-  border-radius: 8px;
   background: color-mix(in srgb, var(--ink) 9%, transparent);
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    height 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 160ms ease;
-}
-
-.dd-ic,
-.dd-text,
-.dd-tick {
-  position: relative;
 }
 
 .dd-ic {
