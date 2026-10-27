@@ -45,7 +45,10 @@ export function Cta() {
       </div>
       <p className="cta-fine">
         Version 0.1.0 for Windows 10 and 11, free under the MIT licence. macOS and Linux are{" "}
-        <a href="#roadmap">on the roadmap</a>.
+        <a href="#roadmap" data-cursor="Jump up" data-cursor-icon="up">
+          on the roadmap
+        </a>
+        .
       </p>
     </section>
   );

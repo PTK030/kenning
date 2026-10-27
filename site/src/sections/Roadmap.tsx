@@ -22,7 +22,13 @@ export function Roadmap() {
             <ul>
               {col.items.map((it) => (
                 <li key={it.text}>
-                  {it.href ? <a href={it.href}>{it.text}</a> : it.text}
+                  {it.href ? (
+                    <a href={it.href} data-cursor="Open on GitHub" data-cursor-icon="out">
+                      {it.text}
+                    </a>
+                  ) : (
+                    it.text
+                  )}
                   {it.funded && <span className="funded">Funded by {it.funded}</span>}
                 </li>
               ))}
@@ -32,7 +38,11 @@ export function Roadmap() {
       </div>
 
       <p className="roadmap-fine">
-        Something missing or wrong? <a href={ISSUES}>Open an issue</a>.
+        Something missing or wrong?{" "}
+        <a href={ISSUES} data-cursor="Open on GitHub" data-cursor-icon="out">
+          Open an issue
+        </a>
+        .
       </p>
     </section>
   );

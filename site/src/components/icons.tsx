@@ -46,6 +46,16 @@ export const ArrowOut = () => (
     <path d="M7 17 17 7M7 7h10v10" />
   </Icon>
 );
+export const ArrowUp = () => (
+  <Icon>
+    <path d="M12 19V5M6 11l6-6 6 6" />
+  </Icon>
+);
+export const ArrowDown = () => (
+  <Icon>
+    <path d="M12 5v14M6 13l6 6 6-6" />
+  </Icon>
+);
 export const Copy = () => (
   <Icon>
     <rect x="9" y="9" width="13" height="13" rx="2" />

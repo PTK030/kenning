@@ -34,7 +34,7 @@ function Row({ name, children, proof, href, visual }: { name: string; children: 
       <h3>{name}</h3>
       <div className="feat-text">
         <p>{children}</p>
-        <a className="proof" href={href}>
+        <a className="proof" href={href} data-cursor="Open on GitHub" data-cursor-icon="out">
           {proof}
         </a>
       </div>

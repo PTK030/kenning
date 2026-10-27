@@ -40,7 +40,9 @@ export function Story() {
           </h2>
           <p className="story-scale">
             270 million attempts on Ethereum and BSC in two years, and at least $83.8M lost.{" "}
-            <a href={STUDY}>USENIX Security 2025</a>
+            <a href={STUDY} data-cursor="Open the paper" data-cursor-icon="out">
+              USENIX Security 2025
+            </a>
           </p>
           <ol className="acts">
             {ACTS.map((a, i) => (

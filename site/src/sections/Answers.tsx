@@ -98,7 +98,11 @@ export function Answers() {
               <i className="mb-bar" />
             </div>
           }
-          link={<a href="#features">How names work</a>}
+          link={
+            <a href="#features" data-cursor="Jump down" data-cursor-icon="down">
+              How names work
+            </a>
+          }
         >
           Copy an address from your book and a badge says whose it is, then slides away after a few seconds.
         </Tile>
@@ -135,7 +139,11 @@ export function Answers() {
               <Addr text={KNOWN} other={POISON} marked />
             </div>
           }
-          link={<a href={RULES}>Read the detection rules</a>}
+          link={
+            <a href={RULES} data-cursor="Open on GitHub" data-cursor-icon="out">
+              Read the detection rules
+            </a>
+          }
         >
           Same start, same end, a different middle. A window shows both addresses in full with every difference
           marked, and one click puts the right one back.

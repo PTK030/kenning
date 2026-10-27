@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowOut, Copy, Download, Pointer, Replay } from "./icons";
+import { ArrowDown, ArrowOut, ArrowUp, Copy, Download, Pointer, Replay } from "./icons";
 import { useFinePointer } from "./pointer";
 
 type Label = { text: string; icon?: string };
@@ -10,6 +10,8 @@ const ICONS: Record<string, ReactNode> = {
   download: <Download />,
   replay: <Replay />,
   out: <ArrowOut />,
+  down: <ArrowDown />,
+  up: <ArrowUp />,
 };
 
 /**

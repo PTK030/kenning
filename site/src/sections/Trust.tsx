@@ -25,7 +25,7 @@ function Terminal({ lines }: { lines: [string, string][] }) {
 
 function Check({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a className="check" href={href}>
+    <a className="check" href={href} data-cursor="Open on GitHub" data-cursor-icon="out">
       {children}
     </a>
   );
@@ -49,7 +49,10 @@ export function Trust() {
           </div>
         </dl>
         <p>
-          Measured on Windows 11. <a href={GATE}>How it was measured</a>
+          Measured on Windows 11.{" "}
+          <a href={GATE} data-cursor="Open on GitHub" data-cursor-icon="out">
+            How it was measured
+          </a>
         </p>
       </div>
       <Scrub
