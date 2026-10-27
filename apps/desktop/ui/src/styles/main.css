@@ -798,6 +798,128 @@ main > .notice {
   margin-top: -4px;
 }
 
+/* ---- Journal ------------------------------------------------------------- */
+
+/* A segmented switch: one choice of a few, in one pill. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.segmented button {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.segmented button:hover {
+  color: var(--ink);
+}
+
+.segmented button[aria-selected="true"] {
+  background: var(--surface-card);
+  color: var(--ink);
+  box-shadow: var(--elev-1);
+}
+
+.day + .day {
+  margin-top: 22px;
+}
+
+.day > h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Action tiles take the colour of what happened. */
+.entry .ic.tone-brand {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.entry .ic.tone-look {
+  background: var(--look-soft);
+  color: var(--look);
+}
+
+.entry .ic.tone-mine {
+  background: var(--mine-soft);
+  color: var(--mine);
+}
+
+.entry .ic.tone-plain {
+  background: var(--surface-raised);
+  color: var(--ink-2);
+}
+
+.entry .who .label {
+  margin-left: 6px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.entry .when {
+  display: grid;
+  justify-items: end;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.entry .when time {
+  color: var(--ink);
+}
+
+.notice.off {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notice.off span {
+  flex: 1;
+}
+
+/* An empty state with a little more to say: an icon, a line, a reason. */
+.empty.rich {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 36px 24px;
+}
+
+.empty.rich .ic {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.empty.rich strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.empty.rich span:last-child {
+  max-width: 32em;
+}
+
 /* A question before something that cannot be undone (confirmSheet.ts). */
 .sheet-card.confirm {
   width: min(400px, 100%);
