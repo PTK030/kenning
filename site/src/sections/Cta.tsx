@@ -1,5 +1,6 @@
 import { motion, useMotionValue, useSpring } from "motion/react";
 import type { PointerEvent, ReactNode } from "react";
+import { CopyCommand } from "../components/CopyCommand";
 import { Download } from "../components/icons";
 import { RiseTitle } from "../components/Reveal";
 import { RELEASES, REPO } from "../links";
@@ -42,6 +43,9 @@ export function Cta() {
         <Magnetic className="btn btn-ghost btn-big" href={REPO} cursor="Open GitHub" icon="out">
           View the source
         </Magnetic>
+      </div>
+      <div className="cta-command">
+        <CopyCommand />
       </div>
       <p className="cta-fine">Free and open source under MIT. Windows today, macOS and Linux next.</p>
     </section>

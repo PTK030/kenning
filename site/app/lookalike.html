@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <!-- Before the window's styles arrive: the frame's colour scheme (or the
+         browser paints the frame opaque) and the window's own background. -->
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      html {
+        background: #141b23;
+      }
+    </style>
+    <title>Kenning: not the address you know</title>
+  </head>
+  <body data-window="lookalike">
+    <div id="chrome"></div>
+    <main id="lookalike" role="alertdialog" aria-labelledby="headline" aria-describedby="detail"></main>
+    <!-- The desktop app's lookalike window, fed by the hero (src/app/lookalike.ts). -->
+    <script type="module" src="../src/app/lookalike.ts"></script>
+  </body>
+</html>

@@ -44,6 +44,11 @@ export function Cursor() {
       const text = t?.dataset.cursor;
       setHover((prev) => (prev?.text === text ? prev : text ? { text, icon: t?.dataset.cursorIcon } : null));
     };
+    // Over an embedded page (the hero's app windows) the pointer belongs to
+    // that page and its own cursor shows; ours would only freeze at the edge.
+    const over = (e: PointerEvent) => {
+      if ((e.target as Element | null)?.tagName === "IFRAME") setVisible(false);
+    };
     const press = () => setDown(true);
     const release = () => setDown(false);
     const leave = () => setVisible(false);
@@ -54,6 +59,7 @@ export function Cursor() {
     };
 
     window.addEventListener("pointermove", move);
+    window.addEventListener("pointerover", over);
     window.addEventListener("pointerdown", press);
     window.addEventListener("pointerup", release);
     document.addEventListener("mouseleave", leave);
@@ -62,6 +68,7 @@ export function Cursor() {
       root.classList.remove("custom-cursor");
       clearTimeout(flashTimer);
       window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerover", over);
       window.removeEventListener("pointerdown", press);
       window.removeEventListener("pointerup", release);
       document.removeEventListener("mouseleave", leave);

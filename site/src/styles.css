@@ -48,6 +48,9 @@
   --mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
   --gutter: clamp(16px, 4vw, 56px);
   --page: min(1280px, 100% - 2 * var(--gutter));
+
+  /* A damped spring, about 9% past the target before it settles. */
+  --spring: linear(0, 0.101 4.5%, 0.322 9.1%, 0.568 13.6%, 0.783 18.2%, 0.941 22.7%, 1.038 27.3%, 1.085 31.8%, 1.095 36.4%, 1.083 40.9%, 1.061 45.5%, 1.038 50%, 1.018 54.5%, 1.004 59.1%, 0.995 63.6%, 0.992 68.2%, 0.991 72.7%, 0.992 77.3%, 0.995 81.8%, 0.997 86.4%, 0.999 90.9%, 1);
 }
 
 *,
@@ -194,6 +197,55 @@ svg {
   font-size: 18px;
 }
 
+/* On hover a blue fill swells from the middle, slightly past the edges, while
+   the label rolls up and out and its copy rolls in from below. */
+.btn-roll {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.btn-roll.btn-light:hover {
+  background: var(--white);
+}
+.btn-roll::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--blue);
+  transform: scale(0);
+  opacity: 0;
+  transition:
+    transform 0.45s cubic-bezier(0.4, 1.35, 0.5, 0.97),
+    opacity 0.2s ease;
+}
+.btn-roll:hover::before {
+  transform: scale(1.04);
+  opacity: 1;
+}
+.roll {
+  display: grid;
+  overflow: hidden;
+}
+.roll > span {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.9s var(--spring);
+}
+.roll > span + span {
+  color: var(--white);
+  transform: translateY(115%);
+}
+.btn-roll:hover .roll > span:first-child {
+  transform: translateY(-115%);
+}
+.btn-roll:hover .roll > span + span {
+  transform: none;
+}
+
 /* Navigation */
 .nav {
   position: fixed;
@@ -243,55 +295,246 @@ svg {
   text-underline-offset: 4px;
 }
 
-/* Hero */
+/* Hero: the first screen is a Windows desktop, with Kenning at work on it. */
 .hero {
   position: relative;
-  min-height: 100svh;
-  padding: 140px 0 120px;
-  background: var(--night);
-  color: var(--on-night);
+  height: 100svh;
+  min-height: 640px;
   overflow: hidden;
   isolation: isolate;
+  background: radial-gradient(130% 90% at 85% 0%, #22324b 0%, #16202a 55%, #0f161e 100%);
+  color: var(--on-night);
 }
-.hero-glow {
+.hero-wall {
   position: absolute;
   inset: 0;
   z-index: -1;
 }
-.hero-inner {
-  width: var(--page);
-  margin: 0 auto;
-  transform-origin: 50% 0;
+/* Wider than the rest of the page: the scene runs off the right edge. */
+.hero-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.26fr);
+  align-items: center;
+  gap: clamp(16px, 3vw, 48px);
+  height: 100%;
+  /* Room for the nav above. */
+  padding: 96px 0 48px max(var(--gutter), (100% - 1600px) / 2);
 }
+/* Poster type: condensed, heavy, set so tight the lines nearly touch. */
 .hero-title {
-  font-size: clamp(60px, 13.5vw, 228px);
+  font-size: clamp(56px, 7.6vw, 150px);
   font-weight: 760;
   font-stretch: 75%;
   font-variation-settings: "wdth" 75;
-  line-height: 0.86;
-  letter-spacing: -0.035em;
-  max-width: 11ch;
+  line-height: 0.84;
+  letter-spacing: -0.03em;
 }
-.hero-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 28px 48px;
-  margin-top: clamp(28px, 4vw, 48px);
+.hero-title .word-mask:not(:last-child) {
+  margin-right: 0.14em;
 }
 .hero-lead {
-  max-width: 34rem;
-  font-size: clamp(18px, 1.6vw, 22px);
-  line-height: 1.45;
+  max-width: 26rem;
+  margin-top: clamp(20px, 2.4vw, 32px);
+  font-size: clamp(17px, 1.45vw, 21px);
+  font-weight: 500;
+  line-height: 1.35;
   color: var(--on-night-2);
 }
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  min-width: 0;
-  max-width: 100%;
+  align-items: center;
+  gap: 12px 18px;
+  margin-top: clamp(22px, 2.6vw, 34px);
+}
+.hero-fine {
+  font-size: 14px;
+  color: var(--on-night-2);
+}
+
+/* The scene, laid out at the windows' real sizes and fitted to its area. */
+.scene {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  /* Clear of the right edge, with room for the camera's push. */
+  margin-right: var(--gutter);
+}
+.scene-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+.scene-cam {
+  position: absolute;
+  inset: 0;
+}
+.scene-canvas {
+  perspective: 1600px;
+}
+.scene:not(.ready) iframe {
+  visibility: hidden;
+}
+.scene iframe {
+  display: block;
+  border: 0;
+  background: transparent;
+  /* Matching the frames' own scheme keeps the badge's frame see-through. */
+  color-scheme: light dark;
+}
+
+/* A window opens and closes the way Windows does it: quick, a touch of scale. */
+.win {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 9%),
+    0 32px 80px -24px rgb(0 0 0 / 75%),
+    0 8px 24px -8px rgb(0 0 0 / 50%);
+  opacity: 0;
+  transform: scale(0.97);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s 0.2s;
+}
+.win.open {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.16s ease,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.7s ease;
+}
+
+/* Two addresses from a wallet's history, floating in the dark. */
+.scene-lines {
+  position: absolute;
+  display: grid;
+  gap: 26px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 1s ease,
+    transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s ease;
+}
+.scene-lines.shown {
+  opacity: 1;
+  transform: none;
+}
+.scene-lines.behind {
+  filter: blur(3px) brightness(0.5);
+}
+.scene-lines li {
+  display: grid;
+  gap: 8px;
+}
+.scene-what {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-night);
+}
+.scene-what span {
+  font-weight: 500;
+  color: var(--on-night-2);
+}
+.scene-addr {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: max-content;
+}
+.scene-addr code {
+  position: relative;
+  font-size: 24px;
+  letter-spacing: 0.01em;
+  color: var(--on-night-2);
+  transition: color 0.4s ease;
+}
+.scene-lines li.selected code {
+  color: var(--white);
+}
+/* The selection sweeps across the address, as a drag would. */
+.scene-code {
+  position: relative;
+}
+.scene-sel {
+  position: absolute;
+  inset: -4px -6px;
+  border-radius: 6px;
+  background: rgb(58 85 201 / 55%);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.scene-lines li.selected .scene-sel {
+  transform: none;
+}
+.scene-keys {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.scene-lines li.copied .scene-keys {
+  opacity: 1;
+  transform: none;
+}
+.scene-keys kbd {
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #2a3644;
+  box-shadow:
+    inset 0 -2px 0 rgb(0 0 0 / 35%),
+    inset 0 0 0 1px rgb(255 255 255 / 10%);
+  color: var(--on-night);
+  font: 600 13px var(--sans);
+}
+.scene-lines li.copied kbd {
+  animation: key-press 0.4s ease 0.05s both;
+}
+.scene-lines li.copied kbd + kbd {
+  animation-delay: 0.14s;
+}
+@keyframes key-press {
+  45% {
+    transform: translateY(2px);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
+  }
+}
+/* Only to be seen: its frame is mostly empty, and a frame takes the pointer. */
+.scene-badge {
+  position: absolute;
+  pointer-events: none;
+}
+
+@media (max-width: 999px) {
+  .hero-stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 20px;
+    padding: 92px var(--gutter) 32px;
+  }
+  .scene {
+    margin-right: 0;
+  }
+  .hero-title {
+    font-size: clamp(48px, 13vw, 96px);
+  }
+  .hero-lead {
+    max-width: 34rem;
+  }
 }
 .command {
   display: inline-flex;
@@ -323,78 +566,6 @@ svg {
   font-weight: 600;
 }
 
-/* The specimen: the lookalike window, tilting in 3D. */
-.specimen-stage {
-  margin-top: clamp(48px, 7vw, 96px);
-  perspective: 1400px;
-}
-.specimen-tilt {
-  transform-style: preserve-3d;
-}
-.specimen {
-  position: relative;
-  overflow: hidden;
-  padding: clamp(20px, 3vw, 36px);
-  border-radius: 28px;
-  background: linear-gradient(180deg, #1d2936, #17222d);
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 9%),
-    0 60px 120px -40px rgb(0 0 0 / 70%),
-    0 0 0 1px rgb(0 0 0 / 30%);
-}
-.specimen-shine {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.specimen-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: clamp(16px, 2.4vw, 28px);
-}
-.specimen-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 650;
-  color: var(--on-night-2);
-  background: rgb(255 255 255 / 6%);
-  transition:
-    color 0.4s ease,
-    background-color 0.4s ease;
-}
-.specimen-state.alert {
-  color: var(--diff-night);
-  background: var(--diff-bg-night);
-}
-.replay {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 6%);
-  color: var(--on-night-2);
-  font-size: 17px;
-  cursor: pointer;
-}
-.replay:hover {
-  color: var(--on-night);
-  background: rgb(255 255 255 / 12%);
-}
-.spec-row {
-  display: grid;
-  gap: 6px;
-  padding: clamp(10px, 1.6vw, 18px) 0;
-}
-.spec-row + .spec-row {
-  border-top: 1px solid var(--night-line);
-}
 .spec-who {
   font-size: 14px;
   font-weight: 600;
@@ -429,27 +600,6 @@ svg {
   background: var(--ch-on-bg);
 }
 
-.verdict {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px 28px;
-  margin-top: clamp(14px, 2vw, 22px);
-  padding-top: clamp(16px, 2vw, 24px);
-  border-top: 1px solid var(--night-line);
-}
-.verdict div {
-  display: grid;
-  gap: 2px;
-}
-.verdict strong {
-  font-size: clamp(20px, 2.2vw, 28px);
-  font-weight: 700;
-}
-.verdict span {
-  color: var(--on-night-2);
-}
 .fix {
   display: inline-flex;
   align-items: center;
@@ -1136,6 +1286,11 @@ svg {
   gap: 14px;
   margin-top: clamp(36px, 5vw, 56px);
 }
+.cta-command {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
 .cta-fine {
   margin-top: 26px;
   color: rgb(255 255 255 / 80%);
@@ -1326,9 +1481,6 @@ html.custom-scrollbar::-webkit-scrollbar {
   .nav .btn {
     margin-left: auto;
   }
-  .hero {
-    padding-top: 112px;
-  }
   .hero-actions,
   .command {
     width: 100%;
@@ -1363,5 +1515,9 @@ html.custom-scrollbar::-webkit-scrollbar {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .btn-roll::before,
+  .roll > span {
+    transition: none;
   }
 }

@@ -1,0 +1,79 @@
+{
+  "known": {
+    "address": {
+      "chain": "evm",
+      "text": "0x28C6c06298d514Db089934071355E5743bf21d60"
+    },
+    "detail": "my deposits · in your book",
+    "grouped": "0x 28C6 c062 98d5 14Db 0899 3407 1355 E574 3bf2 1d60",
+    "headline": "Binance",
+    "history": null,
+    "label": "Binance",
+    "label_kind": null,
+    "lookalike": null,
+    "more_lookalikes": 0,
+    "note": "my deposits",
+    "source": "personal",
+    "state": "mine"
+  },
+  "lookalike": {
+    "address": {
+      "chain": "evm",
+      "text": "0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60"
+    },
+    "detail": "Matches 6 + 4 characters, 30 differ.",
+    "grouped": "0x 28C6 C0aa AAaA AAaa AaAa AAaa AAaa aaaa AAaA 1d60",
+    "headline": "This is not your Binance address.",
+    "history": null,
+    "label": null,
+    "label_kind": null,
+    "lookalike": {
+      "candidate_spans": [
+        {
+          "same": true,
+          "text": "0x28C6C0"
+        },
+        {
+          "same": false,
+          "text": "aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA"
+        },
+        {
+          "same": true,
+          "text": "1d60"
+        }
+      ],
+      "known": {
+        "chain": "evm",
+        "text": "0x28C6c06298d514Db089934071355E5743bf21d60"
+      },
+      "known_grouped": "0x 28C6 c062 98d5 14Db 0899 3407 1355 E574 3bf2 1d60",
+      "known_kind": "mine",
+      "known_label": "Binance",
+      "known_last_seen": null,
+      "known_spans": [
+        {
+          "same": true,
+          "text": "0x28C6c0"
+        },
+        {
+          "same": false,
+          "text": "6298d514Db089934071355E5743bf2"
+        },
+        {
+          "same": true,
+          "text": "1d60"
+        }
+      ],
+      "similarity": {
+        "differing": 30,
+        "length": 40,
+        "same_prefix": 6,
+        "same_suffix": 4
+      }
+    },
+    "more_lookalikes": 0,
+    "note": null,
+    "source": null,
+    "state": "lookalike"
+  }
+}
