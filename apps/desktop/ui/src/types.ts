@@ -170,6 +170,17 @@ export interface JournalRecord {
   related?: string;
 }
 
+/** Two addresses compared character by character (Check › Compare). */
+export interface Comparison {
+  same: boolean;
+  chain: Chain;
+  similarity: Similarity;
+  a_grouped: string;
+  b_grouped: string;
+  a_spans: Span[];
+  b_spans: Span[];
+}
+
 export interface ImportSummary {
   added: number;
   updated: number;

@@ -622,6 +622,182 @@ main > .notice {
   margin-bottom: 14px;
 }
 
+/* ---- Check --------------------------------------------------------------- */
+
+/* What answers are compared against: the system's status, in one line. */
+.check-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.check-status .icon {
+  flex: none;
+  color: var(--brand);
+}
+
+.check-input {
+  display: grid;
+  gap: 8px;
+}
+
+.check-input > div {
+  display: grid;
+  gap: 8px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.check-input textarea,
+.check-input input {
+  width: 100%;
+}
+
+.check-input textarea {
+  min-height: 96px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.compare {
+  display: grid;
+  gap: 8px;
+}
+
+.compare input + .field-label {
+  margin-top: 6px;
+}
+
+.check-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  font-size: 12.5px;
+}
+
+.check-results {
+  margin-top: 16px;
+}
+
+/* A verdict: the tile carries the state's symbol and colour, the address
+   follows in full, then the plain list of what was compared. */
+.verdict {
+  --tone: var(--brand);
+  --tone-soft: var(--brand-soft);
+  display: grid;
+  gap: 12px;
+}
+
+.verdict.k-mine,
+.verdict.k-team,
+.verdict.k-contact {
+  --tone: var(--mine);
+  --tone-soft: var(--mine-soft);
+}
+
+.verdict.k-new {
+  --tone: var(--new);
+  --tone-soft: var(--new-soft);
+}
+
+.verdict.k-seen {
+  --tone: var(--ink-2);
+  --tone-soft: var(--surface-raised);
+}
+
+.verdict.k-lookalike {
+  --tone: var(--look);
+  --tone-soft: var(--look-soft);
+}
+
+.verdict-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.verdict-head strong {
+  display: block;
+  font-size: 16px;
+}
+
+/* After a sentence, a chip needs its gap even as the first element. */
+.verdict-head .meta-chip {
+  margin-left: 8px;
+}
+
+.verdict .tile {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--tone);
+  background: var(--tone-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+.verdict-addr {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+}
+
+.verdict-addr .addr {
+  font-size: 13.5px;
+}
+
+.verdict-addr .who {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.verdict-why {
+  margin: 0;
+  max-width: 46em;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* What was checked: specific steps, so the answer shows its work. */
+.checked {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.checked li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.checked .icon {
+  flex: none;
+  color: var(--mine);
+  transform: translateY(2px);
+}
+
+.verdict .onchain {
+  margin-top: -4px;
+}
+
 /* A question before something that cannot be undone (confirmSheet.ts). */
 .sheet-card.confirm {
   width: min(400px, 100%);

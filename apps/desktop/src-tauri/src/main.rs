@@ -61,6 +61,7 @@ fn main() {
             commands::open_explorer,
             commands::list_books,
             commands::recognize_text,
+            commands::compare_addresses,
             commands::add_entry,
             commands::show_entry,
             commands::remove_entry,

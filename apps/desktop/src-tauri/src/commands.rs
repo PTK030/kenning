@@ -6,7 +6,9 @@ use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 
 use kenning_core::journal::{self, Action};
-use kenning_core::{Chain, ClipboardMode, Config, Entry, Owner, Recognition, extract, interop};
+use kenning_core::{
+    Chain, ClipboardMode, Config, Entry, Owner, Recognition, diff, extract, interop, lookalike,
+};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_autostart::ManagerExt as _;
@@ -263,6 +265,44 @@ pub fn recognize_text(state: State<AppState>, text: String) -> Vec<Recognition> 
         .collect()
 }
 
+/// Two addresses side by side, character by character, as `ken diff`.
+#[derive(Serialize)]
+pub struct Comparison {
+    same: bool,
+    chain: Chain,
+    similarity: lookalike::Similarity,
+    a_grouped: String,
+    b_grouped: String,
+    a_spans: Vec<diff::Span>,
+    b_spans: Vec<diff::Span>,
+}
+
+/// Check: the address someone expects against the one in front of them.
+/// Comparing is not checking either against the book: nothing is recorded.
+#[tauri::command]
+pub fn compare_addresses(a: String, b: String) -> Res<Comparison> {
+    let a = extract::single(&a).ok_or("The first box does not hold one address.")?;
+    let b = extract::single(&b).ok_or("The second box does not hold one address.")?;
+    if a.chain() != b.chain() {
+        return Err(format!(
+            "These are on different chains: {} and {}.",
+            a.chain().display_name(),
+            b.chain().display_name()
+        ));
+    }
+    let ab = lookalike::compare(&a, &b);
+    let ba = lookalike::compare(&b, &a);
+    Ok(Comparison {
+        same: a.key() == b.key(),
+        chain: a.chain(),
+        similarity: ab,
+        a_grouped: a.grouped(),
+        b_grouped: b.grouped(),
+        a_spans: diff::spans(&a, &b, &ab),
+        b_spans: diff::spans(&b, &a, &ba),
+    })
+}
+
 #[tauri::command]
 pub fn add_entry(
     state: State<AppState>,
@@ -473,4 +513,35 @@ pub fn reload(app: AppHandle, state: State<AppState>) -> Res<Overview> {
 #[tauri::command]
 pub fn open_main(app: AppHandle, tab: String) {
     ui::open_main(&app, &tab);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::compare_addresses;
+
+    const KNOWN: &str = "0x28C6c06298d514Db089934071355E5743bf21d60";
+    const POISON: &str = "0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60";
+
+    #[test]
+    fn compare_marks_a_lookalike() {
+        let c = compare_addresses(POISON.into(), KNOWN.into()).unwrap();
+        assert!(!c.same);
+        assert_eq!((c.similarity.same_prefix, c.similarity.same_suffix), (6, 4));
+        assert!(c.a_spans.iter().any(|s| !s.same) && c.b_spans.iter().any(|s| !s.same));
+    }
+
+    #[test]
+    fn compare_ignores_case_and_wrapping() {
+        let c = compare_addresses(format!(" \"{KNOWN}\" "), KNOWN.to_lowercase()).unwrap();
+        assert!(c.same);
+    }
+
+    #[test]
+    fn compare_refuses_text_and_mixed_chains() {
+        assert!(compare_addresses("pay me".into(), KNOWN.into()).is_err());
+        let err = compare_addresses(KNOWN.into(), "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa".into())
+            .err()
+            .unwrap();
+        assert!(err.contains("different chains"), "{err}");
+    }
 }
