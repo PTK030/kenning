@@ -42,16 +42,29 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
 
   const addArea = h("div");
   // The form slides down and fades in; it leaves the same way, reversed.
+  // Its room opens and closes on the same spring, so the search and the
+  // list below follow it instead of jumping.
+  const room = (from: number, to: number) => {
+    addArea.style.overflow = "hidden";
+    return move(addArea, { height: [from, to] }, SPRING).then(() => {
+      addArea.style.height = "";
+      addArea.style.overflow = "";
+    });
+  };
   const openAdd = () => {
     if (addArea.firstChild) return addArea.querySelector<HTMLElement>("input")?.focus();
     const form = addForm(refresh, closeAdd);
     clear(addArea, form);
+    addArea.style.overflow = "hidden";
+    void room(0, addArea.scrollHeight);
     void move(form, { opacity: [0, 1], y: [-8, 0] }, SPRING);
   };
   const closeAdd = async () => {
     const form = addArea.firstElementChild;
     if (!form) return;
-    await move(form, { opacity: [1, 0], y: [0, -8] }, SPRING);
+    addArea.style.overflow = "hidden";
+    const full = addArea.offsetHeight;
+    await Promise.all([room(full, 0), move(form, { opacity: [1, 0], y: [0, -8] }, SPRING)]);
     clear(addArea);
   };
 
