@@ -1,16 +1,20 @@
-import { clear, h } from "../dom";
+import { h } from "../dom";
 import type { Overview } from "../types";
 
-/** "What it reads, what it writes, what it sends." Plain facts. */
-export function trustView(main: HTMLElement, overview: Overview) {
+/** "What it reads, what it writes, what it sends." Plain facts, at the end
+ *  of Settings, next to the switches that change them. */
+export function privacySection(overview: Overview): HTMLElement {
   const watch = overview.config.clipboard === "watch";
-  clear(
-    main,
-    h("header", {}, h("h1", {}, "What Kenning reads, writes and sends")),
+  return h(
+    "section",
+    { id: "privacy" },
+    h("h2", {}, "What Kenning reads, writes and sends"),
     h(
       "div",
-      { class: "trust-line", style: "margin-bottom:22px" },
-      ["MIT licence", "Local-only", "No account", "No telemetry", "Network: off"].map((t) => h("span", {}, t)),
+      { class: "trust-line", style: "margin-bottom:16px" },
+      ["MIT licence", "Local-only", "No account", "No telemetry", overview.config.network ? "Network: addresses only" : "Network: off"].map(
+        (t) => h("span", {}, t),
+      ),
     ),
     h(
       "dl",
@@ -27,6 +31,11 @@ export function trustView(main: HTMLElement, overview: Overview) {
             : `The clipboard, only when you press ${overview.config.shortcut} or choose “Check clipboard now”.`,
           " Text longer than 4 KB is skipped. Content that the copying app marks as private (password managers do) is skipped before it is read.",
         ),
+        h(
+          "p",
+          {},
+          `The selection in the app you are using, only when you press ${overview.config.details_shortcut}: Kenning presses Ctrl+Insert to copy it, reads it, and puts back what was on the clipboard. Nothing it reads that way is recorded in your history.`,
+        ),
         h("p", {}, "Your book, settings and shared books listed in Settings."),
       ),
       h("dt", {}, "Writes"),
@@ -36,7 +45,7 @@ export function trustView(main: HTMLElement, overview: Overview) {
         h("p", { style: "margin-top:0" }, h("code", {}, "book.toml"), " when you add, rename or remove an address."),
         h("p", {}, h("code", {}, "history.json"), ": addresses you copied, how often and when. Only text that is a valid address, never other clipboard content. Can be turned off."),
         h("p", {}, h("code", {}, "journal.jsonl"), ": checks and decisions, for your own audit trail."),
-        h("p", {}, "The clipboard, only when you click “Copy the correct address”."),
+        h("p", {}, "The clipboard, only when you click “Copy the correct address” or “Copy address”, and to put it back after copying the selection."),
         h("p", { class: "muted" }, `All in ${overview.home}`),
       ),
       h("dt", {}, "Sends"),
@@ -57,7 +66,7 @@ export function trustView(main: HTMLElement, overview: Overview) {
                 {},
                 overview.hosts.map(([host, why]) => h("li", {}, h("code", {}, host), " ", h("span", { class: "muted" }, why))),
               ),
-              h("p", {}, "Answers are cached for an hour. Turn this off in Settings or from the tray menu."),
+              h("p", {}, "Answers are cached for an hour. Turn this off under Network above, or from the tray menu."),
             )
           : h(
               "p",

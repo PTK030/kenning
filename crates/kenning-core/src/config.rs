@@ -30,6 +30,9 @@ pub struct Config {
     pub clipboard: ClipboardMode,
     /// Global shortcut, in the format the desktop app understands.
     pub shortcut: String,
+    /// Global shortcut that copies the selection in the focused app and
+    /// shows everything Kenning knows about the address in it.
+    pub details_shortcut: String,
     /// Keys inside Kenning's own windows (the global `shortcut` works in
     /// every app; these only while a Kenning window has focus).
     pub keys: Keys,
@@ -58,6 +61,7 @@ impl Default for Config {
             journal: true,
             clipboard: ClipboardMode::Shortcut,
             shortcut: "Ctrl+Alt+K".into(),
+            details_shortcut: "Ctrl+Alt+D".into(),
             keys: Keys::default(),
             badge_seconds: 4,
             autostart: false,
@@ -102,11 +106,12 @@ impl Default for Keys {
 }
 
 impl Keys {
-    /// The first pair of shortcuts (the global one included) that use the
+    /// The first pair of shortcuts (the global ones included) that use the
     /// same keys, described for the user.
-    pub fn clash(&self, global: &str) -> Option<String> {
+    pub fn clash(&self, global: &str, details: &str) -> Option<String> {
         let all = [
             ("Check what you copied", global),
+            ("Show details of the selected address", details),
             ("Copy the correct address", &self.fix),
             ("Dismiss", &self.dismiss),
             ("Add an address", &self.add),
@@ -172,7 +177,7 @@ mod tests {
     #[test]
     fn default_keys_do_not_clash() {
         let c = Config::default();
-        assert_eq!(c.keys.clash(&c.shortcut), None);
+        assert_eq!(c.keys.clash(&c.shortcut, &c.details_shortcut), None);
     }
 
     #[test]
@@ -181,8 +186,21 @@ mod tests {
             dismiss: "alt + ctrl+k".into(),
             ..Keys::default()
         };
-        let clash = keys.clash("Ctrl+Alt+K").unwrap();
+        let clash = keys.clash("Ctrl+Alt+K", "Ctrl+Alt+D").unwrap();
         assert!(clash.contains("Dismiss"), "{clash}");
+    }
+
+    #[test]
+    fn global_shortcuts_must_differ() {
+        let clash = Keys::default().clash("Ctrl+Alt+K", "alt+ctrl+k").unwrap();
+        assert!(clash.contains("Show details"), "{clash}");
+    }
+
+    #[test]
+    fn old_config_gets_details_shortcut() {
+        let c: Config = toml::from_str("shortcut = \"Ctrl+Shift+K\"
+").unwrap();
+        assert_eq!(c.details_shortcut, "Ctrl+Alt+D");
     }
 
     #[test]

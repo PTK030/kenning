@@ -1512,6 +1512,15 @@ body.immersive #app {
   color: var(--v-look);
 }
 
+/* The details window in miniature: blue edge, not red. */
+.mini-details {
+  border-top-color: #8aa4ff;
+}
+
+.mini-details .top .icon {
+  color: #8aa4ff;
+}
+
 .mini-look .row {
   display: flex;
   align-items: center;

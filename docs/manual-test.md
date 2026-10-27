@@ -19,6 +19,10 @@ cd apps/desktop; npx tauri dev
 - [ ] "This is my address" + name saves it; copying it again shows a quiet badge.
 - [ ] Copy a password from KeePassXC or 1Password: nothing happens.
 - [ ] Switch to "Only when I press the shortcut": copying does nothing; Ctrl+Alt+K shows the badge.
+- [ ] Select an address in a browser, Notepad or a terminal (without copying it) and press Ctrl+Alt+D: the details window opens in the middle of the screen with the name, history and (network on) transactions. Ctrl+V afterwards still pastes what you had copied before.
+- [ ] Ctrl+Alt+D with nothing selected uses the clipboard and says so; with a lookalike selected, the lookalike window opens instead.
+- [ ] In a terminal running a program, Ctrl+Alt+D with nothing selected does not interrupt it.
+- [ ] Esc, ✕ or clicking another window closes the details window; "Add to book" saves the address and the window shows it under its new name.
 - [ ] Settings → Soft sounds off: badges are silent.
 - [ ] Journal lists checks, lookalikes and book changes.
 - [ ] Resource Monitor → Network: no connections from kenning.exe.

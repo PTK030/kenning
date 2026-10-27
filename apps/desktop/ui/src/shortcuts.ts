@@ -6,7 +6,7 @@
 import { h } from "./dom";
 import type { Config, Keys } from "./types";
 
-export type KeyId = "check" | keyof Keys;
+export type KeyId = "check" | "details" | keyof Keys;
 export type Where = "Anywhere" | "Lookalike window" | "Kenning window";
 
 export type Shortcut = {
@@ -23,14 +23,16 @@ export type Shortcut = {
  *  or chatting (Ctrl+Enter sends a message in most apps). */
 export const DEFAULT_KEYS: Keys = { fix: "Alt+C", dismiss: "Alt+D", add: "Alt+N", find: "Ctrl+F", help: "Ctrl+/" };
 export const DEFAULT_GLOBAL = "Ctrl+Alt+K";
+export const DEFAULT_DETAILS = "Ctrl+Alt+D";
 
-export function shortcuts(c: Pick<Config, "shortcut" | "keys">): Shortcut[] {
+export function shortcuts(c: Pick<Config, "shortcut" | "details_shortcut" | "keys">): Shortcut[] {
   const k = { ...DEFAULT_KEYS, ...c.keys };
   return [
     { id: "check", combo: c.shortcut, what: "Check what you copied", where: "Anywhere", editable: true },
+    { id: "details", combo: c.details_shortcut || DEFAULT_DETAILS, what: "Show details of the selected address", where: "Anywhere", editable: true },
     { id: "fix", combo: k.fix, what: "Copy the correct address", where: "Lookalike window", editable: true },
     { id: "dismiss", combo: k.dismiss, what: "Dismiss the window", where: "Lookalike window", editable: true },
-    { id: "tabs", combo: "Ctrl+1…5", what: "Switch section", where: "Kenning window", editable: false },
+    { id: "tabs", combo: "Ctrl+1…4", what: "Switch section", where: "Kenning window", editable: false },
     { id: "add", combo: k.add, what: "Add an address", where: "Kenning window", editable: true },
     { id: "find", combo: k.find, what: "Search the book", where: "Kenning window", editable: true },
     { id: "help", combo: k.help, what: "Show all shortcuts", where: "Kenning window", editable: true },
@@ -137,11 +139,11 @@ export function problem(id: KeyId, combo: string, current: Shortcut[]): string |
   for (const [reserved, meaning] of Object.entries(RESERVED)) {
     if (normalize(reserved) === normalize(combo)) return `${combo} already means ${meaning}.`;
   }
-  if (mods.includes("Ctrl") && !mods.includes("Alt") && !mods.includes("Shift") && /^[1-5]$/.test(key)) {
-    return "Ctrl+1 to Ctrl+5 switch sections.";
+  if (mods.includes("Ctrl") && !mods.includes("Alt") && !mods.includes("Shift") && /^[1-4]$/.test(key)) {
+    return "Ctrl+1 to Ctrl+4 switch sections.";
   }
-  if (id === "check") {
-    if (mods.length < 2) return "The check works in every app, so give it two modifiers, like Ctrl+Alt+K.";
+  if (id === "check" || id === "details") {
+    if (mods.length < 2) return "It works in every app, so give it two modifiers, like Ctrl+Alt+K.";
     if (mods.includes("Ctrl") && mods.includes("Alt") && !mods.includes("Shift") && ALTGR_LETTERS.has(key)) {
       return `Ctrl+Alt+${key} is AltGr+${key} on a Polish keyboard, which types a letter.`;
     }

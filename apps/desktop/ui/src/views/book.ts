@@ -110,6 +110,7 @@ function bookSection(
     !q || e.label.toLowerCase().includes(q) || (e.note ?? "").toLowerCase().includes(q) || e.address.text.toLowerCase().includes(q);
   const entries = b.entries.filter(match).sort((x, y) => x.label.localeCompare(y.label));
   const title = b.writable ? "Your book" : `Shared book: ${b.name}`;
+  const showDetails = (address: string) => ipc.showEntry(address).catch((err) => say(message(err), true));
 
   if (!b.entries.length) {
     return h(
@@ -139,7 +140,17 @@ function bookSection(
         entries.map((e) =>
           h(
             "tr",
-            {},
+            {
+              class: "clickable",
+              tabindex: "0",
+              title: "Show details",
+              onclick: () => showDetails(e.address.text),
+              onkeydown: (ev: KeyboardEvent) => {
+                if (ev.target !== ev.currentTarget || (ev.key !== "Enter" && ev.key !== " ")) return;
+                ev.preventDefault();
+                showDetails(e.address.text);
+              },
+            },
             h("td", {}, h("div", {}, e.label), e.note && h("div", { class: "muted", style: "font-size:12px" }, e.note)),
             h("td", { title: e.address.text }, h("span", { class: "addr" }, short(e.address.text))),
             h("td", {}, CHAIN_NAME[e.address.chain]),
@@ -152,7 +163,9 @@ function bookSection(
                   "button",
                   {
                     class: "link muted",
-                    onclick: async () => {
+                    onclick: async (ev: MouseEvent) => {
+                      // The row behind it opens the details.
+                      ev.stopPropagation();
                       if (!confirm(`Remove “${e.label}” from your book?`)) return;
                       try {
                         await ipc.removeEntry(e.address.text);

@@ -9,6 +9,7 @@ import type {
   BadgeView,
   BookView,
   Config,
+  DetailsView,
   Fact,
   ImportSummary,
   JournalRecord,
@@ -31,10 +32,18 @@ export const ipc = {
   markMine: (label: string) => invoke<void>("mark_mine", { label }),
   dismissLookalike: () => invoke<void>("dismiss_lookalike"),
 
+  getDetails: () => invoke<DetailsView | null>("get_details"),
+  fitDetails: (height: number, reveal: boolean) => invoke<void>("fit_details", { height, reveal }),
+  closeDetails: () => invoke<void>("close_details"),
+  copyDetailsAddress: () => invoke<void>("copy_details_address"),
+  addDetailsAddress: (label: string, owner: Owner) => invoke<DetailsView>("add_details_address", { label, owner }),
+  openExplorer: () => invoke<void>("open_explorer"),
+
   listBooks: () => invoke<BookView[]>("list_books"),
   recognizeText: (text: string) => invoke<Recognition[]>("recognize_text", { text }),
   addEntry: (address: string, label: string, owner: Owner, note: string | null) =>
     invoke<Recognition>("add_entry", { address, label, owner, note }),
+  showEntry: (address: string) => invoke<void>("show_entry", { address }),
   removeEntry: (address: string) => invoke<boolean>("remove_entry", { address }),
   importCsv: (owner: Owner) => invoke<ImportSummary | null>("import_csv", { owner }),
   exportCsv: () => invoke<string | null>("export_csv"),

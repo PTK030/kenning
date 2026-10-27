@@ -70,6 +70,15 @@ export interface LookalikeView {
   sounds: boolean;
 }
 
+/** Where the details window got the address. */
+export type Source = "selection" | "clipboard" | "book";
+
+export interface DetailsView {
+  recognition: Recognition;
+  source: Source;
+  network: boolean;
+}
+
 export interface Entry {
   address: Address;
   label: string;
@@ -99,6 +108,7 @@ export interface Config {
   journal: boolean;
   clipboard: "shortcut" | "watch";
   shortcut: string;
+  details_shortcut: string;
   keys: Keys;
   badge_seconds: number;
   autostart: boolean;

@@ -30,6 +30,7 @@ fn main() {
     };
     let onboarded = kenning.config().onboarded;
     let shortcut = kenning.config().shortcut.clone();
+    let details_shortcut = kenning.config().details_shortcut.clone();
 
     let app = tauri::Builder::default()
         // A second launch focuses the running instance instead of starting
@@ -52,9 +53,16 @@ fn main() {
             commands::copy_correct,
             commands::mark_mine,
             commands::dismiss_lookalike,
+            commands::get_details,
+            commands::fit_details,
+            commands::close_details,
+            commands::copy_details_address,
+            commands::add_details_address,
+            commands::open_explorer,
             commands::list_books,
             commands::recognize_text,
             commands::add_entry,
+            commands::show_entry,
             commands::remove_entry,
             commands::journal,
             commands::save_config,
@@ -72,7 +80,7 @@ fn main() {
         .setup(move |app| {
             let handle = app.handle().clone();
             tray::create(&handle)?;
-            if let Err(e) = hotkey::register(&handle, &shortcut) {
+            if let Err(e) = hotkey::register(&handle, &shortcut, &details_shortcut) {
                 eprintln!("kenning: {e}");
             }
             let watcher_handle = handle.clone();

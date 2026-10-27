@@ -5,7 +5,7 @@
 
 import { clear, h } from "../dom";
 import { move, POP } from "../motion";
-import { comboOf, DEFAULT_GLOBAL, DEFAULT_KEYS, keycaps, problem, shortcuts, type KeyId, type Shortcut } from "../shortcuts";
+import { comboOf, DEFAULT_DETAILS, DEFAULT_GLOBAL, DEFAULT_KEYS, keycaps, problem, shortcuts, type KeyId, type Shortcut } from "../shortcuts";
 import { cue } from "../sound";
 import type { Config } from "../types";
 
@@ -15,6 +15,7 @@ export function shortcutSection(c: Config): HTMLElement {
 
   const set = (id: KeyId, combo: string) => {
     if (id === "check") c.shortcut = combo;
+    else if (id === "details") c.details_shortcut = combo;
     else c.keys = { ...c.keys, [id]: combo };
   };
 
@@ -94,7 +95,7 @@ export function shortcutSection(c: Config): HTMLElement {
     h(
       "p",
       { class: "muted", style: "margin:0 0 8px;max-width:720px" },
-      "Click a shortcut and press the keys you want. Each one needs Ctrl or Alt, so typing never triggers it; the check works in every app, so it needs two. Save to apply.",
+      "Click a shortcut and press the keys you want. Each one needs Ctrl or Alt, so typing never triggers it; the two that work in every app need two. Save to apply.",
     ),
     list,
     h(
@@ -104,6 +105,7 @@ export function shortcutSection(c: Config): HTMLElement {
         style: "margin-top:10px",
         onclick: () => {
           c.shortcut = DEFAULT_GLOBAL;
+          c.details_shortcut = DEFAULT_DETAILS;
           c.keys = { ...DEFAULT_KEYS };
           paint();
         },

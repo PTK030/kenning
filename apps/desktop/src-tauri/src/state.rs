@@ -4,6 +4,7 @@ use std::time::Instant;
 
 use kenning_core::{AddressKey, Kenning, Recognition};
 
+use crate::clipboard::Source;
 use crate::onchain::OnchainState;
 use serde::Serialize;
 
@@ -25,6 +26,14 @@ pub struct BadgeView {
     pub sounds: bool,
 }
 
+/// What the details window shows.
+#[derive(Clone, Debug, Serialize)]
+pub struct DetailsView {
+    pub recognition: Recognition,
+    pub source: Source,
+    pub network: bool,
+}
+
 pub struct AppState {
     pub kenning: Mutex<Kenning>,
     /// Watching is paused from the tray menu.
@@ -38,6 +47,12 @@ pub struct AppState {
     /// Last address seen on the clipboard. Apps often write the clipboard
     /// more than once per copy; the repeat must not count as a second copy.
     pub last_copy: Mutex<Option<(AddressKey, Instant)>>,
+    pub details: Mutex<Option<DetailsView>>,
+    /// The details shortcut is borrowing the clipboard right now.
+    pub grabbing: AtomicBool,
+    /// Clipboard changes before this moment are Kenning's own (copying the
+    /// selection and putting the clipboard back) and are not checked.
+    pub quiet_until: Mutex<Option<Instant>>,
     pub onchain: OnchainState,
 }
 
@@ -51,6 +66,9 @@ impl AppState {
             lookalike: Mutex::new(None),
             lookalike_variant: AtomicUsize::new(0),
             last_copy: Mutex::new(None),
+            details: Mutex::new(None),
+            grabbing: AtomicBool::new(false),
+            quiet_until: Mutex::new(None),
             onchain: OnchainState::default(),
         }
     }

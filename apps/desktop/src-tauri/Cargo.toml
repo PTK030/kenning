@@ -12,9 +12,10 @@ publish = false
 name = "kenning"
 path = "src/main.rs"
 
-# The workspace forbids unsafe code. The desktop shell needs one Win32 call
-# (turning off the system's window animation for the badge), isolated in
-# src/platform.rs, so it denies unsafe instead and allows it there.
+# The workspace forbids unsafe code. The desktop shell needs a few Win32
+# calls (turning off the system's window animation for the badge, and
+# pressing Ctrl+Insert to copy the selection for the details shortcut),
+# isolated in src/platform.rs, so it denies unsafe instead and allows it there.
 [lints.rust]
 unsafe_code = "deny"
 
@@ -40,4 +41,4 @@ tauri-plugin-single-instance = "2"
 [target."cfg(windows)".dependencies]
 clipboard-win = { version = "5", features = ["monitor"] }
 winreg = "0.56.0"
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Dwm"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_UI_Input_KeyboardAndMouse"] }

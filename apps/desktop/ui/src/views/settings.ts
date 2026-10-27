@@ -2,6 +2,7 @@ import { clear, h } from "../dom";
 import { ipc, message } from "../ipc";
 import type { Config, Overview } from "../types";
 import { shortcutSection } from "./shortcutSettings";
+import { privacySection } from "./trust";
 
 function networkSection(c: Config): HTMLElement {
   const rpc = h("input", {
@@ -31,7 +32,7 @@ function networkSection(c: Config): HTMLElement {
         h(
           "span",
           { class: "muted" },
-          " Shows whether an address has ever been used, how many transactions it has and whether it is a verified contract. A lookalike that was never used is a strong sign. Only the address is sent, to the hosts listed on “What it reads”. Off by default.",
+          " Shows whether an address has ever been used, how many transactions it has and whether it is a verified contract. A lookalike that was never used is a strong sign. Only the address is sent, to the hosts listed below. Off by default.",
         ),
       ),
     ),
@@ -168,6 +169,6 @@ export function settingsView(main: HTMLElement, overview: Overview, refresh: () 
       ),
     ),
     networkSection(c),
-    h("section", {}, h("h2", {}, "Files"), h("div", { class: "muted" }, overview.home)),
+    privacySection(overview),
   );
 }

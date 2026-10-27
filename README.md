@@ -19,6 +19,7 @@ Address poisoning works because people check the first and last few characters o
 
 - **Your names:** label wallets, deposit addresses and multisigs once, see the name every time you copy them.
 - **Lookalikes caught:** a copied address that shares its start and end with a known one opens a window with every difference marked.
+- **Details on demand:** select an address anywhere and press `Ctrl+Alt+D` to see its name, history and on-chain activity in the middle of the screen. Your clipboard is left as it was.
 - **One click to fix:** "Copy the correct address" puts yours back on the clipboard; "This is my address" remembers a new one for good.
 - **Quiet by design:** known addresses get a badge for a few seconds, with a soft sound you can turn off. Nothing takes focus from what you are doing.
 - **Four chains:** EVM with EIP-55 checksums, Solana, Bitcoin (legacy, segwit, taproot) and Tron.

@@ -1,7 +1,8 @@
 // "Your keys": press each shortcut for real. Held keys appear as large
 // keycaps, a recognised combination names its action, and the shortcut is
-// ticked off. The global check (Ctrl+Alt+K) is caught by Windows before
-// the page sees it, so Kenning reports it back and the real badge shows.
+// ticked off. The global shortcuts (Ctrl+Alt+K, Ctrl+Alt+D) are caught by
+// Windows before the page sees them, so Kenning reports them back and the
+// real badge or window shows.
 // Every shortcut can be changed later in Settings.
 
 import { clear, h } from "../dom";
@@ -167,7 +168,7 @@ export function keysStep(opts: {
       return;
     }
     const combo = comboOf(e);
-    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-5]$/.test(k);
+    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-4]$/.test(k);
     const hit = tabs
       ? list.find((s) => s.id === "tabs")
       : list.find((s) => s.editable && combo !== null && normalize(s.combo) === normalize(combo));
@@ -197,8 +198,9 @@ export function keysStep(opts: {
     document.removeEventListener("keyup", up, true);
     clearTimeout(idle);
   });
-  const unlisten = on<null>("shortcut", () => {
-    const s = list.find((x) => x.id === "check")!;
+  const unlisten = on<string>("shortcut", (id) => {
+    const s = list.find((x) => x.id === id);
+    if (!s) return;
     const keys = s.combo.split("+");
     keys.forEach(press);
     recognise(s);

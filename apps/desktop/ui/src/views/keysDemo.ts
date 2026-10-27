@@ -7,7 +7,7 @@ import { icon } from "../icons";
 import { draw, EASE_IN, EASE_OUT, move, POP, SPRING } from "../motion";
 import { keycaps, type Shortcut } from "../shortcuts";
 
-const SECTIONS = ["Address book", "Check", "Journal", "Settings", "What it reads"];
+const SECTIONS = ["Address book", "Check", "Journal", "Settings"];
 
 type Later = (fn: () => void, ms: number) => void;
 
@@ -39,12 +39,25 @@ function look(): { el: HTMLElement; fix: HTMLElement } {
   return { el, fix };
 }
 
-/** Act out `s` inside `box`. `key` is the key pressed (for Ctrl+1…5). */
+/** Act out `s` inside `box`. `key` is the key pressed (for Ctrl+1…4). */
 export function actOut(box: HTMLElement, s: Shortcut, key: string, later: Later) {
   switch (s.id) {
     case "check":
       clear(box, badge("Binance deposits", "Checked: in your book"));
       break;
+
+    case "details": {
+      const el = h(
+        "div",
+        { class: "mini-look mini-details" },
+        h("div", { class: "top" }, icon("search", 14), h("b", {}, "Binance deposits")),
+        h("code", {}, "0x28C6 c062 98d5 … 1d60"),
+        h("div", { class: "row" }, h("span", { class: "mini-link" }, "1,204 transactions · Ethereum")),
+      );
+      clear(box, el);
+      void move(el, { opacity: [0, 1], scale: [0.94, 1] }, POP);
+      break;
+    }
 
     case "fix": {
       const l = look();
@@ -74,7 +87,7 @@ export function actOut(box: HTMLElement, s: Shortcut, key: string, later: Later)
     }
 
     case "tabs": {
-      const n = Math.min(5, Math.max(1, Number(key) || 1)) - 1;
+      const n = Math.min(SECTIONS.length, Math.max(1, Number(key) || 1)) - 1;
       const pill = h("span", { class: "mini-pill" });
       const items = SECTIONS.map((t, i) => h("li", { class: i === n ? "on" : "" }, h("kbd", {}, String(i + 1)), t));
       const nav = h("ul", { class: "mini-nav" }, pill, items);

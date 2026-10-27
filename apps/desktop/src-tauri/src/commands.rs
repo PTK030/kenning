@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 
 use kenning_core::journal::{self, Action};
-use kenning_core::{ClipboardMode, Config, Entry, Owner, Recognition, extract, interop};
+use kenning_core::{Chain, ClipboardMode, Config, Entry, Owner, Recognition, extract, interop};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_autostart::ManagerExt as _;
@@ -14,7 +14,7 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
 use crate::onchain::{self, Fact};
-use crate::state::{AppState, BadgeView};
+use crate::state::{AppState, BadgeView, DetailsView};
 use crate::{clipboard, hotkey, tray, ui};
 
 type Res<T> = Result<T, String>;
@@ -163,6 +163,83 @@ pub fn dismiss_lookalike(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn get_details(state: State<AppState>) -> Option<DetailsView> {
+    state.details.lock().unwrap().clone()
+}
+
+/// The details page measured itself; see `ui::fit_details`.
+#[tauri::command]
+pub fn fit_details(app: AppHandle, height: f64, reveal: bool) {
+    ui::fit_details(&app, height, reveal);
+}
+
+#[tauri::command]
+pub fn close_details(app: AppHandle) {
+    ui::close_details(&app);
+}
+
+fn details_address(state: &State<AppState>) -> Res<kenning_core::Address> {
+    state
+        .details
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|d| d.recognition.address.clone())
+        .ok_or_else(|| "nothing to show".into())
+}
+
+/// "Copy address" in the details window: an explicit click.
+#[tauri::command]
+pub fn copy_details_address(app: AppHandle, state: State<AppState>) -> Res<()> {
+    let address = details_address(&state)?;
+    clipboard::write(address.as_str())?;
+    ui::close_details(&app);
+    // In watch mode the copy itself brings up the badge.
+    if state.kenning.lock().unwrap().config().clipboard != ClipboardMode::Watch {
+        crate::flow::info(&app, "Address copied.");
+    }
+    Ok(())
+}
+
+/// "Add to book" in the details window. The window stays and shows the
+/// address under its new name.
+#[tauri::command]
+pub fn add_details_address(state: State<AppState>, label: String, owner: Owner) -> Res<DetailsView> {
+    let label = label.trim();
+    if label.is_empty() {
+        return Err("Give it a name.".into());
+    }
+    let address = details_address(&state)?;
+    let mut e = Entry::new(address.clone(), label, owner);
+    e.source = Some("manual".into());
+    let r = {
+        let mut k = state.kenning.lock().unwrap();
+        k.upsert(e).map_err(err)?;
+        let r = k.recognize(&address);
+        k.journal(Action::Added, &r).map_err(err)?;
+        r
+    };
+    let mut details = state.details.lock().unwrap();
+    let view = details.as_mut().ok_or("nothing to show")?;
+    view.recognition = r;
+    Ok(view.clone())
+}
+
+/// Open the address in the chain's public explorer, in the browser.
+#[tauri::command]
+pub fn open_explorer(app: AppHandle, state: State<AppState>) -> Res<()> {
+    let address = details_address(&state)?;
+    let a = address.as_str();
+    let url = match address.chain() {
+        Chain::Evm => format!("https://etherscan.io/address/{a}"),
+        Chain::Solana => format!("https://solscan.io/account/{a}"),
+        Chain::Bitcoin => format!("https://mempool.space/address/{a}"),
+        Chain::Tron => format!("https://tronscan.org/#/address/{a}"),
+    };
+    app.opener().open_url(url, None::<&str>).map_err(err)
+}
+
+#[tauri::command]
 pub fn list_books(state: State<AppState>) -> Vec<BookView> {
     let k = state.kenning.lock().unwrap();
     std::iter::once(k.personal())
@@ -205,6 +282,16 @@ pub fn add_entry(
     Ok(r)
 }
 
+/// A row of the address book was clicked. Async, so it runs off the main
+/// thread: building the details window from a synchronous command leaves its
+/// WebView2 unloaded on Windows, and the window never shows.
+#[tauri::command]
+pub async fn show_entry(app: AppHandle, address: String) -> Res<()> {
+    let address = kenning_core::parse(&address).map_err(err)?;
+    crate::flow::show_book_details(&app, address);
+    Ok(())
+}
+
 #[tauri::command]
 pub fn remove_entry(state: State<AppState>, address: String) -> Res<bool> {
     let address = kenning_core::parse(&address).map_err(err)?;
@@ -229,15 +316,18 @@ pub fn journal(state: State<AppState>, limit: Option<usize>) -> Res<Vec<journal:
 /// Save settings and apply the parts that live outside the config file.
 #[tauri::command]
 pub fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Res<Overview> {
-    if let Some(clash) = config.keys.clash(&config.shortcut) {
+    if let Some(clash) = config.keys.clash(&config.shortcut, &config.details_shortcut) {
         return Err(format!("Two shortcuts would do different things: {clash}."));
     }
-    let old_shortcut = state.kenning.lock().unwrap().config().shortcut.clone();
-    if config.shortcut != old_shortcut
-        && let Err(e) = hotkey::register(&app, &config.shortcut)
+    let (old_check, old_details) = {
+        let k = state.kenning.lock().unwrap();
+        (k.config().shortcut.clone(), k.config().details_shortcut.clone())
+    };
+    if (config.shortcut != old_check || config.details_shortcut != old_details)
+        && let Err(e) = hotkey::register(&app, &config.shortcut, &config.details_shortcut)
     {
-        // Keep the old, working shortcut.
-        let _ = hotkey::register(&app, &old_shortcut);
+        // Keep the old, working shortcuts.
+        let _ = hotkey::register(&app, &old_check, &old_details);
         return Err(e);
     }
     let autolaunch = app.autolaunch();

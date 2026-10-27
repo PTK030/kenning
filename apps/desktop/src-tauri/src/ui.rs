@@ -1,17 +1,24 @@
-//! Windows: the corner badge, the lookalike window and the main window.
+//! Windows: the corner badge, the lookalike window, the details window and
+//! the main window.
 
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use kenning_core::Recognition;
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+};
 
-use crate::state::{AppState, Badge, BadgeView};
+use crate::state::{AppState, Badge, BadgeView, DetailsView};
 use crate::tray::{self, Tray};
 
 pub const BADGE: &str = "badge";
 pub const LOOKALIKE: &str = "lookalike";
 pub const MAIN: &str = "main";
+pub const DETAILS: &str = "details";
+
+/// Logical width of the details window; its height follows its content.
+const DETAILS_W: f64 = 600.0;
 
 /// Logical size of the badge.
 const BADGE_W: f64 = 400.0;
@@ -200,6 +207,56 @@ pub fn close_lookalike(app: &AppHandle) {
     *app.state::<AppState>().lookalike.lock().unwrap() = None;
     tray::set(app, Tray::Rest);
     if let Some(w) = app.get_webview_window(LOOKALIKE) {
+        let _ = w.close();
+    }
+}
+
+/// Show the details window in the middle of the screen. It is created
+/// hidden and shows itself once its page has measured its content (see
+/// [`fit_details`]), so it never flashes at the wrong size.
+pub fn show_details(app: &AppHandle, view: DetailsView) {
+    *app.state::<AppState>().details.lock().unwrap() = Some(view);
+    if app.get_webview_window(DETAILS).is_some() {
+        let _ = app.emit_to(DETAILS, "details", ());
+        return;
+    }
+    let built = window(app, DETAILS, "details.html")
+        .title("Kenning: address details")
+        .inner_size(DETAILS_W, 420.0)
+        // Kenning draws its own title bar (ui/src/titlebar.ts).
+        .decorations(false)
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .center()
+        .visible(false)
+        .build();
+    if let Err(e) = built {
+        eprintln!("kenning: details window: {e}");
+    }
+}
+
+/// The details page is `height` logical pixels tall: size the window to
+/// it. After a fresh render (`reveal`), also centre it and bring it
+/// forward; when a late on-chain answer adds a line, it only grows.
+pub fn fit_details(app: &AppHandle, height: f64, reveal: bool) {
+    let Some(w) = app.get_webview_window(DETAILS) else {
+        return;
+    };
+    let _ = w.set_size(LogicalSize::new(DETAILS_W, height.clamp(200.0, 760.0)));
+    if reveal {
+        let _ = w.center();
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+    }
+}
+
+pub fn close_details(app: &AppHandle) {
+    *app.state::<AppState>().details.lock().unwrap() = None;
+    if let Some(w) = app.get_webview_window(DETAILS) {
         let _ = w.close();
     }
 }

@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
-// The UI is three static pages, bundled locally. No CDN, no remote fonts.
+// The UI is four static pages, bundled locally. No CDN, no remote fonts.
 export default defineConfig({
   root: "ui",
   clearScreen: false,
@@ -15,6 +15,7 @@ export default defineConfig({
         main: resolve(__dirname, "ui/index.html"),
         badge: resolve(__dirname, "ui/badge.html"),
         lookalike: resolve(__dirname, "ui/lookalike.html"),
+        details: resolve(__dirname, "ui/details.html"),
       },
     },
   },

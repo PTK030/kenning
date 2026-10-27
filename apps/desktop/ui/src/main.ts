@@ -1,4 +1,4 @@
-// Main window: book, check, journal, settings, and the trust page.
+// Main window: book, check, journal and settings.
 
 import { $, clear, h } from "./dom";
 import { ipc, on } from "./ipc";
@@ -7,7 +7,6 @@ import { bookView } from "./views/book";
 import { checkView } from "./views/check";
 import { journalView } from "./views/journal";
 import { settingsView } from "./views/settings";
-import { trustView } from "./views/trust";
 import { welcomeView } from "./views/welcome";
 import { icon, type IconName } from "./icons";
 import { move, rise, SPRING } from "./motion";
@@ -23,7 +22,6 @@ const TABS: { id: string; title: string; icon: IconName; view: View }[] = [
   { id: "check", title: "Check", icon: "search", view: checkView },
   { id: "journal", title: "Journal", icon: "journal", view: journalView },
   { id: "settings", title: "Settings", icon: "sliders", view: settingsView },
-  { id: "trust", title: "What it reads", icon: "fileCheck", view: trustView },
 ];
 
 const app = $("#app");
@@ -75,11 +73,8 @@ async function render() {
     h(
       "div",
       { class: "facts" },
-      h("span", {}, c.network ? "Network: on" : "Network: off"),
-      h("span", {}, c.clipboard === "watch" ? (overview.paused ? "Clipboard: paused" : "Clipboard: watched") : `Clipboard: ${c.shortcut} only`),
-      h("span", {}, `Version ${overview.version}`),
-      h("span", {}, "MIT licence"),
       h("button", { class: "keys-hint", onclick: () => toggleSheet(c) }, "Shortcuts", keycaps(c.keys.help)),
+      h("span", { class: "facts-meta" }, `Kenning ${overview.version}, MIT licence`),
     ),
   );
   const pill = h("div", { class: "pill", "aria-hidden": "true" });
@@ -109,7 +104,7 @@ async function render() {
 
 window.addEventListener("hashchange", () => void render());
 
-// Keyboard: Ctrl+1…5 sections, and the add / search / help keys from the
+// Keyboard: Ctrl+1…4 sections, and the add / search / help keys from the
 // config (Alt+N, Ctrl+F, Ctrl+/ unless changed in Settings).
 /** An input to focus once the next render is done, and the button that
  *  reveals it if it is folded away (the book's add form). */
@@ -130,11 +125,19 @@ function openWith(tab: string, selector: string, opener?: string) {
 }
 
 document.addEventListener("keydown", (e) => {
+  // Development builds only: Ctrl+Shift+O starts the onboarding over.
+  if (import.meta.env.DEV && e.ctrlKey && e.shiftKey && !e.altKey && e.code === "KeyO") {
+    e.preventDefault();
+    document.querySelector("main.onboarding")?.remove();
+    if (currentTab() === "welcome") void render();
+    else location.hash = "welcome";
+    return;
+  }
   if (!overview?.config.onboarded || currentTab() === "welcome") return;
   // Recording a new shortcut in Settings: leave the keys to the recorder.
   if (document.querySelector(".recorder.recording")) return;
   const keys = overview.config.keys;
-  const digit = /^Digit([1-5])$/.exec(e.code);
+  const digit = /^Digit([1-4])$/.exec(e.code);
   if (digit && e.ctrlKey && !e.altKey && !e.shiftKey) {
     e.preventDefault();
     location.hash = TABS[Number(digit[1]) - 1].id;

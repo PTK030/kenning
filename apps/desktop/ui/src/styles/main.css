@@ -87,14 +87,26 @@ nav a[aria-current="page"] {
   font-weight: 600;
 }
 
+/* Sidebar foot: the shortcuts, then the version. What Kenning is doing
+   right now lives in the tray menu, where it can also be changed. */
 .facts {
   margin-top: auto;
-  padding: 10px;
+  padding: 10px 4px 6px;
   font-size: 12px;
   color: var(--ink-2);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+}
+
+.facts .keys-hint {
+  margin: 0 6px;
+}
+
+.facts-meta {
+  padding: 0 6px;
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 main {
@@ -152,6 +164,16 @@ td {
 
 tr:hover td {
   background: var(--bg-2);
+}
+
+/* A row that opens the address's details. */
+tr.clickable {
+  cursor: pointer;
+}
+
+tr.clickable:focus-visible {
+  /* Inside the row: the table clips an outline drawn around it. */
+  outline-offset: -2px;
 }
 
 td .addr {
