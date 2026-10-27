@@ -15,6 +15,9 @@ body {
   color: var(--ink);
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+  /* No rubber-band at the edges (a touchpad would pull the whole window,
+     title bar and all): a Windows app does not bounce. */
+  overscroll-behavior: none;
 }
 
 body {

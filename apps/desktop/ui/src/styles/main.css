@@ -1,9 +1,11 @@
 @import "./base.css";
 @import "./onboarding.css";
 
+/* The window itself never scrolls; only the page inside it does. */
 html,
 body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -137,6 +139,7 @@ nav a[aria-current="page"] {
    window. */
 main {
   overflow: auto;
+  overscroll-behavior: none;
   padding: 30px 36px 48px;
 }
 

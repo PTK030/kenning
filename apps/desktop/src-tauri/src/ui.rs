@@ -34,7 +34,8 @@ const BADGE_LINGER: Duration = Duration::from_secs(30);
 /// Same WebView2 arguments for every window (windows share one browser
 /// environment, which requires identical arguments): Tauri's defaults plus
 /// autoplay, so the soft sounds play without a click first.
-const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required";
+// ElasticOverscroll: no rubber-band on touchpads (the CSS also says so).
+const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,ElasticOverscroll --autoplay-policy=no-user-gesture-required";
 
 fn window<'a>(app: &'a AppHandle, label: &str, url: &str) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
     WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
