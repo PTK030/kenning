@@ -601,16 +601,6 @@ textarea {
   color: var(--ink);
 }
 
-.option {
-  transition:
-    border-color 180ms ease,
-    background 180ms ease;
-}
-
-.option:hover {
-  border-color: var(--line-strong);
-}
-
 .recorder {
   transition:
     border-color 160ms ease,

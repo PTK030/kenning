@@ -1,7 +1,7 @@
 // A tiny element builder. Text always goes through textContent, never
 // innerHTML: labels and notes are user data.
 
-type Child = Node | string | number | null | undefined | false;
+export type Child = Node | string | number | null | undefined | false;
 type Attrs = Record<string, unknown>;
 
 export function h<K extends keyof HTMLElementTagNameMap>(

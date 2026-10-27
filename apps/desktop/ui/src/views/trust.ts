@@ -1,17 +1,14 @@
 import { h } from "../dom";
 import type { Overview } from "../types";
 
-/** "What it reads, what it writes, what it sends." Plain facts, at the end
- *  of Settings, next to the switches that change them. */
-export function privacySection(overview: Overview): HTMLElement {
+/** "What it reads, what it writes, what it sends." Plain facts, for the last
+ *  card of Settings, next to the switches that change them. */
+export function privacyFacts(overview: Overview): HTMLElement[] {
   const watch = overview.config.clipboard === "watch";
-  return h(
-    "section",
-    { id: "privacy" },
-    h("h2", {}, "What Kenning reads, writes and sends"),
+  return [
     h(
       "div",
-      { class: "trust-line", style: "margin-bottom:16px" },
+      { class: "trust-line" },
       ["MIT licence", "Local-only", "No account", "No telemetry", overview.config.network ? "Network: addresses only" : "Network: off"].map(
         (t) => h("span", {}, t),
       ),
@@ -81,5 +78,5 @@ export function privacySection(overview: Overview): HTMLElement {
         h("p", { style: "margin-top:0" }, `${overview.public_label_count} built in, each with a source you can check. They ship with the app; nothing is downloaded.`),
       ),
     ),
-  );
+  ];
 }

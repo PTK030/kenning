@@ -233,22 +233,6 @@ td.actions {
     var(--elev-1);
 }
 
-.card .top {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.card .top strong {
-  font-size: 15px;
-}
-
-.card .addr {
-  display: block;
-  margin-top: 8px;
-}
-
 .form {
   display: grid;
   grid-template-columns: 120px 1fr;
@@ -271,30 +255,6 @@ td.actions {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-}
-
-.option {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-card);
-  cursor: pointer;
-}
-
-.option:has(input:checked) {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-}
-
-.option input {
-  margin-top: 3px;
-}
-
-.option strong {
-  display: block;
 }
 
 .notice {
@@ -918,6 +878,242 @@ main > .notice {
 
 .empty.rich span:last-child {
   max-width: 32em;
+}
+
+/* ---- Settings ------------------------------------------------------------ */
+
+/* One card per group, as in Windows Settings: a head with an icon tile,
+   then rows separated by hairlines. */
+.set-card {
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  box-shadow: var(--elev-1);
+}
+
+.set-card + .set-card,
+#privacy {
+  margin-top: 16px;
+}
+
+.set-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px 18px 4px;
+}
+
+.set-head .ic {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.set-head h2 {
+  font-size: 16px;
+}
+
+.set-head p {
+  margin: 2px 0 0;
+  font-size: 13px;
+}
+
+.set-body {
+  display: grid;
+  padding: 8px 18px 14px 64px;
+}
+
+.set-body > * + * {
+  border-top: 1px solid var(--line);
+}
+
+/* Rows inside a card lose the onboarding's own frame (and its icon tile:
+   the card's head has one), and the switch sits at the right edge. */
+.set-card .toggle {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.set-body > * + .toggle {
+  border-top: 1px solid var(--line);
+}
+
+.set-card .toggle:hover {
+  background: none;
+}
+
+.set-card .toggle .ic {
+  display: none;
+}
+
+.set-card .toggle strong + .muted {
+  display: block;
+}
+
+.set-card .toggle:has(input:focus-visible) {
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 6px 0 14px;
+}
+
+.set-body > .choices + * {
+  border-top: 0;
+}
+
+.choices .choice {
+  height: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.choices .choice .muted {
+  display: block;
+}
+
+.set-row,
+.set-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.set-row .spacer {
+  flex: 1;
+}
+
+.set-row input[type="range"] {
+  flex: 1;
+  max-width: 260px;
+}
+
+.set-row .value {
+  min-width: 32px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.set-field input {
+  flex: 1;
+}
+
+.set-body > textarea {
+  width: 100%;
+  margin: 6px 0 4px;
+  border-top: 1px solid var(--line);
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 8px 0 4px;
+}
+
+.rule {
+  display: grid;
+  gap: 4px;
+}
+
+.rule input {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.set-shortcuts {
+  display: grid;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.set-shortcuts .shortcut-list {
+  margin-left: -10px;
+}
+
+.set-shortcuts > .link {
+  justify-self: start;
+  font-size: 12.5px;
+}
+
+#privacy .set-body {
+  gap: 14px;
+}
+
+#privacy .set-body > * + * {
+  border-top: 0;
+}
+
+#privacy dl.facts-list {
+  font-size: 13px;
+}
+
+#privacy dl.facts-list p {
+  margin: 0 0 6px;
+}
+
+#privacy ul {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+}
+
+@media (max-width: 700px) {
+  .set-body {
+    padding-left: 18px;
+  }
+  .choices,
+  .rules {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Unsaved changes: a bar that stays in view at the bottom of the page. */
+.save-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 10px 10px 10px 16px;
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand) 35%, transparent),
+    var(--elev-2);
+}
+
+.save-bar[hidden] {
+  display: none;
+}
+
+.save-bar > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.save-bar .icon {
+  color: var(--brand);
+}
+
+.save-bar .spacer {
+  flex: 1;
 }
 
 /* A question before something that cannot be undone (confirmSheet.ts). */

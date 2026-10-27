@@ -89,20 +89,13 @@ export function shortcutSection(c: Config): HTMLElement {
   paint();
 
   return h(
-    "section",
-    {},
-    h("h2", {}, "Keyboard shortcuts"),
-    h(
-      "p",
-      { class: "muted", style: "margin:0 0 8px;max-width:720px" },
-      "Click a shortcut and press the keys you want. Each one needs Ctrl or Alt, so typing never triggers it; the two that work in every app need two. Save to apply.",
-    ),
+    "div",
+    { class: "set-shortcuts" },
     list,
     h(
       "button",
       {
-        class: "link",
-        style: "margin-top:10px",
+        class: "link muted",
         onclick: () => {
           c.shortcut = DEFAULT_GLOBAL;
           c.details_shortcut = DEFAULT_DETAILS;
