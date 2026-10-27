@@ -5,7 +5,7 @@ import { menuFor } from "../contextMenu";
 import { clear, h } from "../dom";
 import { icon, STATE_ICON, type IconName } from "../icons";
 import { ipc, message } from "../ipc";
-import { move, rise, SPRING } from "../motion";
+import { move, rise } from "../motion";
 import type { BookView, Entry, Overview, Owner } from "../types";
 import { toast } from "../toast";
 import { recognitionCard } from "./card";
@@ -41,12 +41,14 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
   filter.addEventListener("input", () => draw());
 
   const addArea = h("div");
-  // The form slides down and fades in; it leaves the same way, reversed.
-  // Its room opens and closes on the same spring, so the search and the
-  // list below follow it instead of jumping.
-  const room = (from: number, to: number) => {
+  // The form slides down and fades in while its room opens, so the search
+  // and the list below follow it; it leaves the same way, exactly reversed.
+  // A smooth curve, not a spring: a spring overshoots the height and wobbles.
+  const OPEN = { duration: 0.3, ease: [0.22, 1, 0.36, 1] } as const;
+  const CLOSE = { duration: 0.3, ease: [0.64, 0, 0.78, 0] } as const;
+  const room = (from: number, to: number, how: typeof OPEN | typeof CLOSE) => {
     addArea.style.overflow = "hidden";
-    return move(addArea, { height: [from, to] }, SPRING).then(() => {
+    return move(addArea, { height: [from, to] }, how).then(() => {
       addArea.style.height = "";
       addArea.style.overflow = "";
     });
@@ -56,15 +58,15 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
     const form = addForm(refresh, closeAdd);
     clear(addArea, form);
     addArea.style.overflow = "hidden";
-    void room(0, addArea.scrollHeight);
-    void move(form, { opacity: [0, 1], y: [-8, 0] }, SPRING);
+    void room(0, addArea.scrollHeight, OPEN);
+    void move(form, { opacity: [0, 1], y: [-8, 0] }, OPEN);
   };
   const closeAdd = async () => {
     const form = addArea.firstElementChild;
     if (!form) return;
     addArea.style.overflow = "hidden";
     const full = addArea.offsetHeight;
-    await Promise.all([room(full, 0), move(form, { opacity: [1, 0], y: [0, -8] }, SPRING)]);
+    await Promise.all([room(full, 0, CLOSE), move(form, { opacity: [1, 0], y: [0, -8] }, CLOSE)]);
     clear(addArea);
   };
 

@@ -43,12 +43,16 @@ function prime(els: Element[], keyframes: DOMKeyframesDefinition) {
   if (scale !== undefined) parts.push(`scale(${scale})`);
   const opacity = first(k.opacity);
   const filter = first(k.filter);
+  const height = first(k.height);
+  const width = first(k.width);
   for (const el of els) {
     const style = (el as HTMLElement).style;
     if (!style) continue;
     if (opacity !== undefined) style.opacity = String(opacity);
     if (parts.length) style.transform = parts.join(" ");
     if (filter !== undefined) style.filter = String(filter);
+    if (height !== undefined) style.height = len(height);
+    if (width !== undefined) style.width = len(width);
   }
 }
 
