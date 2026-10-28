@@ -33,6 +33,12 @@ export function privacyFacts(overview: Overview): HTMLElement[] {
           {},
           `The selection in the app you are using, only when you press ${overview.config.details_shortcut}: Kenning presses Ctrl+Insert to copy it, reads it, and puts back what was on the clipboard. Nothing it reads that way is recorded in your history.`,
         ),
+        overview.config.guard &&
+          h(
+            "p",
+            {},
+            "Every clipboard change, the moment it happens, because the clipboard guard is on: what was written, which program wrote it, and whether a key was pressed since. Only what it catches is kept, in memory until Kenning quits; a recovery phrase or key is noted by its kind, never its words.",
+          ),
         h("p", {}, "Your book, settings and shared books listed in Settings."),
       ),
       h("dt", {}, "Writes"),

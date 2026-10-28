@@ -7,7 +7,7 @@ import { icon } from "../icons";
 import { draw, EASE_IN, EASE_OUT, move, POP, SPRING } from "../motion";
 import { keycaps, type Shortcut } from "../shortcuts";
 
-const SECTIONS = ["Address book", "Check", "Journal", "Settings"];
+const SECTIONS = ["Address book", "Check", "Protection", "Journal", "Settings"];
 
 type Later = (fn: () => void, ms: number) => void;
 
@@ -39,7 +39,7 @@ function look(): { el: HTMLElement; fix: HTMLElement } {
   return { el, fix };
 }
 
-/** Act out `s` inside `box`. `key` is the key pressed (for Ctrl+1…4). */
+/** Act out `s` inside `box`. `key` is the key pressed (for Ctrl+1…5). */
 export function actOut(box: HTMLElement, s: Shortcut, key: string, later: Later) {
   switch (s.id) {
     case "check":

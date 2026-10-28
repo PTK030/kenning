@@ -168,7 +168,7 @@ export function keysStep(opts: {
       return;
     }
     const combo = comboOf(e);
-    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-4]$/.test(k);
+    const tabs = e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-5]$/.test(k);
     const hit = tabs
       ? list.find((s) => s.id === "tabs")
       : list.find((s) => s.editable && combo !== null && normalize(s.combo) === normalize(combo));

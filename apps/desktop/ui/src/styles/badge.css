@@ -58,6 +58,43 @@ body {
   --accent: var(--brand);
   --accent-soft: var(--brand-soft);
 }
+/* The clipboard guard: the one badge that is a warning. The tile and the
+   border carry the red; the text stays readable ink. */
+#badge.k-alert {
+  --accent: var(--look);
+  --accent-soft: var(--look-soft);
+  align-items: flex-start;
+  border-color: color-mix(in srgb, var(--look) 55%, var(--line));
+}
+
+#badge.k-alert .headline .name {
+  font-size: 14.5px;
+}
+
+#badge.k-alert .detail {
+  white-space: normal;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+#badge .act {
+  margin-top: 7px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  /* The light red in both themes: white on it is 6.5:1. */
+  background: #b91c1c;
+  cursor: pointer;
+  transition: filter 120ms;
+}
+
+#badge .act:hover {
+  filter: brightness(1.12);
+}
 
 .tile {
   flex: none;

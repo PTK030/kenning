@@ -1,4 +1,4 @@
-// Main window: book, check, journal and settings.
+// Main window: book, check, protection, journal and settings.
 
 import { $, clear, h } from "./dom";
 import { ipc, on } from "./ipc";
@@ -6,6 +6,7 @@ import type { Overview } from "./types";
 import { bookView } from "./views/book";
 import { checkView } from "./views/check";
 import { journalView } from "./views/journal";
+import { protectionView } from "./views/protection";
 import { settingsView } from "./views/settings";
 import { welcomeView } from "./views/welcome";
 import { icon, type IconName } from "./icons";
@@ -21,6 +22,7 @@ type View = (main: HTMLElement, overview: Overview, refresh: () => Promise<void>
 const TABS: { id: string; title: string; icon: IconName; view: View }[] = [
   { id: "book", title: "Address book", icon: "book", view: bookView },
   { id: "check", title: "Check", icon: "search", view: checkView },
+  { id: "protection", title: "Protection", icon: "shield", view: protectionView },
   { id: "journal", title: "Journal", icon: "journal", view: journalView },
   { id: "settings", title: "Settings", icon: "sliders", view: settingsView },
 ];
@@ -122,7 +124,7 @@ async function render() {
 
 window.addEventListener("hashchange", () => void render());
 
-// Keyboard: Ctrl+1…4 sections, and the add / search / help keys from the
+// Keyboard: Ctrl+1…5 sections, and the add / search / help keys from the
 // config (Alt+N, Ctrl+F, Ctrl+/ unless changed in Settings).
 /** An input to focus once the next render is done, and the button that
  *  reveals it if it is folded away (the book's add form). */
@@ -169,7 +171,7 @@ document.addEventListener("keydown", (e) => {
   // Recording a new shortcut in Settings: leave the keys to the recorder.
   if (document.querySelector(".recorder.recording")) return;
   const keys = overview.config.keys;
-  const digit = /^Digit([1-4])$/.exec(e.code);
+  const digit = /^Digit([1-5])$/.exec(e.code);
   if (digit && e.ctrlKey && !e.altKey && !e.shiftKey) {
     e.preventDefault();
     location.hash = TABS[Number(digit[1]) - 1].id;

@@ -1346,3 +1346,175 @@ code {
 .shortcut-error .keycaps {
   margin-right: 4px;
 }
+
+/* ---- Protection ---------------------------------------------------------- */
+
+/* The test: one chip per decoy, lit as it goes out and comes back. */
+.test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.decoys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.decoy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition:
+    background 200ms ease,
+    color 200ms ease;
+}
+
+.decoy .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background 200ms ease;
+}
+
+.decoy[data-state="run"] .dot {
+  background: var(--brand);
+  animation: decoy-pulse 0.9s ease-in-out infinite;
+}
+
+.decoy[data-state="clean"] {
+  color: var(--ink);
+}
+
+.decoy[data-state="clean"] .dot {
+  background: var(--mine);
+}
+
+.decoy[data-state="swap"] {
+  color: var(--look);
+  background: var(--look-soft);
+}
+
+.decoy[data-state="swap"] .dot {
+  background: var(--look);
+}
+
+@keyframes decoy-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decoy[data-state="run"] .dot {
+    animation: none;
+  }
+}
+
+.test-result:empty {
+  display: none;
+}
+
+.test-clean {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 12px 0 2px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.test-clean svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--mine);
+}
+
+.test-clean strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.set-body > .test-swapped {
+  margin: 12px 0 2px;
+  border-top: 0;
+}
+
+.test-swapped ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+/* How the guard tells a swap: three signs, quiet. */
+.guard-how {
+  padding: 12px 0 2px;
+}
+
+.guard-how p {
+  margin: 0 0 8px;
+}
+
+.guard-how ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.guard-how li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.guard-how .ic {
+  flex: none;
+  display: grid;
+  margin-top: 1px;
+  color: var(--brand);
+}
+
+.guard-how strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.guard-caught {
+  margin-top: 24px;
+}
+
+.guard-caught > h2 {
+  margin: 0 0 8px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Guard events are a record, not a link. */
+.entry.static {
+  cursor: default;
+}
+
+.entry.static:hover {
+  background: none;
+}
+
+.entry .who .why {
+  font-size: 12px;
+  color: var(--ink-2);
+}

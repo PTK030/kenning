@@ -33,7 +33,36 @@ function render(view: BadgeView | null) {
   const close = h("button", { class: "close", "aria-label": "Close", title: "Close", onclick: () => ipc.hideBadge() }, icon("x", 14));
   bar = h("div", { class: "bar" });
 
-  if (view.kind === "info") {
+  if (view.kind === "alert") {
+    // The guard caught something: red, a sentence that says what, and the
+    // one thing to do about it.
+    root.classList.add("k-alert");
+    const action = view.action;
+    clear(
+      root,
+      h("div", { class: "tile" }, icon("alert", 20)),
+      h(
+        "div",
+        { class: "text" },
+        h("div", { class: "headline" }, h("span", { class: "name" }, view.title)),
+        h("div", { class: "detail" }, view.text),
+        action &&
+          h(
+            "button",
+            {
+              class: "act",
+              onclick: () => {
+                void ipc.guardAction(action.id).catch(() => {});
+              },
+            },
+            action.label,
+          ),
+      ),
+      close,
+      h("div", { class: "track" }, bar),
+    );
+    if (view.sounds) playFor("lookalike");
+  } else if (view.kind === "info") {
     root.classList.add("k-info");
     clear(
       root,

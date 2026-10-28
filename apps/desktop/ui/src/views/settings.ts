@@ -12,7 +12,7 @@ import { privacyFacts } from "./trust";
 let keepScroll = 0;
 
 /** A group of settings: an icon tile, a title and one line, then the rows. */
-function card(ic: IconName, title: string, desc: string | null, ...body: Child[]): HTMLElement {
+export function card(ic: IconName, title: string, desc: string | null, ...body: Child[]): HTMLElement {
   return h(
     "section",
     { class: "set-card" },
@@ -22,7 +22,7 @@ function card(ic: IconName, title: string, desc: string | null, ...body: Child[]
 }
 
 /** A yes/no setting as a row with a switch. */
-function toggleRow(ic: IconName, title: string, text: string, checked: boolean, set: (on: boolean) => void): HTMLElement {
+export function toggleRow(ic: IconName, title: string, text: string, checked: boolean, set: (on: boolean) => void): HTMLElement {
   return h(
     "label",
     { class: "toggle" },

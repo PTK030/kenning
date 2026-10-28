@@ -12,6 +12,7 @@ import type {
   Config,
   DetailsView,
   Fact,
+  GuardEvent,
   ImportSummary,
   JournalRecord,
   LookalikeView,
@@ -62,6 +63,10 @@ export const ipc = {
   getOnchain: (addresses: string[]) => invoke<Record<string, Fact>>("get_onchain", { addresses }),
   lookupOnchain: (address: string) => invoke<Fact>("lookup_onchain", { address }),
   setNetwork: (on: boolean) => invoke<Overview>("set_network", { on }),
+
+  guardEvents: () => invoke<GuardEvent[]>("guard_events"),
+  runClipboardTest: () => invoke<GuardEvent>("run_clipboard_test"),
+  guardAction: (action: "restore" | "clear") => invoke<void>("guard_action", { action }),
 };
 
 export function on<T>(event: string, handler: (payload: T) => void): Promise<UnlistenFn> {

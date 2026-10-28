@@ -59,7 +59,8 @@ export interface Recognition {
 
 export type Badge =
   | { kind: "recognition"; recognition: Recognition }
-  | { kind: "info"; text: string };
+  | { kind: "info"; text: string }
+  | { kind: "alert"; title: string; text: string; action: { id: "restore" | "clear"; label: string } | null };
 
 /** A badge plus how long it stays and whether to play a sound. */
 export type BadgeView = Badge & { seconds: number; sounds: boolean };
@@ -117,6 +118,31 @@ export interface Config {
   solana_rpc?: string | null;
   onboarded: boolean;
   lookalike: Rules;
+  /** The clipboard guard: swapped addresses and secrets on the clipboard. */
+  guard: boolean;
+}
+
+/** Why the guard took a write for a swap. */
+export type Clue = "no_input" | "background" | "looks_alike";
+
+/** What the clipboard guard has seen (kept in memory until Kenning quits). */
+export type GuardEvent =
+  | { kind: "swap"; at: string; chain: Chain; copied: string; found: string; process: string | null; after_ms: number; clues: Clue[] }
+  | { kind: "secret"; at: string; what: string; process: string | null }
+  | { kind: "test"; at: string; checked: number; swaps: TestSwap[] };
+
+export interface TestSwap {
+  chain: Chain;
+  wrote: string;
+  found: string | null;
+  process: string | null;
+}
+
+/** A running clipboard test: one decoy out (`clean` null) or back. */
+export interface TestStep {
+  index: number;
+  chain: Chain;
+  clean: boolean | null;
 }
 
 /** Shortcuts inside Kenning's windows (config.toml `[keys]`). */
