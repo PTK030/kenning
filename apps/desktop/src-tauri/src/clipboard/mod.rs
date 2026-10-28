@@ -12,7 +12,7 @@
 mod windows;
 
 #[cfg(windows)]
-pub use windows::{read, read_selection, spawn_watcher, write};
+pub use windows::{clear, read, read_selection, restore, save, seq, spawn_watcher, write, write_hidden};
 
 use serde::Serialize;
 
@@ -59,4 +59,30 @@ pub fn read_selection() -> (Content, Source) {
 }
 
 #[cfg(not(windows))]
-pub fn spawn_watcher(_on_change: impl Fn() + Send + 'static) {}
+pub fn spawn_watcher(_on_write: impl Fn() + Send + 'static, _on_change: impl Fn() + Send + 'static) {}
+
+#[cfg(not(windows))]
+pub type Saved = ();
+
+#[cfg(not(windows))]
+pub fn seq() -> Option<u32> {
+    None
+}
+
+#[cfg(not(windows))]
+pub fn write_hidden(_text: &str) -> Result<(), String> {
+    Err("clipboard is not supported on this platform yet".into())
+}
+
+#[cfg(not(windows))]
+pub fn clear() -> Result<(), String> {
+    Err("clipboard is not supported on this platform yet".into())
+}
+
+#[cfg(not(windows))]
+pub fn save() -> Option<Saved> {
+    None
+}
+
+#[cfg(not(windows))]
+pub fn restore(_saved: &Saved) {}

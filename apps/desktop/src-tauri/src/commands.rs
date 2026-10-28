@@ -17,7 +17,8 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::onchain::{self, Fact};
 use crate::state::{AppState, BadgeView, DetailsView};
-use crate::{clipboard, hotkey, tray, ui};
+use crate::guard::{self, Event};
+use crate::{clipboard, flow, hotkey, tray, ui};
 
 type Res<T> = Result<T, String>;
 
@@ -518,6 +519,40 @@ pub fn reload(app: AppHandle, state: State<AppState>) -> Res<Overview> {
 #[tauri::command]
 pub fn open_main(app: AppHandle, tab: String) {
     ui::open_main(&app, &tab);
+}
+
+/// What the clipboard guard has seen since Kenning started, newest first.
+#[tauri::command]
+pub fn guard_events(state: State<AppState>) -> Vec<Event> {
+    state.guard.events()
+}
+
+/// Write a decoy address of each chain and watch for anything swapping it.
+/// Takes a few seconds; the clipboard is put back afterwards.
+#[tauri::command]
+pub async fn run_clipboard_test(app: AppHandle) -> Res<Event> {
+    tauri::async_runtime::spawn_blocking(move || guard::run_test(&app))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// The button on a guard alert: put the copied address back, or clear the
+/// clipboard.
+#[tauri::command]
+pub fn guard_action(app: AppHandle, state: State<AppState>, action: String) -> Res<()> {
+    match action.as_str() {
+        "restore" => {
+            let address = state.guard.take_restore().ok_or("Nothing to put back.")?;
+            clipboard::write(&address)?;
+            flow::info(&app, "Your address is back on the clipboard. Check it once more before you send.");
+        }
+        "clear" => {
+            clipboard::clear()?;
+            flow::info(&app, "Clipboard cleared.");
+        }
+        _ => return Err(format!("unknown action {action}")),
+    }
+    Ok(())
 }
 
 #[cfg(test)]

@@ -5,6 +5,7 @@ use std::time::Instant;
 use kenning_core::{AddressKey, Kenning, Recognition};
 
 use crate::clipboard::Source;
+use crate::guard::GuardState;
 use crate::onchain::OnchainState;
 use serde::Serialize;
 
@@ -14,6 +15,20 @@ use serde::Serialize;
 pub enum Badge {
     Recognition { recognition: Box<Recognition> },
     Info { text: String },
+    /// The clipboard guard caught something: a swapped address or a secret.
+    Alert {
+        title: String,
+        text: String,
+        action: Option<AlertAction>,
+    },
+}
+
+/// The button on an alert badge.
+#[derive(Clone, Debug, Serialize)]
+pub struct AlertAction {
+    /// "restore" or "clear", passed back to `guard_action`.
+    pub id: String,
+    pub label: String,
 }
 
 /// The badge as the page receives it: content plus how long it stays, so
@@ -54,6 +69,7 @@ pub struct AppState {
     /// selection and putting the clipboard back) and are not checked.
     pub quiet_until: Mutex<Option<Instant>>,
     pub onchain: OnchainState,
+    pub guard: GuardState,
 }
 
 impl AppState {
@@ -70,6 +86,7 @@ impl AppState {
             grabbing: AtomicBool::new(false),
             quiet_until: Mutex::new(None),
             onchain: OnchainState::default(),
+            guard: GuardState::default(),
         }
     }
 }

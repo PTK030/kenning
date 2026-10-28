@@ -22,6 +22,10 @@ pub fn on_clipboard_change(app: &AppHandle) {
     if st.quiet_until.lock().unwrap().is_some_and(|t| Instant::now() < t) {
         return;
     }
+    // The guard's alert about this very write must stay on screen.
+    if st.guard.alarmed_now() {
+        return;
+    }
     if st.kenning.lock().unwrap().config().clipboard != ClipboardMode::Watch {
         return;
     }

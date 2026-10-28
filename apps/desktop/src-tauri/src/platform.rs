@@ -104,3 +104,113 @@ pub fn press_copy() -> bool {
 pub fn press_copy() -> bool {
     false
 }
+
+/// The process of the window that last wrote the clipboard, if any. A
+/// clipper running in the background owns the clipboard after a swap; a
+/// copy made by the user is owned by the app they are using.
+#[cfg(windows)]
+#[allow(unsafe_code)]
+pub fn clipboard_owner_pid() -> Option<u32> {
+    use windows_sys::Win32::System::DataExchange::GetClipboardOwner;
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetWindowThreadProcessId;
+
+    // SAFETY: takes nothing; returns a window handle, or null when no
+    // window owns the clipboard.
+    let hwnd = unsafe { GetClipboardOwner() };
+    if hwnd.is_null() {
+        return None;
+    }
+    let mut pid = 0u32;
+    // SAFETY: `pid` is a live u32; a stale `hwnd` makes the call return 0
+    // and leaves `pid` at 0.
+    unsafe { GetWindowThreadProcessId(hwnd, &mut pid) };
+    (pid != 0).then_some(pid)
+}
+
+#[cfg(not(windows))]
+pub fn clipboard_owner_pid() -> Option<u32> {
+    None
+}
+
+/// The process of the window in front.
+#[cfg(windows)]
+#[allow(unsafe_code)]
+pub fn foreground_pid() -> Option<u32> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowThreadProcessId};
+
+    // SAFETY: takes nothing; may return null (no window in front).
+    let hwnd = unsafe { GetForegroundWindow() };
+    if hwnd.is_null() {
+        return None;
+    }
+    let mut pid = 0u32;
+    // SAFETY: as above.
+    unsafe { GetWindowThreadProcessId(hwnd, &mut pid) };
+    (pid != 0).then_some(pid)
+}
+
+#[cfg(not(windows))]
+pub fn foreground_pid() -> Option<u32> {
+    None
+}
+
+/// A process's executable file name, e.g. "chrome.exe".
+#[cfg(windows)]
+#[allow(unsafe_code)]
+pub fn process_name(pid: u32) -> Option<String> {
+    use windows_sys::Win32::Foundation::CloseHandle;
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
+    };
+
+    // SAFETY: plain call; returns null when the process is gone or closed
+    // to us (limited query rights are enough for the image name).
+    let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
+    if handle.is_null() {
+        return None;
+    }
+    let mut buf = [0u16; 512];
+    let mut len = buf.len() as u32;
+    // SAFETY: `buf` and `len` are live and `len` holds the buffer's size in
+    // characters; the handle is open until the CloseHandle below.
+    let ok = unsafe { QueryFullProcessImageNameW(handle, PROCESS_NAME_WIN32, buf.as_mut_ptr(), &mut len) };
+    // SAFETY: `handle` came from OpenProcess and is closed exactly once.
+    unsafe { CloseHandle(handle) };
+    if ok == 0 {
+        return None;
+    }
+    let path = String::from_utf16_lossy(&buf[..len as usize]);
+    path.rsplit('\\').next().map(str::to_owned)
+}
+
+#[cfg(not(windows))]
+pub fn process_name(_pid: u32) -> Option<String> {
+    None
+}
+
+/// Milliseconds since the last key press or mouse movement, anywhere. A
+/// person copies with a key or a click; a program writing the clipboard on
+/// its own leaves no input behind it.
+#[cfg(windows)]
+#[allow(unsafe_code)]
+pub fn idle_ms() -> Option<u32> {
+    use windows_sys::Win32::System::SystemInformation::GetTickCount;
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
+
+    let mut info = LASTINPUTINFO {
+        cbSize: size_of::<LASTINPUTINFO>() as u32,
+        dwTime: 0,
+    };
+    // SAFETY: `info` is live and its cbSize is set, as the call requires.
+    if unsafe { GetLastInputInfo(&mut info) } == 0 {
+        return None;
+    }
+    // SAFETY: takes nothing. Both values are the same 32-bit tick count, so
+    // the wrapping difference is right across its 49-day rollover.
+    Some(unsafe { GetTickCount() }.wrapping_sub(info.dwTime))
+}
+
+#[cfg(not(windows))]
+pub fn idle_ms() -> Option<u32> {
+    None
+}

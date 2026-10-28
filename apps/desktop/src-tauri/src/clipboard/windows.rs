@@ -70,6 +70,36 @@ pub fn write(text: &str) -> Result<(), String> {
     clipboard_win::set_clipboard_string(text).map_err(|e| e.to_string())
 }
 
+/// The clipboard's sequence number, which changes on every write.
+pub fn seq() -> Option<u32> {
+    raw::seq_num().map(|n| n.get())
+}
+
+/// Put `text` on the clipboard marked to stay out of clipboard history and
+/// cloud sync: the clipboard test's decoy addresses must not end up there.
+pub fn write_hidden(text: &str) -> Result<(), String> {
+    let _clip = Clipboard::new_attempts(10).map_err(|e| e.to_string())?;
+    raw::empty().map_err(|e| e.to_string())?;
+    let wide: Vec<u8> = text
+        .encode_utf16()
+        .chain([0])
+        .flat_map(u16::to_le_bytes)
+        .collect();
+    raw::set_without_clear(formats::CF_UNICODETEXT, &wide).map_err(|e| e.to_string())?;
+    for name in IGNORE_IF_ZERO {
+        if let Some(f) = register_format(name) {
+            let _ = raw::set_without_clear(f.get(), &[0, 0, 0, 0]);
+        }
+    }
+    Ok(())
+}
+
+/// Empty the clipboard.
+pub fn clear() -> Result<(), String> {
+    let _clip = Clipboard::new_attempts(10).map_err(|e| e.to_string())?;
+    raw::empty().map_err(|e| e.to_string())
+}
+
 /// Most Kenning will hold on to while it borrows the clipboard. A bigger
 /// clipboard (a large image, say) is left alone and the selection is not
 /// copied.
@@ -77,7 +107,7 @@ const MAX_SAVED: usize = 32 * 1024 * 1024;
 
 /// What was on the clipboard, format by format, in the order the copying
 /// app offered them.
-type Saved = Vec<(u32, Vec<u8>)>;
+pub type Saved = Vec<(u32, Vec<u8>)>;
 
 /// Formats whose data is a handle (bitmaps, metafiles, palettes) or private
 /// to the app that wrote it: they cannot be copied as bytes. Windows
@@ -87,7 +117,7 @@ fn is_handle_format(format: u32) -> bool {
     HANDLES.contains(&format) || (0x200..=0x3FF).contains(&format)
 }
 
-fn save() -> Option<Saved> {
+pub fn save() -> Option<Saved> {
     let _clip = Clipboard::new_attempts(10).ok()?;
     let mut saved = Vec::new();
     let mut total = 0;
@@ -107,7 +137,7 @@ fn save() -> Option<Saved> {
     Some(saved)
 }
 
-fn restore(saved: &Saved) {
+pub fn restore(saved: &Saved) {
     let Ok(_clip) = Clipboard::new_attempts(10) else {
         eprintln!("kenning: could not put the clipboard back");
         return;
@@ -160,8 +190,10 @@ pub fn read_selection() -> (Content, Source) {
     (content, Source::Selection)
 }
 
-/// Call `on_change` on a background thread after every clipboard change.
-pub fn spawn_watcher(on_change: impl Fn() + Send + 'static) {
+/// On a background thread, after every clipboard change: `on_write` at once
+/// (the guard must see a write before anything can write over it), then
+/// `on_change` once the copying app has had time to finish.
+pub fn spawn_watcher(on_write: impl Fn() + Send + 'static, on_change: impl Fn() + Send + 'static) {
     std::thread::Builder::new()
         .name("clipboard-watcher".into())
         .spawn(move || {
@@ -176,6 +208,7 @@ pub fn spawn_watcher(on_change: impl Fn() + Send + 'static) {
             loop {
                 match monitor.recv() {
                     Ok(true) => {
+                        on_write();
                         // Let the copying app finish writing all its formats
                         // (including the "private" markers) before we look.
                         std::thread::sleep(Duration::from_millis(30));

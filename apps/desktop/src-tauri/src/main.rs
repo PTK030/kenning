@@ -6,6 +6,7 @@
 mod clipboard;
 mod commands;
 mod flow;
+mod guard;
 mod hotkey;
 mod icon;
 mod onchain;
@@ -77,6 +78,9 @@ fn main() {
             commands::get_onchain,
             commands::lookup_onchain,
             commands::set_network,
+            commands::guard_events,
+            commands::run_clipboard_test,
+            commands::guard_action,
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
@@ -84,8 +88,11 @@ fn main() {
             if let Err(e) = hotkey::register(&handle, &shortcut, &details_shortcut) {
                 eprintln!("kenning: {e}");
             }
-            let watcher_handle = handle.clone();
-            clipboard::spawn_watcher(move || flow::on_clipboard_change(&watcher_handle));
+            let (guard_handle, watcher_handle) = (handle.clone(), handle.clone());
+            clipboard::spawn_watcher(
+                move || guard::on_write(&guard_handle),
+                move || flow::on_clipboard_change(&watcher_handle),
+            );
             if !onboarded {
                 ui::open_main(&handle, "welcome");
             }
