@@ -585,8 +585,10 @@ main.onboarding {
 }
 
 .ob-bookwrap,
+/* Centred in the panel, like the other steps' pictures: the list is
+   shorter than the panel, and stretched it left the bottom empty. */
 .ob-hosts {
-  align-self: stretch;
+  align-self: center;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -1770,6 +1772,22 @@ body.immersive #app::before {
 
 .ob-hosts .ob-hostlist li code {
   font-size: 11.5px;
+}
+
+/* One line under the list: what leaves the computer, or that nothing does. */
+.ob-hosts-foot {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 2px 2px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--v-ink-2);
+}
+
+.ob-hosts-foot svg {
+  flex: none;
+  margin-top: 1px;
 }
 
 /* A network's mark on its own colour, lit from the top like the tiles. */

@@ -456,8 +456,16 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
                   ).map(([f, what]) => h("li", {}, h("b", {}, f), h("span", {}, what))),
                 ),
               ],
+          h(
+            "p",
+            { class: "ob-hosts-foot" },
+            icon("info", 14),
+            s.network
+              ? "Only the address is sent, never your book or labels. Answers are kept for an hour."
+              : "No accounts, no analytics, no update checks. Turn lookups on any time in Settings.",
+          ),
         );
-        void rise(hosts.querySelectorAll("li"), { y: 6, gap: 0.04 });
+        void rise(hosts.querySelectorAll("li, .ob-hosts-foot"), { y: 6, gap: 0.04 });
       };
       paintHosts();
       return panel(
