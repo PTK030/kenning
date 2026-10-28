@@ -585,22 +585,50 @@ main.onboarding {
 }
 
 .ob-bookwrap,
-/* Centred in the panel, like the other steps' pictures: the list is
-   shorter than the panel, and stretched it left the bottom empty. */
 .ob-hosts {
-  align-self: center;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+/* The book grows as you add to it, so it hangs from the top: centred, its
+   heading would climb with every name. Until then the empty list fills
+   the panel, a place waiting for names. */
+.ob-bookwrap {
+  align-self: stretch;
+  min-height: 0;
+}
+
+.ob-bookwrap .ob-book {
+  flex: 1;
+  min-height: 0;
+}
+
+.ob-book:has(> .empty-row) {
+  align-content: stretch;
+}
+
+/* The hosts are a fixed picture, shorter than the panel: centred, like the
+   other steps' pictures. */
+.ob-hosts {
+  align-self: center;
+}
+
+/* The title over a panel's list (the book, the hosts): bright, one step
+   above the rows, with the icon in the brand's light blue. */
 .ob-bookhead {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 600;
-  color: var(--v-ink-2);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--v-ink);
+}
+
+.ob-bookhead svg {
+  color: #8aa4ff;
 }
 
 .ob-book,
@@ -662,12 +690,23 @@ main.onboarding {
 }
 
 .ob-book li.empty-row {
-  display: block;
+  display: grid;
+  grid-template-columns: auto;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
   padding: 30px 12px;
   text-align: center;
   color: var(--v-ink-2);
   /* Opaque enough to read over the panel's light. */
   background: rgb(14 19 25 / 55%);
+  box-shadow: none;
+  outline: 1.5px dashed var(--v-line);
+  outline-offset: -1.5px;
+}
+
+.ob-book li.empty-row svg {
+  opacity: 0.7;
 }
 
 /* Step 5: preferences */
@@ -1758,20 +1797,25 @@ body.immersive #app::before {
   white-space: nowrap;
 }
 
+/* Under the title, each row has three levels: the network (bright), the
+   host it asks (mono, a step down) and a note (smallest, dimmest); the
+   line under the list is quieter still. */
 .ob-hostlist b {
   color: var(--v-ink);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 .ob-hosts .ob-hostlist .note {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 12px;
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--v-ink-2) 80%, transparent);
 }
 
 .ob-hosts .ob-hostlist li code {
-  font-size: 11.5px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--v-ink) 72%, transparent);
 }
 
 /* One line under the list: what leaves the computer, or that nothing does. */
@@ -1780,14 +1824,15 @@ body.immersive #app::before {
   gap: 8px;
   align-items: flex-start;
   margin: 2px 2px 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--v-ink-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--v-ink-2) 85%, transparent);
 }
 
 .ob-hosts-foot svg {
   flex: none;
-  margin-top: 1px;
+  margin-top: 2px;
+  opacity: 0.8;
 }
 
 /* A network's mark on its own colour, lit from the top like the tiles. */

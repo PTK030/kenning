@@ -322,7 +322,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
 
       const paintList = () => {
         if (!s.added.length) {
-          clear(list, h("li", { class: "empty-row" }, "Names you add appear here."));
+          clear(list, h("li", { class: "empty-row" }, icon("book", 22), "Names you add appear here."));
           return;
         }
         clear(
