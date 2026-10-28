@@ -16,6 +16,7 @@ import { sandbox } from "./sandbox";
 import { keysStep } from "./keys";
 import { playIntro } from "./intro";
 import { cue } from "../sound";
+import { chainMark, chainOf } from "../chainMarks";
 import iconUrl from "../../../src-tauri/icons/128x128@2x.png";
 
 /** A real stablecoin contract, recognised by its public label. */
@@ -417,7 +418,29 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           h("div", { class: "ob-bookhead" }, icon(s.network ? "globe" : "power", 16), s.network ? "Kenning will ask only these hosts" : "Everything stays on this computer"),
           // The folder once, then what lives in it: short rows, no repeated path.
           s.network
-            ? h("ul", { class: "ob-files" }, overview.hosts.map(([chain, host]) => h("li", {}, h("b", {}, chain), h("code", {}, host))))
+            ? h(
+                "ul",
+                { class: "ob-files ob-hostlist" },
+                // Pairs of host and what it is for, e.g. "EVM addresses
+                // (Ethereum mainnet)": the network leads, with its mark;
+                // the host it asks sits under it.
+                overview.hosts.map(([host, why]) => {
+                  const chain = chainOf(why);
+                  const net = why.replace(/ addresses.*$/, "");
+                  const note = /\((.+)\)/.exec(why)?.[1];
+                  return h(
+                    "li",
+                    {},
+                    chain ? chainMark(chain, 30) : h("span"),
+                    h(
+                      "span",
+                      { class: "net" },
+                      h("span", { class: "name" }, h("b", {}, net), note && h("span", { class: "note" }, `${note[0].toUpperCase()}${note.slice(1)}`)),
+                      h("code", { title: host }, host),
+                    ),
+                  );
+                }),
+              )
             : [
                 h("code", { class: "ob-home", title: overview.home }, overview.home),
                 h(

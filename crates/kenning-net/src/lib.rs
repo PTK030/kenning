@@ -28,10 +28,10 @@ pub const HOSTS: &[(&str, &str)] = &[
     ("eth.blockscout.com", "EVM addresses (Ethereum mainnet)"),
     (
         "api.mainnet-beta.solana.com",
-        "Solana addresses (unless you set your own RPC)",
+        "Solana addresses (mainnet, or your own RPC)",
     ),
-    ("mempool.space", "Bitcoin addresses"),
-    ("api.trongrid.io", "Tron addresses"),
+    ("mempool.space", "Bitcoin addresses (mainnet)"),
+    ("api.trongrid.io", "Tron addresses (mainnet)"),
 ];
 
 /// How long a cached answer is used before asking again.
