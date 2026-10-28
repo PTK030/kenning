@@ -64,7 +64,10 @@ async function render() {
       // The panel's data is ready before anything moves, so there is no
       // empty beat between the onboarding leaving and the panel arriving.
       const next = await ipc.overview();
-      await move(main, { opacity: [1, 0] }, { duration: 0.45, ease: HANDOVER });
+      await Promise.all([
+        move(main, { opacity: [1, 0] }, { duration: 0.45, ease: HANDOVER }),
+        move(bar.el.querySelector(".tb-sub"), { opacity: [1, 0] }, { duration: 0.45, ease: HANDOVER }),
+      ]);
       overview = next;
       arriving = true;
       if (currentTab() === "book" && location.hash === "#book") void render();
@@ -93,6 +96,14 @@ async function render() {
   const pill = h("div", { class: "pill", "aria-hidden": "true" });
   nav.prepend(pill);
   const main = h("main");
+  // After the onboarding, the panel is in the page before its data is
+  // (the view awaits the shell): it waits there unseen, or it would show
+  // at full strength, vanish as its entrance starts, and fade back in.
+  if (arriving) {
+    nav.style.opacity = "0";
+    main.style.opacity = "0";
+    bar.el.querySelector<HTMLElement>(".tb-sub")?.style.setProperty("opacity", "0");
+  }
   clear(app, nav, main);
   if (overview.warnings.length) {
     main.appendChild(h("div", { class: "notice error" }, overview.warnings.join(" ")));
@@ -115,7 +126,11 @@ async function render() {
     // the title bar and the light settle (CSS transitions).
     // A scene change, once: slow and eased, no spring.
     arriving = false;
+    // The page's children take over the fade from the page itself, in the
+    // same frame, so nothing is painted in between.
+    main.style.opacity = "";
     void move(nav, { opacity: [0, 1], x: [-12, 0] }, { duration: 0.7, ease: HANDOVER });
+    void move(bar.el.querySelector(".tb-sub"), { opacity: [0, 1] }, { duration: 0.7, ease: HANDOVER, delay: 0.15 });
     void move(main.children, { opacity: [0, 1], y: [12, 0] }, { duration: 0.7, ease: HANDOVER, delay: stagger(0.07, { startDelay: 0.15 }) });
   } else if (active.id !== lastTab) void rise(main.children, { y: 10, gap: 0.035 });
   lastTab = active.id;
