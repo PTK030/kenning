@@ -12,7 +12,9 @@
 mod windows;
 
 #[cfg(windows)]
-pub use windows::{clear, read, read_selection, restore, save, seq, spawn_watcher, write, write_hidden};
+pub use windows::{
+    clear, read, read_selection, read_within, restore, save, seq, spawn_watcher, write, write_hidden,
+};
 
 use serde::Serialize;
 
@@ -26,6 +28,14 @@ pub enum Content {
     Private,
     /// Empty, not text, or too long.
     Nothing,
+}
+
+/// One write, as the clipboard guard sees it.
+pub struct Snapshot {
+    pub seq: Option<u32>,
+    /// The process whose window wrote it, if a window did.
+    pub owner: Option<u32>,
+    pub content: Content,
 }
 
 /// Where the details window got its address.
@@ -46,6 +56,11 @@ pub enum Source {
 #[cfg(not(windows))]
 pub fn read() -> Content {
     Content::Nothing
+}
+
+#[cfg(not(windows))]
+pub fn read_within(_timeout: std::time::Duration) -> Option<Snapshot> {
+    None
 }
 
 #[cfg(not(windows))]

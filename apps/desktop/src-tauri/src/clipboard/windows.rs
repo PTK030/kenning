@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use clipboard_win::{Clipboard, Monitor, formats, get, is_format_avail, raw, register_format};
 
-use super::{Content, MAX_TEXT, Source};
+use super::{Content, MAX_TEXT, Snapshot, Source};
 use crate::platform;
 
 const IGNORE_IF_PRESENT: [&str; 2] = [
@@ -49,6 +49,34 @@ pub fn read() -> Content {
     let Ok(_clip) = Clipboard::new_attempts(10) else {
         return Content::Nothing;
     };
+    read_open()
+}
+
+/// Like [`read`], but wait up to `timeout` for the clipboard to be free,
+/// or None if it never was. The writer that just announced a change may
+/// still hold it (a .NET or OLE write does, for a few milliseconds), and
+/// [`read`]'s retries take microseconds.
+///
+/// The sequence number and the owner are read while the clipboard is open,
+/// so they belong to the same write as the text: nobody can write between.
+pub fn read_within(timeout: Duration) -> Option<Snapshot> {
+    let deadline = Instant::now() + timeout;
+    let _clip = loop {
+        match Clipboard::new() {
+            Ok(clip) => break clip,
+            Err(_) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(5)),
+            Err(_) => return None,
+        }
+    };
+    Some(Snapshot {
+        seq: seq(),
+        owner: platform::clipboard_owner_pid(),
+        content: read_open(),
+    })
+}
+
+/// The clipboard's text; the clipboard is open.
+fn read_open() -> Content {
     if is_private() {
         return Content::Private;
     }

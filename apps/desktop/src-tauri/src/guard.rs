@@ -188,6 +188,9 @@ pub struct GuardState {
     alarm_seq: Mutex<Option<u32>>,
     /// When the last secret warning was shown (an app may write twice).
     secret_at: Mutex<Option<Instant>>,
+    /// The sequence number of the last write looked at: Windows often
+    /// announces one write two or three times.
+    seen_seq: Mutex<Option<u32>>,
     /// The test is borrowing the clipboard.
     testing: AtomicBool,
 }
@@ -248,15 +251,25 @@ pub fn on_write(app: &AppHandle) {
         return;
     }
 
-    // Who wrote it and who is in front, before anything else can change.
-    let writer = platform::clipboard_owner_pid();
+    let already = |seq: Option<u32>| seq.is_some() && *g.seen_seq.lock().unwrap() == seq;
+    if already(clipboard::seq()) {
+        return;
+    }
+    // Who is in front and when the last input was, before anything changes.
     let front = platform::foreground_pid();
     let idle = platform::idle_ms();
-    let content = clipboard::read();
-    let seq = clipboard::seq();
-
-    let Content::Text(text) = content else {
-        *g.last.lock().unwrap() = None;
+    // A clipboard still held by its writer is not "something else copied":
+    // forgetting your address there would let the swap that follows pass
+    // as a fresh copy. Only text that is not an address resets it.
+    let Some(snap) = clipboard::read_within(Duration::from_millis(250)) else {
+        return;
+    };
+    if already(snap.seq) {
+        return;
+    }
+    let (seq, writer) = (snap.seq, snap.owner);
+    *g.seen_seq.lock().unwrap() = seq;
+    let Content::Text(text) = snap.content else {
         return;
     };
 
