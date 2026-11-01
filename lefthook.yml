@@ -1,0 +1,26 @@
+# Git hooks, installed by `npm install` at the repository root. Quick checks
+# on what is being committed; CI runs the full set (docs/development.md).
+# `git commit --no-verify` skips them when you must.
+
+pre-commit:
+  parallel: true
+  commands:
+    ui-types:
+      root: apps/desktop/
+      glob: "apps/desktop/ui/**/*.ts"
+      run: npx tsc --noEmit
+    contrast:
+      glob: "apps/desktop/ui/src/styles/tokens.css"
+      run: node apps/desktop/scripts/check-contrast.mjs
+    site-types:
+      root: site/
+      glob: "site/src/**/*.ts"
+      run: npx tsc --noEmit
+    clippy:
+      glob: "*.rs"
+      run: cargo clippy --workspace --all-targets -- -D warnings
+
+commit-msg:
+  commands:
+    subject:
+      run: node .github/scripts/commit-subject.mjs --file {1}

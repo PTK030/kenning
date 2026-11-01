@@ -1,0 +1,19 @@
+{
+  "name": "kenning",
+  "private": true,
+  "description": "Commands for the whole repository; each app keeps its own packages.",
+  "scripts": {
+    "postinstall": "lefthook install",
+    "dev": "npm --prefix apps/desktop run tauri dev",
+    "dev:site": "npm --prefix site run dev",
+    "shots": "npm --prefix apps/desktop run shots --",
+    "check": "npm run check:rust && npm run check:ui && npm run check:site",
+    "check:rust": "cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace",
+    "check:ui": "npm --prefix apps/desktop run build && node apps/desktop/scripts/check-contrast.mjs",
+    "check:site": "npm --prefix site run build",
+    "deny": "cargo deny --manifest-path crates/kenning-core/Cargo.toml check"
+  },
+  "devDependencies": {
+    "lefthook": "2.2.2"
+  }
+}
