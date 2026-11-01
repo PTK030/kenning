@@ -90,7 +90,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd target/release/bundle
-          sha256sum nsis/*.exe msi/*.msi | sed 's#  [a-z]*/#  #' > SHA256SUMS.txt
+          # Windows' sha256sum marks binary files with '*': plain names, so
+          # sha256sum -c works on the downloaded files side by side.
+          sha256sum nsis/*.exe msi/*.msi | sed -E 's#^([0-9a-f]+) [ *]*[a-z]+/#\1  #' > SHA256SUMS.txt
           cat SHA256SUMS.txt
           gh release upload "$TAG" SHA256SUMS.txt --clobber
 
