@@ -47,10 +47,10 @@ fn number(v: &Value) -> Option<u64> {
 
 const BLOCKSCOUT: &str = "Blockscout";
 
-pub(crate) fn blockscout(agent: &Agent, base: &str, address: &Address) -> Result<Onchain, NetError> {
+pub(crate) fn blockscout(agent: &Agent, base: &str, network: &str, address: &Address) -> Result<Onchain, NetError> {
     let mut out = Onchain {
         chain: Chain::Evm,
-        network: "Ethereum".into(),
+        network: network.into(),
         source: BLOCKSCOUT.into(),
         active: false,
         transactions: None,
@@ -59,6 +59,7 @@ pub(crate) fn blockscout(agent: &Agent, base: &str, address: &Address) -> Result
         verified: None,
         name: None,
         fetched_at: Timestamp::now(),
+        networks: Vec::new(),
     };
     let info = match get(agent, BLOCKSCOUT, &format!("{base}/api/v2/addresses/{address}")) {
         Ok((404, _)) => return Ok(out),
@@ -131,6 +132,48 @@ fn node_facts(agent: &Agent, base: &str, address: &Address, mut out: Onchain) ->
     out.active.then_some(out)
 }
 
+/// An EVM network asked through its public node: code means a contract, a
+/// nonce counts the transactions sent, a balance means it was funded. A node
+/// cannot see tokens received, so an address showing none of these is "no
+/// sign of use" (`active: false`), which the caller must not read as "never
+/// used".
+pub(crate) fn evm_node(agent: &Agent, url: &str, network: &str, address: &Address) -> Result<Onchain, NetError> {
+    let source = url.split_once("://").map_or(url, |(_, r)| r);
+    let source = source.split('/').next().unwrap_or(source);
+    let provider = "EVM node";
+    let call = |method: &str| -> Result<String, NetError> {
+        let body = json!({"jsonrpc": "2.0", "id": 1, "method": method, "params": [address.as_str(), "latest"]});
+        let (status, body) = post(agent, provider, url, &body)?;
+        ok_or_fail(provider, status)?;
+        if let Some(err) = body.get("error") {
+            return Err(fail(provider, err["message"].as_str().unwrap_or("RPC error")));
+        }
+        body["result"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| fail(provider, "no result"))
+    };
+    let hex = |h: &str| u128::from_str_radix(h.trim_start_matches("0x"), 16).unwrap_or(0);
+    let contract = call("eth_getCode")?.trim_start_matches("0x").chars().any(|c| c != '0');
+    let sent = hex(&call("eth_getTransactionCount")?) as u64;
+    let funded = hex(&call("eth_getBalance")?) > 0;
+    Ok(Onchain {
+        chain: Chain::Evm,
+        network: network.into(),
+        source: source.into(),
+        active: contract || sent > 0 || funded,
+        // A contract's nonce counts the contracts it created, from 1
+        // (EIP-161), not transactions: no number rather than a wrong one.
+        transactions: (!contract && sent > 0).then_some(sent),
+        transactions_capped: false,
+        contract,
+        verified: None,
+        name: None,
+        fetched_at: Timestamp::now(),
+        networks: Vec::new(),
+    })
+}
+
 // ---------------------------------------------------------------- Solana
 
 const SOLANA: &str = "Solana RPC";
@@ -172,6 +215,7 @@ pub(crate) fn solana(agent: &Agent, rpc: &str, address: &Address) -> Result<Onch
         verified: None,
         name: None,
         fetched_at: Timestamp::now(),
+        networks: Vec::new(),
     })
 }
 
@@ -210,6 +254,7 @@ pub(crate) fn mempool(agent: &Agent, base: &str, address: &Address) -> Result<On
         verified: None,
         name: None,
         fetched_at: Timestamp::now(),
+        networks: Vec::new(),
     })
 }
 
@@ -218,26 +263,40 @@ pub(crate) fn mempool(agent: &Agent, base: &str, address: &Address) -> Result<On
 const TRONGRID: &str = "TronGrid";
 const TRON_PAGE: u64 = 200;
 
-pub(crate) fn trongrid(agent: &Agent, base: &str, address: &Address) -> Result<Onchain, NetError> {
+pub(crate) fn trongrid(agent: &Agent, base: &str, key: Option<&str>, address: &Address) -> Result<Onchain, NetError> {
     let s = address.as_str();
-    let (status, account) = get(agent, TRONGRID, &format!("{base}/v1/accounts/{s}"))?;
+    let get = |url: &str| -> Result<(u16, Value), NetError> {
+        let mut req = agent.get(url);
+        if let Some(k) = key {
+            req = req.header("TRON-PRO-API-KEY", k);
+        }
+        let mut resp = req.call().map_err(|e| fail(TRONGRID, e))?;
+        let status = resp.status().as_u16();
+        Ok((status, resp.body_mut().read_json::<Value>().unwrap_or(Value::Null)))
+    };
+    let post = |url: &str, body: &Value| -> Result<(u16, Value), NetError> {
+        let mut req = agent.post(url);
+        if let Some(k) = key {
+            req = req.header("TRON-PRO-API-KEY", k);
+        }
+        let mut resp = req.send_json(body).map_err(|e| fail(TRONGRID, e))?;
+        let status = resp.status().as_u16();
+        Ok((status, resp.body_mut().read_json::<Value>().unwrap_or(Value::Null)))
+    };
+    let (status, account) = get(&format!("{base}/v1/accounts/{s}"))?;
     ok_or_fail(TRONGRID, status)?;
     let activated = account["data"].as_array().is_some_and(|d| !d.is_empty());
 
     let (status, contract) = post(
-        agent,
-        TRONGRID,
         &format!("{base}/wallet/getcontract"),
         &json!({"value": s, "visible": true}),
     )?;
     ok_or_fail(TRONGRID, status)?;
     let is_contract = contract.get("contract_address").is_some();
 
-    let (status, txs) = get(
-        agent,
-        TRONGRID,
-        &format!("{base}/v1/accounts/{s}/transactions?limit={TRON_PAGE}&only_confirmed=true"),
-    )?;
+    let (status, txs) = get(&format!(
+        "{base}/v1/accounts/{s}/transactions?limit={TRON_PAGE}&only_confirmed=true"
+    ))?;
     ok_or_fail(TRONGRID, status)?;
     let count = txs["data"].as_array().map(|a| a.len() as u64).unwrap_or(0);
 
@@ -255,5 +314,6 @@ pub(crate) fn trongrid(agent: &Agent, base: &str, address: &Address) -> Result<O
             .filter(|n| !n.is_empty())
             .map(str::to_owned),
         fetched_at: Timestamp::now(),
+        networks: Vec::new(),
     })
 }

@@ -69,10 +69,14 @@ fn mock(routes: Vec<(&'static str, u16, &'static str)>) -> Mock {
 fn net(base: &str) -> Net {
     Net::new(
         Endpoints {
-            blockscout: base.into(),
+            evm: vec![EvmEndpoint {
+                name: "Ethereum".into(),
+                source: EvmSource::Blockscout(base.into()),
+            }],
             solana_rpc: base.into(),
             mempool: base.into(),
             trongrid: base.into(),
+            trongrid_key: None,
         },
         None,
     )
@@ -281,4 +285,114 @@ fn thousands_separator() {
     assert_eq!(thousands(999), "999");
     assert_eq!(thousands(1000), "1,000");
     assert_eq!(thousands(1234567), "1,234,567");
+}
+
+fn evm_net(networks: Vec<EvmEndpoint>) -> Net {
+    Net::new(
+        Endpoints {
+            evm: networks,
+            ..Default::default()
+        },
+        None,
+    )
+}
+
+#[test]
+fn evm_asked_on_several_networks() {
+    // The explorer has never seen it; the node shows three transactions sent.
+    let m = mock(vec![
+        ("RPC eth_getCode", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x"}"#),
+        ("RPC eth_getTransactionCount", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x3"}"#),
+        ("RPC eth_getBalance", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#),
+    ]);
+    let n = evm_net(vec![
+        EvmEndpoint {
+            name: "Ethereum".into(),
+            source: EvmSource::Blockscout(m.base.clone()),
+        },
+        EvmEndpoint {
+            name: "Base".into(),
+            source: EvmSource::Rpc(m.base.clone()),
+        },
+    ]);
+    let o = n.lookup(&parse(ROUTER).unwrap()).unwrap();
+    assert!(o.active);
+    let used: Vec<_> = o.networks.iter().map(|u| (u.network.as_str(), u.used)).collect();
+    assert_eq!(used, [("Ethereum", Some(false)), ("Base", Some(true))]);
+    assert_eq!(o.summary(), "Used on Base · 3 transactions on Base");
+}
+
+#[test]
+fn evm_node_silence_is_not_never_used() {
+    // A node sees no transaction sent and no balance: no sign of use, which
+    // is not "never used" (tokens received are invisible to it).
+    let m = mock(vec![
+        ("RPC eth_getCode", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x"}"#),
+        ("RPC eth_getTransactionCount", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#),
+        ("RPC eth_getBalance", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#),
+    ]);
+    let rpc = |name: &str| EvmEndpoint {
+        name: name.into(),
+        source: EvmSource::Rpc(m.base.clone()),
+    };
+    let o = evm_net(vec![rpc("Base"), rpc("Arbitrum")]).lookup(&parse(ROUTER).unwrap()).unwrap();
+    assert!(!o.active);
+    assert!(o.networks.iter().all(|u| u.used.is_none()));
+    assert_eq!(o.summary(), "No sign of use on 2 EVM networks");
+}
+
+#[test]
+fn evm_one_network_down_is_reported_not_fatal() {
+    let up = mock(vec![("RPC eth_getCode", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x6080"}"#),
+        ("RPC eth_getTransactionCount", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#),
+        ("RPC eth_getBalance", 200, r#"{"jsonrpc":"2.0","id":1,"result":"0x0"}"#)]);
+    let down = mock(vec![]);
+    let o = evm_net(vec![
+        EvmEndpoint {
+            name: "Base".into(),
+            source: EvmSource::Rpc(up.base.clone()),
+        },
+        EvmEndpoint {
+            name: "BNB Chain".into(),
+            source: EvmSource::Rpc(down.base.clone()),
+        },
+    ])
+    .lookup(&parse(ROUTER).unwrap())
+    .unwrap();
+    assert!(o.contract);
+    assert!(o.networks[1].error.is_some());
+    assert_eq!(o.summary(), "Used on Base · contract · 1 not reachable");
+    // Every network down is an error.
+    let rpc = |name: &str| EvmEndpoint {
+        name: name.into(),
+        source: EvmSource::Rpc(down.base.clone()),
+    };
+    assert!(evm_net(vec![rpc("A"), rpc("B")]).lookup(&parse(ROUTER).unwrap()).is_err());
+}
+
+#[test]
+fn endpoints_from_settings() {
+    let e = Endpoints::new(
+        &["base".into(), "nonsense".into(), "ethereum".into()],
+        None,
+        Some(" http://umbrel.local:3006/ "),
+        Some("  "),
+    );
+    // In the list's order, unknown ids skipped.
+    let names: Vec<_> = e.evm.iter().map(|n| n.name.as_str()).collect();
+    assert_eq!(names, ["Ethereum", "Base"]);
+    assert_eq!(e.mempool, "http://umbrel.local:3006");
+    assert_eq!(e.trongrid_key, None);
+    let hosts = e.hosts();
+    assert!(hosts.contains(&("umbrel.local:3006".into(), "Bitcoin addresses".into())));
+    assert!(hosts.contains(&("mainnet.base.org".into(), "EVM addresses on Base".into())));
+    assert_eq!(Endpoints::default().evm.len(), EVM_NETWORKS.len());
+}
+
+#[test]
+fn endpoint_urls_are_checked() {
+    assert!(check_url("https://my.node:8899").is_ok());
+    assert!(check_url("http://umbrel.local").is_ok());
+    assert!(check_url("mempool.space").is_err());
+    assert!(check_url("https://").is_err());
 }

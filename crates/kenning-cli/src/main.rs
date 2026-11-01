@@ -309,7 +309,7 @@ fn run(cli: Cli) -> Result<u8, Fail> {
                 "off (use --online per command)"
             };
             writeln!(out, "\nnetwork  {state}")?;
-            for (host, why) in kenning_net::HOSTS {
+            for (host, why) in kenning_net::Endpoints::from_config(k.config()).hosts() {
                 writeln!(out, "  {host:<30} {DIM}{why}{DIM:#}")?;
             }
             Ok(0)
@@ -353,7 +353,7 @@ fn cmd_recognize(cli: &Cli) -> Result<u8, Fail> {
     // in settings.
     let onchain: Vec<Option<Result<kenning_net::Onchain, String>>> = if cli.online || k.config().network {
         let net = kenning_net::Net::new(
-            kenning_net::Endpoints::with_solana_rpc(k.config().solana_rpc.as_deref()),
+            kenning_net::Endpoints::from_config(k.config()),
             Some(k.home().join("net-cache.json")),
         );
         results
