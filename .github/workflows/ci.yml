@@ -110,10 +110,15 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache-dependency-path: |
+            site/package-lock.json
+            apps/desktop/package-lock.json
+      # The page embeds the desktop app's own windows, built from its sources
+      # with its packages, so those are installed too.
       - name: Types and build
         working-directory: site
         run: |
+          npm ci --prefix ../apps/desktop
           npm ci
           npm run build
 
