@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://getkenning.vercel.app"><b>웹사이트</b></a> ·
   <a href="https://github.com/PTK030/kenning/releases"><b>다운로드</b></a> ·
   <a href="docs/detection-rules.md"><b>탐지 규칙</b></a> ·
   <a href="#cli-1"><b>CLI</b></a> ·
