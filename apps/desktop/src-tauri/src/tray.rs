@@ -1,6 +1,6 @@
 //! Tray icon and menu. The menu always states the two facts people ask
 //! about first: whether Kenning uses the network, and how it reads the
-//! clipboard.
+//! clipboard. While watching is paused, the icon says so too.
 
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -9,7 +9,7 @@ use kenning_core::ClipboardMode;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Manager, Wry};
+use tauri::{AppHandle, Emitter, Manager, Wry};
 
 use crate::icon::{self, IconState};
 use crate::state::AppState;
@@ -25,8 +25,16 @@ pub enum Tray {
     Lookalike,
 }
 
-fn image(state: Tray) -> Image<'static> {
+/// Watching the clipboard, but paused from the menu or the window.
+fn paused(app: &AppHandle) -> bool {
+    let st = app.state::<AppState>();
+    let watch = st.kenning.lock().unwrap().config().clipboard == ClipboardMode::Watch;
+    watch && st.paused.load(Ordering::SeqCst)
+}
+
+fn image(state: Tray, paused: bool) -> Image<'static> {
     let s = match state {
+        Tray::Rest if paused => IconState::Paused,
         Tray::Rest => IconState::Rest,
         Tray::Recognized => IconState::Recognized,
         Tray::Lookalike => IconState::Lookalike,
@@ -46,7 +54,7 @@ fn ink() -> [u8; 3] {
 
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
     TrayIconBuilder::with_id(TRAY_ID)
-        .icon(image(Tray::Rest))
+        .icon(image(Tray::Rest, false))
         .tooltip("Kenning")
         .menu(&menu(app)?)
         .show_menu_on_left_click(true)
@@ -55,17 +63,29 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Rebuild the menu after settings or pause state change.
+/// Rebuild the menu after settings or pause state change, and the resting
+/// icon with it (a lookalike on screen keeps its own).
 pub fn refresh(app: &AppHandle) {
     if let (Some(tray), Ok(menu)) = (app.tray_by_id(TRAY_ID), menu(app)) {
         let _ = tray.set_menu(Some(menu));
+    }
+    if app.state::<AppState>().lookalike.lock().unwrap().is_none() {
+        set(app, Tray::Rest);
     }
 }
 
 pub fn set(app: &AppHandle, state: Tray) {
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
-        let _ = tray.set_icon(Some(image(state)));
+        let _ = tray.set_icon(Some(image(state, paused(app))));
     }
+}
+
+/// Pause or resume watching, from the menu or the main window, which is
+/// told so it can show (or drop) its "Watching paused" card.
+pub fn set_paused(app: &AppHandle, on: bool) {
+    app.state::<AppState>().paused.store(on, Ordering::SeqCst);
+    refresh(app);
+    let _ = app.emit_to(ui::MAIN, "paused", on);
 }
 
 /// Filled dot for about a second, then back to rest (unless a lookalike is open).
@@ -98,6 +118,11 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let item = |id: &str, text: &str| MenuItem::with_id(app, id, text, true, None::<&str>);
 
     let menu = Menu::new(app)?;
+    // A newer version found: said first, since it is the one thing to do.
+    if let Some(u) = crate::update::found(app) {
+        menu.append(&item("update", &format!("Update to Kenning {}…", u.version()))?)?;
+        menu.append(&PredefinedMenuItem::separator(app)?)?;
+    }
     let network = st.kenning.lock().unwrap().config().network;
     menu.append(&item(
         "network",
@@ -146,13 +171,13 @@ fn on_menu(app: &AppHandle, event: MenuEvent) {
             }
         }
         "pause" => {
-            let st = app.state::<AppState>();
-            st.paused.fetch_xor(true, Ordering::SeqCst);
-            refresh(app);
+            let on = !app.state::<AppState>().paused.load(Ordering::SeqCst);
+            set_paused(app, on);
         }
         "book" => ui::open_main(app, "book"),
         "journal" => ui::open_main(app, "journal"),
         "settings" => ui::open_main(app, "settings"),
+        "update" => ui::open_main(app, "update"),
         "quit" => app.exit(0),
         _ => {}
     }

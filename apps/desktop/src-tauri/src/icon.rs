@@ -5,12 +5,14 @@
 //! * `Rest`       – outline tag with its hole (the logo)
 //! * `Recognized` – outline tag with a check mark (shown for about a second)
 //! * `Lookalike`  – outline tag with a gap in its end
+//! * `Paused`     – outline tag with a pause sign in place of its hole
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IconState {
     Rest,
     Recognized,
     Lookalike,
+    Paused,
 }
 
 /// RGBA pixels, `size` × `size`, in the given colour.
@@ -47,6 +49,12 @@ pub fn render(state: IconState, size: u32, rgb: [u8; 3]) -> Vec<u8> {
                     let d1 = segment([ux, uy], [-0.17, 0.0], [-0.05, 0.12]);
                     let d2 = segment([ux, uy], [-0.05, 0.12], [0.19, -0.13]);
                     coverage(d1.min(d2) - stroke / 2.0, px)
+                }
+                // Two upright bars in the middle of the tag.
+                IconState::Paused => {
+                    let d1 = segment([ux, uy], [-0.065, -0.085], [-0.065, 0.085]);
+                    let d2 = segment([ux, uy], [0.065, -0.085], [0.065, 0.085]);
+                    coverage(d1.min(d2) - stroke / 2.6, px)
                 }
                 _ => {
                     let dh = ((p[0] - hole[0]).powi(2) + (p[1] - hole[1]).powi(2)).sqrt();
@@ -94,8 +102,10 @@ mod tests {
         let rest = render(IconState::Rest, 32, [255, 255, 255]);
         let seen = render(IconState::Recognized, 32, [255, 255, 255]);
         let look = render(IconState::Lookalike, 32, [255, 255, 255]);
+        let paused = render(IconState::Paused, 32, [255, 255, 255]);
         let ink = |v: &[u8]| v.chunks(4).map(|p| p[3] as u32).sum::<u32>();
         assert_ne!(ink(&seen), ink(&rest));
+        assert_ne!(paused, rest);
         assert!(ink(&look) < ink(&rest));
         assert_eq!(rest.len(), 32 * 32 * 4);
     }

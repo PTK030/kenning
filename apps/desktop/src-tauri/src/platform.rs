@@ -18,6 +18,25 @@ pub fn taskbar_is_light() -> bool {
     false
 }
 
+/// Whether apps use the light theme (Windows: `AppsUseLightTheme`), which is
+/// what the pages' `prefers-color-scheme` follows.
+#[cfg(windows)]
+pub fn apps_are_light() -> bool {
+    use winreg::RegKey;
+    use winreg::enums::HKEY_CURRENT_USER;
+
+    RegKey::predef(HKEY_CURRENT_USER)
+        .open_subkey(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+        .and_then(|k| k.get_value::<u32, _>("AppsUseLightTheme"))
+        .map(|v| v != 0)
+        .unwrap_or(true)
+}
+
+#[cfg(not(windows))]
+pub fn apps_are_light() -> bool {
+    true
+}
+
 /// Turn off the system's own show and hide animation for a window, so the
 /// page's animation is the only one and the two never fight.
 #[cfg(windows)]
@@ -155,9 +174,14 @@ pub fn foreground_pid() -> Option<u32> {
 }
 
 /// A process's executable file name, e.g. "chrome.exe".
+pub fn process_name(pid: u32) -> Option<String> {
+    process_path(pid).and_then(|path| path.rsplit('\\').next().map(str::to_owned))
+}
+
+/// A process's executable in full, e.g. "C:\Program Files\…\chrome.exe".
 #[cfg(windows)]
 #[allow(unsafe_code)]
-pub fn process_name(pid: u32) -> Option<String> {
+pub fn process_path(pid: u32) -> Option<String> {
     use windows_sys::Win32::Foundation::CloseHandle;
     use windows_sys::Win32::System::Threading::{
         OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
@@ -179,12 +203,11 @@ pub fn process_name(pid: u32) -> Option<String> {
     if ok == 0 {
         return None;
     }
-    let path = String::from_utf16_lossy(&buf[..len as usize]);
-    path.rsplit('\\').next().map(str::to_owned)
+    Some(String::from_utf16_lossy(&buf[..len as usize]))
 }
 
 #[cfg(not(windows))]
-pub fn process_name(_pid: u32) -> Option<String> {
+pub fn process_path(_pid: u32) -> Option<String> {
     None
 }
 
@@ -213,4 +236,21 @@ pub fn idle_ms() -> Option<u32> {
 #[cfg(not(windows))]
 pub fn idle_ms() -> Option<u32> {
     None
+}
+
+/// Open Explorer on `path`'s folder with the file selected.
+#[cfg(windows)]
+pub fn reveal_file(path: &str) -> std::io::Result<()> {
+    use std::os::windows::process::CommandExt;
+    // Explorer reads its own command line: the path goes in quotes, which
+    // a Windows path cannot contain.
+    std::process::Command::new("explorer.exe")
+        .raw_arg(format!("/select,\"{path}\""))
+        .spawn()
+        .map(drop)
+}
+
+#[cfg(not(windows))]
+pub fn reveal_file(_path: &str) -> std::io::Result<()> {
+    Err(std::io::Error::other("Showing files is Windows only for now."))
 }

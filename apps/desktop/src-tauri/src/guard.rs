@@ -138,6 +138,8 @@ pub enum Event {
         copied: String,
         found: String,
         process: Option<String>,
+        /// The program's file, for "Show the file".
+        path: Option<String>,
         after_ms: u64,
         clues: Vec<Clue>,
     },
@@ -145,6 +147,7 @@ pub enum Event {
         at: String,
         what: String,
         process: Option<String>,
+        path: Option<String>,
     },
     Test {
         at: String,
@@ -160,6 +163,7 @@ pub struct TestSwap {
     /// What came back instead: an address, or None when it was not one.
     pub found: Option<String>,
     pub process: Option<String>,
+    pub path: Option<String>,
 }
 
 /// Progress of a running test, for the Protection view.
@@ -196,6 +200,15 @@ pub struct GuardState {
 }
 
 impl GuardState {
+    /// Whether `path` is the file of a program the guard caught: the only
+    /// files Kenning will show in Explorer.
+    pub fn caught_path(&self, path: &str) -> bool {
+        self.events.lock().unwrap().iter().any(|e| match e {
+            Event::Swap { path: p, .. } | Event::Secret { path: p, .. } => p.as_deref() == Some(path),
+            Event::Test { swaps, .. } => swaps.iter().any(|s| s.path.as_deref() == Some(path)),
+        })
+    }
+
     pub fn events(&self) -> Vec<Event> {
         self.events.lock().unwrap().iter().cloned().collect()
     }
@@ -224,6 +237,10 @@ fn now() -> String {
 
 fn name_of(pid: Option<u32>) -> Option<String> {
     pid.and_then(platform::process_name)
+}
+
+fn path_of(pid: Option<u32>) -> Option<String> {
+    pid.and_then(platform::process_path)
 }
 
 /// "0x5290…9EE7"
@@ -276,7 +293,7 @@ pub fn on_write(app: &AppHandle) {
     if let Some(found) = secret::detect(&text) {
         drop(text);
         *g.last.lock().unwrap() = None;
-        warn_secret(app, found, name_of(writer), seq);
+        warn_secret(app, found, writer, seq);
         return;
     }
 
@@ -314,7 +331,7 @@ pub fn on_write(app: &AppHandle) {
             // Keep your address as the baseline: a clipper that swaps again
             // after it is put back is caught again.
             drop(last);
-            warn_swap(app, &copied, &address, writer_name, age, clues, seq);
+            warn_swap(app, &copied, &address, writer, age, clues, seq);
         }
         None => {
             *last = Some(Seen {
@@ -329,13 +346,14 @@ fn warn_swap(
     app: &AppHandle,
     copied: &Address,
     found: &Address,
-    process: Option<String>,
+    writer: Option<u32>,
     age: Duration,
     clues: Vec<Clue>,
     seq: Option<u32>,
 ) {
     let st = app.state::<AppState>();
     let g = &st.guard;
+    let process = name_of(writer);
     let who = process.clone().unwrap_or_else(|| "A program with no window".to_owned());
     // A lookalike shortens to the same text as yours: that is the point of
     // it, so the alert names the trick instead of showing two equal stubs.
@@ -355,6 +373,7 @@ fn warn_swap(
             copied: copied.as_str().to_owned(),
             found: found.as_str().to_owned(),
             process,
+            path: path_of(writer),
             after_ms: age.as_millis() as u64,
             clues,
         },
@@ -373,7 +392,7 @@ fn warn_swap(
     );
 }
 
-fn warn_secret(app: &AppHandle, found: secret::Secret, process: Option<String>, seq: Option<u32>) {
+fn warn_secret(app: &AppHandle, found: secret::Secret, writer: Option<u32>, seq: Option<u32>) {
     let st = app.state::<AppState>();
     let g = &st.guard;
     {
@@ -390,7 +409,8 @@ fn warn_secret(app: &AppHandle, found: secret::Secret, process: Option<String>, 
         Event::Secret {
             at: now(),
             what: what.clone(),
-            process,
+            process: name_of(writer),
+            path: path_of(writer),
         },
     );
     let title = match found {
@@ -445,7 +465,7 @@ pub fn run_test(app: &AppHandle) -> Event {
         if touched {
             // Let it finish writing, then see what it left.
             std::thread::sleep(Duration::from_millis(40));
-            let process = name_of(platform::clipboard_owner_pid());
+            let owner = platform::clipboard_owner_pid();
             let found = match clipboard::read() {
                 Content::Text(t) => extract::single(&t).map(|a| a.as_str().to_owned()),
                 _ => None,
@@ -457,7 +477,8 @@ pub fn run_test(app: &AppHandle) -> Event {
                     chain,
                     wrote: (*decoy).to_owned(),
                     found,
-                    process,
+                    process: name_of(owner),
+                    path: path_of(owner),
                 });
             }
         }

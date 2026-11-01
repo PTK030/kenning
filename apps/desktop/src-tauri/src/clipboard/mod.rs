@@ -46,10 +46,6 @@ pub enum Source {
     Selection,
     /// Nothing was selected (or the app did not copy it): the clipboard.
     Clipboard,
-    /// A row of the address book was clicked.
-    Book,
-    /// A record of the journal was clicked.
-    Journal,
 }
 
 // Other platforms come later; these stubs keep the crate compiling there.
