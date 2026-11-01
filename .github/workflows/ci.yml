@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same ref makes the run still going pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # The whole workspace, desktop app included, where it ships: Windows.
+  windows:
+    name: workspace (windows)
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+      # The desktop crate embeds the built UI, so it must exist before cargo runs.
+      - name: Build the desktop UI
+        working-directory: apps/desktop
+        run: |
+          npm ci
+          npm run build
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Tests
+        run: cargo test --workspace --locked
+
+  # The core, CLI and network crates are not tied to Windows: keep them so.
+  portable:
+    name: core, cli, net (linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Clippy
+        run: cargo clippy -p kenning-core -p kenning-cli -p kenning-net -p kenning-labels --all-targets --locked -- -D warnings
+      - name: Tests
+        run: cargo test -p kenning-core -p kenning-cli -p kenning-net -p kenning-labels --locked
+
+  # The recognition engine stays offline and its licences clean (deny.toml).
+  deny:
+    name: cargo deny (core)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          manifest-path: crates/kenning-core/Cargo.toml
+          command: check
+
+  ui:
+    name: desktop UI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+      - name: Types and build
+        working-directory: apps/desktop
+        run: |
+          npm ci
+          npm run build
+      - name: Colour contrast (WCAG 4.5:1, both themes)
+        run: node apps/desktop/scripts/check-contrast.mjs
+      # Every window and state in both themes, against canned answers
+      # (docs/qa.md): fails if a page throws or logs an error.
+      - name: Screenshots
+        working-directory: apps/desktop
+        run: |
+          npx vite --port 1420 --strictPort > /dev/null &
+          for _ in $(seq 30); do curl -sf http://localhost:1420/ > /dev/null && break; sleep 1; done
+          npm run shots -- --out shots
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: screenshots
+          path: apps/desktop/shots
+          retention-days: 14
+
+  site:
+    name: landing page
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Types and build
+        working-directory: site
+        run: |
+          npm ci
+          npm run build
+
+  # Every commit in a pull request: a Conventional Commits subject.
+  commits:
+    name: commit messages
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Check subjects
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: node .github/scripts/commit-subject.mjs "$BASE..$HEAD"

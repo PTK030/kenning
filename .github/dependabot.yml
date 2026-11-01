@@ -1,0 +1,83 @@
+# Weekly dependency updates, as Conventional Commits (chore(deps): …,
+# ci(deps): …). Minor and patch updates come grouped, one pull request per
+# ecosystem; a major update gets its own, since it may need code changes.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, rust]
+    open-pull-requests-limit: 10
+    groups:
+      tauri:
+        patterns: ["tauri", "tauri-*"]
+        update-types: [minor, patch]
+      rust:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /apps/desktop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, desktop]
+    open-pull-requests-limit: 10
+    # The installer's NSIS template (src-tauri/installer/installer.nsi) is
+    # this CLI version's template with one change: a new CLI needs its
+    # template carried over by hand, so it is updated by hand.
+    ignore:
+      - dependency-name: "@tauri-apps/cli"
+    groups:
+      tauri:
+        patterns: ["@tauri-apps/*"]
+        update-types: [minor, patch]
+      desktop:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, site]
+    open-pull-requests-limit: 5
+    groups:
+      site:
+        update-types: [minor, patch]
+
+  # The repository's own tools (lefthook).
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies]
+    open-pull-requests-limit: 3
+
+  # The workflows' actions are pinned to commits; this keeps the pins fresh.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+      include: scope
+    labels: [dependencies, ci]
+    groups:
+      actions:
+        update-types: [minor, patch]

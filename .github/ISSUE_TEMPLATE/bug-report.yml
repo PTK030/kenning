@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in Kenning does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A way to get past the lookalike warning, or anything else that puts funds at risk, is a security issue: report it privately (see SECURITY.md), not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Copy …
+        2. Press …
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Kenning version
+      description: Settings › Updates, or the bottom of the sidebar.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Clipboard mode
+      options:
+        - When I press the shortcut
+        - Every time I copy
+  - type: textarea
+    id: more
+    attributes:
+      label: Screenshots or anything else
+      description: Never paste a recovery phrase, a private key or an address you would not share.

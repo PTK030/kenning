@@ -1,0 +1,27 @@
+name: Feature request
+description: Something Kenning could do for you.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you were doing, and where Kenning fell short. The situation matters more than the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+  - type: dropdown
+    id: networks
+    attributes:
+      label: Networks it concerns
+      multiple: true
+      options:
+        - EVM (Ethereum, Base, Arbitrum, …)
+        - Solana
+        - Bitcoin
+        - Tron
+        - Another network
+        - Not network-specific
