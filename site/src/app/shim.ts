@@ -27,6 +27,8 @@ mockIPC(
         return tell("hide-badge");
       case "copy_correct":
         return tell("copy-correct");
+      case "guard_action":
+        return tell("guard-action");
       case "dismiss_lookalike":
         return tell("dismiss");
       case "mark_mine":
@@ -49,10 +51,11 @@ addEventListener("message", (e) => {
     lookalike = e.data.lookalike;
     void emit("lookalike", null);
   }
-  // The hero presses the fix itself when nobody does: the button dips as
-  // under a finger, then its own click handler runs.
+  // The page presses the fix itself when nobody does (the lookalike window's
+  // "Copy the correct address", the guard alert's "Put mine back"): the
+  // button dips as under a finger, then its own click handler runs.
   if (e.data.press) {
-    const button = document.querySelector<HTMLButtonElement>(".actions .primary");
+    const button = document.querySelector<HTMLButtonElement>(".actions .primary, .badge-card .act");
     if (!button) return;
     button
       .animate([{ transform: "none" }, { transform: "scale(0.95)", filter: "brightness(1.25)" }, { transform: "none" }], {

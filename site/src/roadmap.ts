@@ -27,6 +27,7 @@ export const ROADMAP: { title: string; items: Item[] }[] = [
       { text: "Command line with JSON output and JSON-RPC" },
       { text: "Team books, a local journal, Safe{Wallet} import" },
       { text: "On-chain lookups, off by default" },
+      { text: "A clipboard guard against clipper malware, with a test" },
     ],
   },
   {

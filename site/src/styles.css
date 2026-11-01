@@ -1210,6 +1210,154 @@ svg {
   justify-self: stretch;
 }
 
+/* Guard: the clipboard guard as the app shows it. */
+.guard {
+  padding: clamp(80px, 11vw, 150px) 0;
+  background: var(--paper);
+}
+.guard-in {
+  width: var(--page);
+  margin: 0 auto;
+}
+.guard-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 24px clamp(32px, 5vw, 80px);
+}
+.guard-head .section-lead {
+  margin-top: 0;
+}
+.guard-kicker {
+  margin-bottom: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--diff);
+}
+/* The desktop: Kenning's main window and its alert, the app's own pages in
+   frames, the alert in the corner where Windows puts it. */
+.guard-desk {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-top: clamp(36px, 5vw, 64px);
+}
+.gd-win {
+  border-radius: 12px;
+  overflow: hidden;
+  /* Raised off the page the way a window is off the desktop: a wide soft
+     shadow, a closer one under it, and a hairline edge. */
+  box-shadow:
+    0 60px 120px -40px rgb(22 32 60 / 45%),
+    0 24px 48px -24px rgb(22 32 60 / 30%),
+    0 2px 6px rgb(22 32 60 / 8%),
+    0 0 0 1px rgb(22 32 42 / 12%);
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.6s ease;
+}
+.gd-win.shown {
+  opacity: 1;
+  transform: none;
+}
+.gd-win iframe,
+.gd-badge iframe {
+  display: block;
+  border: 0;
+  background: transparent;
+  color-scheme: light dark;
+  transform-origin: 0 0;
+}
+.gd-badge {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+}
+.guard-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px clamp(32px, 4vw, 64px);
+  margin-top: clamp(40px, 5vw, 64px);
+}
+.guard-facts h3 {
+  margin-bottom: 6px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.guard-facts p {
+  font-size: 16px;
+  color: var(--ink-2);
+}
+.guard-facts a {
+  color: var(--blue);
+  text-underline-offset: 3px;
+}
+
+/* Why: read by the scroll, one paragraph at a time, full screen. It opens
+   and closes with a sentence in the section heading's type. */
+.why {
+  position: relative;
+  background: #0f161e;
+  color: var(--on-night);
+}
+.why-stage {
+  position: sticky;
+  top: 0;
+  display: grid;
+  align-items: center;
+  height: 100svh;
+  padding: 96px max(var(--gutter), (100% - 1280px) / 2) 56px;
+  background: radial-gradient(110% 70% at 50% 0%, #1d2a44 0%, var(--night) 55%, #0f161e 100%);
+  overflow: hidden;
+}
+.why-page {
+  display: grid;
+  align-items: center;
+}
+.why-page > * {
+  grid-area: 1 / 1;
+}
+.why-title {
+  justify-self: start;
+  max-width: 12em;
+  font-size: clamp(48px, 7.4vw, 124px);
+  font-weight: 740;
+  font-stretch: 75%;
+  font-variation-settings: "wdth" 75;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.why-p {
+  max-width: 22em;
+  font-size: clamp(22px, 3.5vw, 56px);
+  font-weight: 650;
+  font-stretch: 85%;
+  font-variation-settings: "wdth" 85;
+  line-height: 1.16;
+  letter-spacing: -0.015em;
+}
+.why-w {
+  margin: 0 -0.08em;
+  padding: 0 0.08em;
+  border-radius: 0.18em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.why-key {
+  color: var(--blue-light);
+}
+.why-still {
+  padding: clamp(96px, 14vw, 180px) var(--gutter);
+}
+.why-still .why-in {
+  display: grid;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
 /* Trust */
 .trust {
   padding: clamp(96px, 14vw, 180px) 0;
@@ -1343,36 +1491,131 @@ svg {
   color: var(--ink);
   font-weight: 650;
 }
-.roadmap-cols {
+/* The roadmap as one line: solid up to now, dashed after, fading out where
+   nobody can see yet. Each phase draws its stretch, its dot, then its list. */
+.timeline {
+  --tl-gap: clamp(20px, 2.5vw, 36px);
   display: grid;
   grid-template-columns: 2fr 1fr 2fr;
-  gap: 16px;
-  margin-top: clamp(40px, 5vw, 64px);
+  gap: 0 var(--tl-gap);
+  margin-top: clamp(48px, 6vw, 80px);
 }
-.roadmap-col {
-  padding: clamp(22px, 2.4vw, 32px);
-  border-radius: 24px;
-  background: var(--white);
+.phase {
+  position: relative;
+  padding-top: 48px;
 }
-.roadmap-col.now {
-  background: var(--ice);
+.phase-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: calc(-1 * var(--tl-gap));
+  height: 16px;
 }
-.roadmap-col h3 {
-  margin-bottom: 14px;
+.phase:last-child .phase-rail {
+  right: 0;
+}
+.phase-line {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue);
+  transform-origin: 0 50%;
+}
+.phase.now .phase-line {
+  background:
+    linear-gradient(90deg, var(--blue) 0 40%, transparent 40%),
+    repeating-linear-gradient(90deg, #9aa6b4 0 6px, transparent 6px 12px);
+}
+.phase.next .phase-line {
+  background: repeating-linear-gradient(90deg, #9aa6b4 0 6px, transparent 6px 12px);
+  mask-image: linear-gradient(90deg, #000 55%, transparent);
+}
+.phase-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 5px var(--paper);
+}
+/* Half done: half filled. */
+.phase.now .phase-dot {
+  background: linear-gradient(90deg, var(--blue) 50%, var(--paper) 50%);
+  box-shadow:
+    inset 0 0 0 2px var(--blue),
+    0 0 0 5px var(--paper);
+}
+.phase.next .phase-dot {
+  background: var(--paper);
+  box-shadow:
+    inset 0 0 0 2px #9aa6b4,
+    0 0 0 5px var(--paper);
+}
+.phase h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
   font-size: clamp(22px, 2vw, 28px);
   font-weight: 700;
   font-stretch: 85%;
   font-variation-settings: "wdth" 85;
 }
-.roadmap-col ul {
+.here {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-variation-settings: "wdth" 100;
+  color: var(--blue);
+  background: var(--ice);
+}
+.phase ul {
   display: grid;
   gap: 10px;
 }
-.roadmap-col li {
+.phase li {
+  position: relative;
+  padding-left: 24px;
   line-height: 1.35;
 }
-.roadmap-col.done li {
+.phase li::before {
+  content: "";
+  position: absolute;
+  top: 0.42em;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.phase.done li {
   color: var(--ink-2);
+}
+.phase.done li::before {
+  top: 0.38em;
+  width: 10px;
+  height: 5px;
+  border-radius: 0;
+  border-left: 2px solid var(--blue);
+  border-bottom: 2px solid var(--blue);
+  transform: rotate(-45deg);
+}
+.phase.now li {
+  font-weight: 600;
+  color: var(--ink);
+}
+.phase.now li::before {
+  background: var(--blue);
+}
+.phase.next li::before {
+  box-shadow: inset 0 0 0 2px #9aa6b4;
 }
 .funded {
   display: block;
@@ -1597,6 +1840,13 @@ html.custom-scrollbar::-webkit-scrollbar {
 }
 
 @media (max-width: 860px) {
+  .guard-head,
+  .guard-facts {
+    grid-template-columns: 1fr;
+  }
+  .why-stage {
+    padding-top: 80px;
+  }
   .story {
     height: 360vh;
   }
@@ -1632,8 +1882,42 @@ html.custom-scrollbar::-webkit-scrollbar {
   .answer-panel .addr {
     font-size: clamp(11px, 2.6vw, 15px);
   }
-  .roadmap-cols {
+  .timeline {
     grid-template-columns: 1fr;
+  }
+  .phase {
+    padding: 0 0 40px 40px;
+  }
+  .phase:last-child {
+    padding-bottom: 0;
+  }
+  .phase-rail {
+    top: 0;
+    bottom: 0;
+    right: auto;
+    width: 16px;
+    height: auto;
+  }
+  .phase:last-child .phase-rail {
+    right: auto;
+  }
+  .phase-line {
+    top: 0;
+    bottom: 0;
+    left: 7px;
+    right: auto;
+    width: 2px;
+    height: auto;
+    transform-origin: 50% 0;
+  }
+  .phase.now .phase-line {
+    background:
+      linear-gradient(180deg, var(--blue) 0 30%, transparent 30%),
+      repeating-linear-gradient(180deg, #9aa6b4 0 6px, transparent 6px 12px);
+  }
+  .phase.next .phase-line {
+    background: repeating-linear-gradient(180deg, #9aa6b4 0 6px, transparent 6px 12px);
+    mask-image: linear-gradient(180deg, #000 55%, transparent);
   }
   .measured p {
     margin-left: 0;

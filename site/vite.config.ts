@@ -21,6 +21,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         badge: resolve(__dirname, "app/badge.html"),
         lookalike: resolve(__dirname, "app/lookalike.html"),
+        window: resolve(__dirname, "app/main.html"),
       },
     },
   },

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <!-- Before the window's styles arrive: the frame's colour scheme and the
+         window's own background (--surface in tokens.css). -->
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      html { background: #f4f6f9; }
+      @media (prefers-color-scheme: dark) { html { background: #121a22; } }
+    </style>
+    <title>Kenning</title>
+  </head>
+  <body data-window="main">
+    <div id="chrome"></div>
+    <div id="app"></div>
+    <!-- The desktop app's main window, fed by the guard section (src/app/main.ts). -->
+    <script type="module" src="../src/app/main.ts"></script>
+  </body>
+</html>

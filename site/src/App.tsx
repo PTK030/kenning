@@ -7,8 +7,10 @@ import { Hero } from "./sections/Hero";
 import { Answers } from "./sections/Answers";
 import { Story } from "./sections/Story";
 import { Features } from "./sections/Features";
+import { Guard } from "./sections/Guard";
 import { Trust } from "./sections/Trust";
 import { Roadmap } from "./sections/Roadmap";
+import { Why } from "./sections/Why";
 import { Cta } from "./sections/Cta";
 import { Footer } from "./sections/Footer";
 
@@ -28,8 +30,10 @@ export default function App() {
         <Answers />
         <Story />
         <Features />
+        <Guard />
         <Trust />
         <Roadmap />
+        <Why />
         <Cta />
       </main>
       <Footer />
