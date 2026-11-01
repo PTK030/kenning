@@ -3,7 +3,7 @@
 // outside closes it.
 
 import { h } from "./dom";
-import { EASE_IN, move, rise, SPRING } from "./motion";
+import { rise, sheetIn, sheetOut } from "./motion";
 import { keycaps, shortcuts } from "./shortcuts";
 import type { Config } from "./types";
 
@@ -40,8 +40,7 @@ export function toggleSheet(config: Config) {
   const overlay = h("div", { class: "sheet-overlay", onclick: (e: Event) => e.target === overlay && closeSheet() }, card);
   document.body.appendChild(overlay);
   open = overlay;
-  void move(overlay, { opacity: [0, 1] }, { duration: 0.2 });
-  void move(card, { opacity: [0, 1], y: [18, 0], scale: [0.97, 1] }, SPRING);
+  sheetIn(overlay, card);
   void rise(card.querySelectorAll(".keys-row"), { y: 6, gap: 0.03, delay: 0.08 });
 }
 
@@ -49,6 +48,6 @@ export async function closeSheet() {
   const el = open;
   if (!el) return;
   open = null;
-  await move(el, { opacity: 0 }, { duration: 0.16, ease: EASE_IN });
+  await sheetOut(el, el.querySelector<HTMLElement>(".sheet-card"));
   el.remove();
 }

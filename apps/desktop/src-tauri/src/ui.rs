@@ -189,13 +189,14 @@ pub fn show_lookalike(app: &AppHandle, r: Recognition) {
         let _ = w.set_focus();
         return;
     }
-    // Sized to its content: on-chain lines add a row under each address.
-    let network = st.kenning.lock().unwrap().config().network;
-    let height = if network { 440.0 } else { 392.0 };
+    // Created hidden: the page measures its content and the window takes
+    // that height before it shows (see `fit_lookalike`), so a long on-chain
+    // line never gets cut and a short one leaves no empty band.
     let built = window(app, LOOKALIKE, "lookalike.html")
         .title("Kenning: not the address you know")
         .background_color(GRAPHITE)
-        .inner_size(640.0, height)
+        .inner_size(LOOKALIKE_W, 420.0)
+        .visible(false)
         // Kenning draws its own title bar (ui/src/titlebar.ts).
         .decorations(false)
         .resizable(false)
@@ -207,15 +208,68 @@ pub fn show_lookalike(app: &AppHandle, r: Recognition) {
         .build();
     if let Err(e) = built {
         eprintln!("kenning: lookalike window: {e}");
+        return;
     }
+    // A warning must never stay unseen: should the page not measure itself
+    // (it failed to load), the window shows at its first size anyway.
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(1200));
+        if let Some(w) = app.get_webview_window(LOOKALIKE)
+            && !w.is_visible().unwrap_or(true)
+        {
+            reveal(&w);
+        }
+    });
+}
+
+const LOOKALIKE_W: f64 = 640.0;
+
+/// The lookalike page measured itself: give the window that height and, on
+/// a fresh render, centre it and bring it forward.
+pub fn fit_lookalike(app: &AppHandle, height: f64, show: bool) {
+    let Some(w) = app.get_webview_window(LOOKALIKE) else {
+        return;
+    };
+    let _ = w.set_size(LogicalSize::new(LOOKALIKE_W, height.clamp(300.0, 820.0)));
+    if show {
+        reveal(&w);
+    }
+}
+
+fn reveal(w: &WebviewWindow) {
+    let _ = w.center();
+    let _ = w.show();
+    let _ = w.unminimize();
+    let _ = w.set_focus();
 }
 
 pub fn close_lookalike(app: &AppHandle) {
     *app.state::<AppState>().lookalike.lock().unwrap() = None;
     tray::set(app, Tray::Rest);
-    if let Some(w) = app.get_webview_window(LOOKALIKE) {
-        let _ = w.close();
-    }
+    close_after_leave(app, LOOKALIKE, |app| {
+        app.state::<AppState>().lookalike.lock().unwrap().is_none()
+    });
+}
+
+/// How long a window's page has to play its leaving before the window
+/// closes (`LEAVE` in motion.ts takes 160 ms).
+const LEAVE_MS: u64 = 180;
+
+/// Ask a window's page to leave the way it came, then close the window,
+/// unless it was given something new to show meanwhile.
+fn close_after_leave(app: &AppHandle, label: &'static str, still_closing: fn(&AppHandle) -> bool) {
+    let Some(w) = app.get_webview_window(label) else {
+        return;
+    };
+    let _ = app.emit_to(label, "leave", ());
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(LEAVE_MS));
+        if still_closing(&app) {
+            let _ = w.close();
+        }
+    });
 }
 
 /// Show the details window in the middle of the screen. It is created
@@ -264,18 +318,29 @@ pub fn fit_details(app: &AppHandle, height: f64, reveal: bool) {
 
 pub fn close_details(app: &AppHandle) {
     *app.state::<AppState>().details.lock().unwrap() = None;
-    if let Some(w) = app.get_webview_window(DETAILS) {
-        let _ = w.close();
+    close_after_leave(app, DETAILS, |app| {
+        app.state::<AppState>().details.lock().unwrap().is_none()
+    });
+}
+
+/// The main window's page colour (`--surface` in tokens.css), in the theme
+/// the page will use: what shows before the page has painted.
+fn main_background() -> tauri::window::Color {
+    if crate::platform::apps_are_light() {
+        tauri::window::Color(0xf4, 0xf6, 0xf9, 0xff)
+    } else {
+        tauri::window::Color(0x12, 0x1a, 0x22, 0xff)
     }
 }
 
-/// Open (or focus) the main window on a given tab.
+/// Open (or focus) the main window on a given tab. A new one is created
+/// hidden, on the page's own colour, and shows once the page has drawn
+/// itself (`main_ready`), so it never flashes white or empty. Should the
+/// page never say so, it shows anyway after a few seconds.
 pub fn open_main(app: &AppHandle, tab: &str) {
-    if let Some(w) = app.get_webview_window(MAIN) {
+    if app.get_webview_window(MAIN).is_some() {
         let _ = app.emit_to(MAIN, "navigate", tab);
-        let _ = w.show();
-        let _ = w.unminimize();
-        let _ = w.set_focus();
+        reveal_main(app);
         return;
     }
     let built = window(app, MAIN, &format!("index.html#{tab}"))
@@ -286,8 +351,28 @@ pub fn open_main(app: &AppHandle, tab: &str) {
         // no step of the onboarding has to scroll.
         .min_inner_size(720.0, 600.0)
         .center()
+        .background_color(main_background())
+        .visible(false)
         .build();
-    if let Err(e) = built {
-        eprintln!("kenning: main window: {e}");
+    match built {
+        Ok(_) => {
+            let app = app.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_secs(3));
+                if app.get_webview_window(MAIN).is_some_and(|w| !w.is_visible().unwrap_or(true)) {
+                    reveal_main(&app);
+                }
+            });
+        }
+        Err(e) => eprintln!("kenning: main window: {e}"),
+    }
+}
+
+/// Show the main window and bring it forward.
+pub fn reveal_main(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window(MAIN) {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
     }
 }

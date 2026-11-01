@@ -5,7 +5,8 @@ import { defineConfig } from "vite";
 export default defineConfig({
   root: "ui",
   clearScreen: false,
-  server: { port: 1420, strictPort: true },
+  // The repository root too: the app shows the changelog kept there.
+  server: { port: 1420, strictPort: true, fs: { allow: [resolve(__dirname, "../..")] } },
   build: {
     outDir: "dist",
     emptyOutDir: true,

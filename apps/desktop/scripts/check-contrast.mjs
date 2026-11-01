@@ -22,7 +22,7 @@ const ratio = (a, b) => {
 
 const SURFACES = ["surface-base", "surface", "surface-card", "surface-raised", "surface-sunken", "surface-pop"];
 const PAIRS = [
-  ...SURFACES.flatMap((s) => [["ink", s], ["ink-2", s], ["brand", s]]),
+  ...SURFACES.flatMap((s) => [["ink", s], ["ink-body", s], ["ink-2", s], ["brand", s]]),
   ["brand", "brand-soft"], ["brand-ink", "brand"], ["on-brand", "brand-strong"], ["on-brand", "brand-strong-hover"],
   ["mine", "surface-card"], ["mine", "mine-soft"], ["new", "surface-card"], ["new", "new-soft"],
   ["look", "surface-card"], ["look", "surface-sunken"], ["look", "look-soft"],

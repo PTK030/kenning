@@ -14,6 +14,7 @@ mod platform;
 mod state;
 mod tray;
 mod ui;
+mod update;
 
 use kenning_core::Kenning;
 use tauri::RunEvent;
@@ -21,8 +22,18 @@ use tauri_plugin_autostart::MacosLauncher;
 
 use crate::state::AppState;
 
+/// The Kenning directory. A development build keeps its own,
+/// `~/.kenning-dev`, so trying things out never touches the real book;
+/// `KENNING_HOME` still wins.
+fn open() -> kenning_core::Result<Kenning> {
+    if cfg!(debug_assertions) && std::env::var_os("KENNING_HOME").is_none_or(|v| v.is_empty()) {
+        return Kenning::open_at(kenning_core::default_home()?.with_file_name(".kenning-dev"));
+    }
+    Kenning::open()
+}
+
 fn main() {
-    let kenning = match Kenning::open() {
+    let kenning = match open() {
         Ok(k) => k,
         Err(e) => {
             eprintln!("kenning: {e}");
@@ -43,7 +54,9 @@ fn main() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState::new(kenning))
+        .manage(update::UpdateState::default())
         .invoke_handler(tauri::generate_handler![
             commands::overview,
             commands::get_badge,
@@ -56,6 +69,7 @@ fn main() {
             commands::dismiss_lookalike,
             commands::get_details,
             commands::fit_details,
+            commands::fit_lookalike,
             commands::close_details,
             commands::copy_details_address,
             commands::add_details_address,
@@ -64,7 +78,8 @@ fn main() {
             commands::recognize_text,
             commands::compare_addresses,
             commands::add_entry,
-            commands::show_entry,
+            commands::edit_entry,
+            commands::rename_group,
             commands::remove_entry,
             commands::journal,
             commands::save_config,
@@ -81,9 +96,16 @@ fn main() {
             commands::guard_events,
             commands::run_clipboard_test,
             commands::guard_action,
+            commands::update_check,
+            commands::update_found,
+            commands::update_install,
+            commands::main_ready,
+            commands::set_paused,
+            commands::show_caught_file,
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
+            sync_autostart(&handle);
             tray::create(&handle)?;
             if let Err(e) = hotkey::register(&handle, &shortcut, &details_shortcut) {
                 eprintln!("kenning: {e}");
@@ -96,6 +118,7 @@ fn main() {
             if !onboarded {
                 ui::open_main(&handle, "welcome");
             }
+            update::spawn_checks(handle.clone());
             Ok(())
         })
         .build(tauri::generate_context!())
@@ -109,4 +132,24 @@ fn main() {
             api.prevent_exit();
         }
     });
+}
+
+/// "Start with Windows" lives in the registry (the installer's finish page
+/// sets it too): the settings take what is really there, so the switch in
+/// Settings and in the onboarding shows what Windows will do.
+fn sync_autostart(app: &tauri::AppHandle) {
+    use tauri::Manager;
+    use tauri_plugin_autostart::ManagerExt as _;
+    let Ok(on) = app.autolaunch().is_enabled() else {
+        return;
+    };
+    let st = app.state::<state::AppState>();
+    let mut k = st.kenning.lock().unwrap();
+    if k.config().autostart != on {
+        let mut config = k.config().clone();
+        config.autostart = on;
+        if let Err(e) = k.set_config(config) {
+            eprintln!("kenning: autostart setting: {e}");
+        }
+    }
 }

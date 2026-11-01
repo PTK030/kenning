@@ -102,6 +102,16 @@ textarea {
   text-overflow: ellipsis;
 }
 
+.onchain .icon {
+  flex: none;
+}
+
+.onchain .t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .onchain[hidden] {
   display: none;
 }
@@ -196,6 +206,7 @@ textarea {
 }
 
 input[type="text"],
+input[type="password"],
 input[type="number"],
 select,
 textarea {
@@ -211,6 +222,7 @@ textarea {
 }
 
 input[type="text"]:hover,
+input[type="password"]:hover,
 input[type="number"]:hover,
 select:hover,
 textarea:hover {
@@ -222,6 +234,7 @@ textarea:hover {
    card around it. No outline on top of the border, and nothing outside the
    field to be cut off. */
 input[type="text"]:focus,
+input[type="password"]:focus,
 input[type="number"]:focus,
 select:focus,
 textarea:focus {
@@ -427,8 +440,12 @@ input[type="number"]::-webkit-outer-spin-button {
   color: color-mix(in srgb, var(--ink-2) 75%, transparent);
 }
 
+/* Taller on demand, never shorter than two lines of text and its padding,
+   nor taller than half the window. */
 textarea {
   resize: vertical;
+  min-height: calc(2lh + 20px);
+  max-height: 50vh;
 }
 
 /* Scrollbars: a thin rounded thumb, no arrows, no track. (The standard
@@ -589,6 +606,329 @@ textarea {
   font-size: 11.5px;
 }
 
+/* What is known about an address (facts.ts): label, value. */
+.fact-list {
+  display: grid;
+  grid-template-columns: 104px 1fr;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 13px;
+}
+
+.fact-list .chain {
+  display: contents;
+}
+
+.fact-list dt {
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.fact-list dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* An EVM address on several networks: one line each, the name in a
+   column so the answers line up. */
+.fact-list .net-uses {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fact-list .net-uses li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.fact-list .net-name {
+  color: var(--ink-2);
+}
+
+.fact-list .warn {
+  color: var(--new);
+  font-weight: 600;
+}
+
+.fact-list .pending {
+  opacity: 0.75;
+}
+
+/* A network's mark on its own colour, lit from the top like the tiles
+   (chainMarks.ts). Small ones, beside a name, get a smaller radius. */
+.chain-mark {
+  flex: none;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--mark-bg);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 22%),
+    inset 0 0 0 1px rgb(255 255 255 / 8%);
+}
+
+.chain-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.4;
+  vertical-align: -3px;
+  white-space: nowrap;
+}
+
+.chain-tag:first-child {
+  margin-left: 0;
+}
+
+/* A book entry's picture (emoji.ts): its artwork, or else the system's
+   emoji font. Apple's font comes first only for whoever has it installed. */
+.emoji {
+  flex: none;
+  display: inline-block;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  user-select: none;
+}
+
+img.emoji {
+  object-fit: contain;
+}
+
+/* A picture's tile, on the background chosen or picked to suit it. */
+.tint-red {
+  background: var(--tint-red);
+  color: var(--ink-2);
+}
+
+.tint-orange {
+  background: var(--tint-orange);
+  color: var(--ink-2);
+}
+
+.tint-yellow {
+  background: var(--tint-yellow);
+  color: var(--ink-2);
+}
+
+.tint-green {
+  background: var(--tint-green);
+  color: var(--ink-2);
+}
+
+.tint-teal {
+  background: var(--tint-teal);
+  color: var(--ink-2);
+}
+
+.tint-blue {
+  background: var(--tint-blue);
+  color: var(--ink-2);
+}
+
+.tint-purple {
+  background: var(--tint-purple);
+  color: var(--ink-2);
+}
+
+.tint-pink {
+  background: var(--tint-pink);
+  color: var(--ink-2);
+}
+
+.tint-gray {
+  background: var(--tint-gray);
+  color: var(--ink-2);
+}
+
+.tint-mist {
+  background: var(--tint-mist);
+  color: var(--ink-2);
+}
+
+.tint-slate {
+  background: var(--tint-slate);
+  color: var(--ink-2);
+}
+
+.tint-snow {
+  background: var(--tint-snow);
+  color: var(--ink-2);
+}
+
+.tint-night {
+  background: var(--tint-night);
+  color: var(--ink-2);
+}
+
+/* The picker: the tile as it will look and its backgrounds on top, the
+   emoji by kind below, scrolling, and the two ways out at the foot. */
+.emoji-pop {
+  width: min(352px, calc(100vw - 12px));
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.emoji-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.emoji-preview {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  transition: background 160ms ease;
+}
+
+.emoji-tints {
+  min-width: 0;
+}
+
+.emoji-group-name {
+  margin: 0 0 6px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tint-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tint-swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.tint-swatch:hover {
+  transform: scale(1.12);
+}
+
+.tint-swatch[aria-pressed="true"] {
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    0 0 0 2px var(--surface-pop),
+    0 0 0 4px var(--brand);
+}
+
+/* Auto: a pill with the colour it would choose now. */
+.tint-swatch.auto {
+  width: auto;
+  padding: 0 8px 0 22px;
+  position: relative;
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tint-swatch.auto::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--auto, var(--tint-gray));
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.tint-swatch.auto:hover {
+  transform: none;
+  color: var(--ink);
+}
+
+.emoji-scroll {
+  max-height: 290px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 12px 4px;
+}
+
+.emoji-group + .emoji-group {
+  margin-top: 10px;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 38px);
+  gap: 2px;
+}
+
+.emoji-cell {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.emoji-cell:hover,
+.emoji-cell:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.emoji-cell:active {
+  transform: scale(0.92);
+}
+
+.emoji-cell[aria-pressed="true"] {
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1.5px var(--brand);
+}
+
+.emoji-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.emoji-foot .spacer {
+  flex: 1;
+}
+
 /* Title bar (main and lookalike windows). */
 .titlebar {
   flex: none;
@@ -605,6 +945,13 @@ textarea {
     opacity 160ms,
     background-color 500ms ease,
     border-color 500ms ease;
+}
+
+/* The main window's: one surface with the sidebar under it, and the mark
+   and title over the sidebar's icons and labels. */
+.titlebar.tb-base {
+  padding-left: 19px;
+  border-bottom-color: transparent;
 }
 
 .titlebar.blurred .tb-mark,

@@ -3,7 +3,7 @@
 // or a click outside cancels.
 
 import { h } from "./dom";
-import { EASE_IN, move, SPRING } from "./motion";
+import { sheetIn, sheetOut } from "./motion";
 
 export function confirmSheet(opts: { title: string; body: string; confirm: string; danger?: boolean }): Promise<boolean> {
   return new Promise((resolve) => {
@@ -11,7 +11,7 @@ export function confirmSheet(opts: { title: string; body: string; confirm: strin
     const close = async (answer: boolean) => {
       document.removeEventListener("keydown", keys, true);
       resolve(answer);
-      await move(overlay, { opacity: 0 }, { duration: 0.14, ease: EASE_IN });
+      await sheetOut(overlay, card);
       overlay.remove();
       before?.focus();
     };
@@ -34,7 +34,6 @@ export function confirmSheet(opts: { title: string; body: string; confirm: strin
     document.body.appendChild(overlay);
     document.addEventListener("keydown", keys, true);
     yes.focus();
-    void move(overlay, { opacity: [0, 1] }, { duration: 0.18 });
-    void move(card, { opacity: [0, 1], y: [14, 0], scale: [0.97, 1] }, SPRING);
+    sheetIn(overlay, card);
   });
 }

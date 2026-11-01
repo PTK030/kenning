@@ -1,41 +1,55 @@
-// Main window: book, check, protection, journal and settings.
+// Main window: book, check, journal and protection; settings at the foot.
 
 import { $, clear, h } from "./dom";
 import { ipc, on } from "./ipc";
-import type { Overview } from "./types";
+import type { Overview, UpdateInfo } from "./types";
 import { bookView } from "./views/book";
 import { checkView } from "./views/check";
 import { journalView } from "./views/journal";
 import { protectionView } from "./views/protection";
 import { settingsView } from "./views/settings";
+import { updateSheet } from "./views/updateSheet";
 import { welcomeView } from "./views/welcome";
 import { icon, type IconName } from "./icons";
-import { move, rise, SPRING, stagger } from "./motion";
+import { move, rise, sink, SPRING, stagger } from "./motion";
 import { titlebar } from "./titlebar";
 import { closeSheet, sheetOpen, toggleSheet } from "./shortcutSheet";
-import { keycaps, matches } from "./shortcuts";
-import { toast } from "./toast";
+import { matches } from "./shortcuts";
+import { toast, toastSounds } from "./toast";
 import "./guard";
 
 type View = (main: HTMLElement, overview: Overview, refresh: () => Promise<void>) => Promise<void> | void;
 
-const TABS: { id: string; title: string; icon: IconName; view: View }[] = [
+// In the order of use, which Ctrl+1…5 follow. Settings is about Kenning
+// rather than your addresses: it sits at the foot of the sidebar, as in
+// Windows' own apps.
+const TABS: { id: string; title: string; icon: IconName; view: View; foot?: true }[] = [
   { id: "book", title: "Address book", icon: "book", view: bookView },
   { id: "check", title: "Check", icon: "search", view: checkView },
-  { id: "protection", title: "Protection", icon: "shield", view: protectionView },
   { id: "journal", title: "Journal", icon: "journal", view: journalView },
-  { id: "settings", title: "Settings", icon: "sliders", view: settingsView },
+  { id: "protection", title: "Protection", icon: "shield", view: protectionView },
+  { id: "settings", title: "Settings", icon: "sliders", view: settingsView, foot: true },
 ];
 
 const app = $("#app");
 const bar = titlebar({ title: "Kenning", minimize: true, maximize: true });
+// One surface with the sidebar under it, as in Windows: no line between.
+bar.el.classList.add("tb-base");
 $("#chrome").replaceWith(bar.el);
 let overview: Overview;
 /** The tab drawn last, and where its highlight sat, so a change can glide. */
 let lastTab = "";
 let lastPillTop: number | null = null;
+/** Counts renders, so a page that waited for the last one to leave can
+ *  tell it was overtaken. */
+let renders = 0;
 /** Set when the onboarding hands over: the panel arrives instead of appearing. */
 let arriving = false;
+/** A newer Kenning, once a check found one: the sidebar says so. */
+let update: UpdateInfo | null = null;
+/** Where the sidebar asks for something (watching paused, an update);
+ *  repainted when either changes. */
+let notices: HTMLElement | null = null;
 /** A gentle ease in and out, for the one change of scene. */
 const HANDOVER = [0.4, 0, 0.2, 1] as const;
 
@@ -45,10 +59,63 @@ function currentTab(): string {
 
 async function refresh() {
   overview = await ipc.overview();
+  toastSounds(overview.config.sounds);
   await render();
 }
 
+async function showUpdates() {
+  // A window opened from the tray may not have heard of the update yet.
+  update ??= await ipc.updateFound();
+  paintNotices();
+  updateSheet({ version: overview.version, found: update, daily: overview.config.update_check });
+}
+
+/** "Watching paused" and "Update to …", each only while it is so: a
+ *  notice that is always there stops being read. Pausing goes first, as
+ *  the one that leaves you unprotected. */
+function paintNotices() {
+  if (!notices || !overview) return;
+  const paused = overview.paused && overview.config.clipboard === "watch";
+  clear(
+    notices,
+    paused &&
+      h(
+        "div",
+        { class: "paused-card", role: "status" },
+        h("div", { class: "paused-head" }, icon("pause", 15), h("strong", {}, "Watching paused")),
+        h("p", {}, "Copied addresses are not checked."),
+        h("button", { type: "button", class: "btn", onclick: () => void ipc.setPaused(false) }, "Resume"),
+      ),
+    update &&
+      h(
+        "button",
+        { class: "update-pill", onclick: showUpdates, title: "See what is new and install it" },
+        h("span", { class: "update-dot", "aria-hidden": "true" }),
+        `Update to ${update.version}`,
+      ),
+  );
+  if (notices.isConnected) placePill();
+}
+
+/** Keep the highlight on the current row when the rows move under it:
+ *  Settings, at the foot, moves with the window's height and with the
+ *  notices above it. */
+function placePill() {
+  const pill = document.querySelector<HTMLElement>("nav .pill");
+  const current = document.querySelector<HTMLElement>('nav a[aria-current="page"]');
+  if (!pill || !current) return;
+  pill.style.top = `${current.offsetTop}px`;
+  pill.style.height = `${current.offsetHeight}px`;
+  lastPillTop = current.offsetTop;
+}
+
 async function render() {
+  // The tray's "Update to …" opens the window here: the book, with the
+  // update in front of it.
+  if (location.hash === "#update") {
+    history.replaceState(null, "", "#book");
+    if (overview.config.onboarded) queueMicrotask(() => void showUpdates());
+  }
   const tab = currentTab();
   if (tab === "welcome" || !overview.config.onboarded) {
     // Already running: a redraw (tray click, navigate event) must not
@@ -69,6 +136,7 @@ async function render() {
         move(bar.el.querySelector(".tb-sub"), { opacity: [1, 0] }, { duration: 0.45, ease: HANDOVER }),
       ]);
       overview = next;
+      toastSounds(next.config.sounds);
       arriving = true;
       if (currentTab() === "book" && location.hash === "#book") void render();
       else location.hash = "book";
@@ -78,21 +146,63 @@ async function render() {
   app.style.display = "";
   document.body.classList.remove("immersive");
   const active = TABS.find((t) => t.id === tab) ?? TABS[0];
+
+  // Another tab: the highlight sets off at once, and the page leaves the
+  // way it came (sinking back) before the next one rises. Only the last of
+  // quick switches is drawn.
+  const mine = ++renders;
+  const leaving = app.querySelector<HTMLElement>(":scope > main:not(.onboarding)");
+  if (leaving && lastTab && lastTab !== "welcome" && active.id !== lastTab && !arriving) {
+    const oldNav = app.querySelector("nav");
+    const oldPill = oldNav?.querySelector<HTMLElement>(".pill");
+    const target = oldNav?.querySelector<HTMLElement>(`a[href="#${active.id}"]`);
+    if (oldNav && oldPill && target) {
+      for (const a of oldNav.querySelectorAll("a[aria-current]")) a.setAttribute("aria-current", "false");
+      target.setAttribute("aria-current", "page");
+      const from = oldPill.getBoundingClientRect().top - oldNav.getBoundingClientRect().top;
+      oldPill.style.top = `${target.offsetTop}px`;
+      oldPill.style.height = `${target.offsetHeight}px`;
+      void move(oldPill, { y: [from - target.offsetTop, 0] }, SPRING);
+    }
+    await sink(leaving.children, { y: 10 });
+    if (mine !== renders) return;
+  }
+  // Where the highlight is right now, mid-glide or at rest: the new one
+  // carries on from there.
+  const shownPill = app.querySelector<HTMLElement>("nav .pill");
+  const shownNav = app.querySelector("nav");
+  const pillFrom = shownPill && shownNav ? shownPill.getBoundingClientRect().top - shownNav.getBoundingClientRect().top : null;
   bar.setSubtitle(active.title);
   const c = overview.config;
+  const link = (t: (typeof TABS)[number]) =>
+    h(
+      "a",
+      { href: `#${t.id}`, "aria-current": t.id === active.id ? "page" : false, title: `Ctrl+${TABS.indexOf(t) + 1}` },
+      icon(t.icon, 16),
+      t.title,
+    );
+  // Two zones: what you do with Kenning, then Kenning itself. Between
+  // them, the notices, empty on most days.
   const nav = h(
     "nav",
     {},
-    TABS.map((t) =>
-      h("a", { href: `#${t.id}`, "aria-current": t.id === active.id ? "page" : false }, icon(t.icon, 16), t.title),
-    ),
+    TABS.filter((t) => !t.foot).map(link),
+    h("div", { class: "nav-gap" }),
+    (notices = h("div", { class: "nav-notices" })),
     h(
       "div",
-      { class: "facts" },
-      h("button", { class: "keys-hint", onclick: () => toggleSheet(c) }, "Shortcuts", keycaps(c.keys.help)),
-      h("span", { class: "facts-meta" }, `Kenning ${overview.version}, MIT licence`),
+      { class: "nav-foot" },
+      TABS.filter((t) => t.foot).map(link),
+      h("button", { type: "button", class: "nav-row", title: c.keys.help, onclick: () => toggleSheet(c) }, icon("keyboard", 16), "Shortcuts"),
+      h(
+        "button",
+        { type: "button", class: "nav-meta", onclick: showUpdates, title: "What's new and updates" },
+        icon("info", 16),
+        h("span", {}, h("strong", {}, `Version ${overview.version}`), h("small", {}, "MIT licence")),
+      ),
     ),
   );
+  paintNotices();
   const pill = h("div", { class: "pill", "aria-hidden": "true" });
   nav.prepend(pill);
   const main = h("main");
@@ -105,22 +215,27 @@ async function render() {
     bar.el.querySelector<HTMLElement>(".tb-sub")?.style.setProperty("opacity", "0");
   }
   clear(app, nav, main);
+
+  // The highlight slides from the previous tab at once, while the page
+  // loads: placed only after it, it would show unplaced at the top of the
+  // sidebar (its bar is drawn even with no height), then jump back.
+  // A refresh of the same tab (after an edit) does not replay anything.
+  const current = nav.querySelector<HTMLElement>('a[aria-current="page"]');
+  if (current) {
+    pill.style.top = `${current.offsetTop}px`;
+    pill.style.height = `${current.offsetHeight}px`;
+    const from = pillFrom ?? lastPillTop;
+    if (from !== null && Math.abs(from - current.offsetTop) > 0.5) {
+      void move(pill, { y: [from - current.offsetTop, 0] }, SPRING);
+    }
+    lastPillTop = current.offsetTop;
+  }
   if (overview.warnings.length) {
     main.appendChild(h("div", { class: "notice error" }, overview.warnings.join(" ")));
   }
   await active.view(main, overview, refresh);
 
-  // The highlight slides from the previous tab; the page lifts into place.
-  // A refresh of the same tab (after an edit) does not replay anything.
-  const link = nav.querySelector<HTMLElement>('a[aria-current="page"]');
-  if (link) {
-    pill.style.top = `${link.offsetTop}px`;
-    pill.style.height = `${link.offsetHeight}px`;
-    if (lastPillTop !== null && lastPillTop !== link.offsetTop) {
-      void move(pill, { y: [lastPillTop - link.offsetTop, 0] }, SPRING);
-    }
-    lastPillTop = link.offsetTop;
-  }
+  // The page lifts into place.
   if (arriving) {
     // After the onboarding: the sidebar slides in as the page rises, while
     // the title bar and the light settle (CSS transitions).
@@ -138,6 +253,7 @@ async function render() {
 }
 
 window.addEventListener("hashchange", () => void render());
+window.addEventListener("resize", placePill);
 
 // Keyboard: Ctrl+1…5 sections, and the add / search / help keys from the
 // config (Alt+N, Ctrl+F, Ctrl+/ unless changed in Settings).
@@ -207,4 +323,22 @@ void on<string>("navigate", (tab) => {
   if (location.hash !== `#${tab}`) location.hash = tab;
   else void refresh();
 });
-void refresh();
+// A check, automatic or from the sheet, answered.
+void on<UpdateInfo | null>("update", (u) => {
+  update = u;
+  paintNotices();
+});
+// Paused or resumed, from the tray menu or the card.
+void on<boolean>("paused", (on) => {
+  if (!overview) return;
+  overview.paused = on;
+  paintNotices();
+});
+void refresh().then(async () => {
+  // The window was created hidden: show it once this first page is on
+  // screen (two frames: laid out, then painted), never blank.
+  requestAnimationFrame(() => requestAnimationFrame(() => void ipc.mainReady()));
+  // One found before this window opened.
+  update = await ipc.updateFound();
+  paintNotices();
+});

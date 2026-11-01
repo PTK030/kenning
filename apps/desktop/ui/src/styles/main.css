@@ -1,5 +1,9 @@
 @import "./base.css";
 @import "./onboarding.css";
+/* The badge and the lookalike window, for the onboarding's pictures of them. */
+@import "./badgeCard.css";
+@import "./lookCard.css";
+@import "./detailsCard.css";
 
 /* The window itself never scrolls; only the page inside it does. */
 html,
@@ -13,15 +17,31 @@ body {
   flex-direction: column;
 }
 
-/* Two layers, as in Windows 11: a quiet base for navigation, and the page
-   with its cards. A faint blue light in the page's top corner, the same
-   recipe as the onboarding, only quieter. */
+/* Two layers, as in Windows 11 (WinUI's NavigationView): the title bar
+   and the sidebar are one quiet base, and the page is a sheet laid on it,
+   with a line along its top and left and a rounded top-left corner. */
 #app {
   position: relative;
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: 200px 1fr;
+  background-color: var(--surface-base);
+  transition: background-color 700ms ease;
+}
+
+/* The onboarding fills the window with the page's colour; leaving it, the
+   base settles in around the arriving page. */
+body.immersive #app {
+  background-color: var(--surface);
+}
+
+/* A faint blue light in the page's top corner, the same recipe as the
+   onboarding, only quieter. */
+#app > main:not(.onboarding) {
+  border: 1px solid var(--line);
+  border-width: 1px 0 0 1px;
+  border-top-left-radius: 8px;
   background:
     radial-gradient(55% 45% at 100% 0%, color-mix(in srgb, var(--brand-strong) 8%, transparent), transparent 70%),
     var(--surface);
@@ -44,14 +64,16 @@ body {
   position: relative;
 }
 
+/* The first row starts close under the title bar, as in WinUI's pane, but
+   10px down: the same inset as at the sides, so a highlighted row sits
+   evenly in its corner, and a little more than the rows' own rhythm, so
+   the list reads as its own group under the title. */
 nav {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 14px 10px;
-  background: var(--surface-base);
-  border-right: 1px solid var(--line);
+  padding: 10px 10px 10px;
 }
 
 .brand {
@@ -71,68 +93,82 @@ nav {
   border-radius: 6px;
 }
 
+/* The current row: the same quiet fill as a row under the pointer, told
+   apart by a short brand-coloured bar at its edge (WinUI's selection
+   indicator, 3 by 16). The text keeps its colour and weight. */
 nav .pill {
   position: absolute;
   left: 10px;
   right: 10px;
-  border-radius: 8px;
-  background: var(--brand-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 14%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
-nav a {
+nav .pill::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 2px;
+  background: var(--brand);
+}
+
+/* One kind of row for everything in the sidebar: links and the Shortcuts
+   button alike. Icon and word in one colour; 13.5px of Inter reads as the
+   14px of Segoe that Windows uses. The label's left edge lines up with
+   "Kenning" in the title bar. */
+nav a,
+nav .nav-row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: inherit;
-  text-decoration: none;
-  transition:
-    background 180ms ease,
-    color 180ms ease;
-}
-
-nav a .icon {
-  color: var(--ink-2);
-}
-
-nav a[aria-current="page"] .icon {
-  color: var(--brand);
-}
-
-nav a:not([aria-current="page"]):hover {
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  gap: 9px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
   color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms ease;
 }
 
-nav a[aria-current="page"] {
-  background: transparent;
-  color: var(--brand);
-  font-weight: 600;
+nav a:not([aria-current="page"]):hover,
+nav .nav-row:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
-/* Sidebar foot: the shortcuts, then the version. What Kenning is doing
-   right now lives in the tray menu, where it can also be changed. */
-.facts {
-  margin-top: auto;
-  padding: 10px 4px 6px;
-  font-size: 12px;
-  color: var(--ink-2);
+.nav-gap {
+  flex: 1;
+}
+
+/* Between the two zones: what asks for something, only while it does. */
+.nav-notices {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-bottom: 12px;
 }
 
-.facts .keys-hint {
-  margin: 0 6px;
+.nav-notices:empty {
+  display: none;
 }
 
-.facts-meta {
-  padding: 0 6px;
-  font-size: 11px;
-  opacity: 0.75;
+/* The foot: Kenning itself, under a hairline. */
+.nav-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
 }
 
 /* The page: one column, never wider than reads well, centred in a wide
@@ -303,23 +339,6 @@ main > .notice {
   box-shadow: var(--elev-1);
 }
 
-/* Short facts in a row (licence, local-only…): quiet chips. */
-.trust-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.trust-line span {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--surface-raised);
-  box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--ink-2);
-  font-size: 12px;
-  font-weight: 500;
-}
-
 /* ---- Address book ------------------------------------------------------ */
 
 /* Search: the full width, with its icon inside. */
@@ -442,18 +461,32 @@ main > .notice {
   white-space: nowrap;
 }
 
-.entry .who .addr {
+/* The address and the note share one line, so a row stays two lines tall. */
+.entry .line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
   font-size: 12.5px;
   color: var(--ink-2);
+}
+
+.entry .who .addr {
+  flex: none;
   white-space: nowrap;
 }
 
 .entry .note {
-  font-size: 12.5px;
-  color: var(--ink-2);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.entry .note::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--line-strong);
 }
 
 .entry .meta {
@@ -595,29 +628,29 @@ main > .notice {
   }
 }
 
-.add-card {
-  margin-bottom: 20px;
-}
-
-.add-card > h2 {
-  margin-bottom: 14px;
-}
 
 /* ---- Check --------------------------------------------------------------- */
 
-/* What answers are compared against: the system's status, in one line. */
-.check-status {
+/* A line under a page's header on the state of things: an empty book in
+   Check, whether the guard is on. A long one wraps beside its icon. */
+.page-status {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  margin: 0 0 14px;
+  line-height: 1.45;
+  margin: 0 0 16px;
   font-size: 13px;
   color: var(--ink-2);
 }
 
-.check-status .icon {
+.page-status .icon {
   flex: none;
+  margin-top: 2px;
   color: var(--brand);
+}
+
+.page-status > button {
+  flex: none;
 }
 
 .check-input {
@@ -656,6 +689,7 @@ main > .notice {
 }
 
 .check-foot {
+  margin: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -679,22 +713,28 @@ main > .notice {
 
 .verdict.k-mine,
 .verdict.k-team,
-.verdict.k-contact {
+.verdict.k-contact,
+.found.k-mine,
+.found.k-team,
+.found.k-contact {
   --tone: var(--mine);
   --tone-soft: var(--mine-soft);
 }
 
-.verdict.k-new {
+.verdict.k-new,
+.found.k-new {
   --tone: var(--new);
   --tone-soft: var(--new-soft);
 }
 
-.verdict.k-seen {
+.verdict.k-seen,
+.found.k-seen {
   --tone: var(--ink-2);
   --tone-soft: var(--surface-raised);
 }
 
-.verdict.k-lookalike {
+.verdict.k-lookalike,
+.found.k-lookalike {
   --tone: var(--look);
   --tone-soft: var(--look-soft);
 }
@@ -750,6 +790,140 @@ main > .notice {
   max-width: 46em;
   font-size: 13px;
   color: var(--ink-2);
+}
+
+/* The line under a verdict's headline: words, hairlines and the chain's
+   chip on one centred row, the chip spaced off even right after text. */
+.verdict-head .muted {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 2px;
+}
+
+.verdict-head .muted .chain-tag {
+  margin-left: 10px;
+  vertical-align: 0;
+}
+
+/* Several answers at once: one card, a line on what was found, then a row
+   each that opens in place to the same details a single card shows. */
+.found-list {
+  padding: 6px;
+}
+
+.found-sum {
+  margin: 0;
+  padding: 8px 12px 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.found-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.found {
+  --tone: var(--brand);
+  --tone-soft: var(--brand-soft);
+}
+
+.found + .found {
+  border-top: 1px solid var(--line);
+}
+
+.found-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.found-row:hover {
+  background: var(--surface-raised);
+}
+
+.found .tile {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--tone);
+  background: var(--tone-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+.found-main {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.found-main strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.found.k-lookalike .found-main strong {
+  color: var(--look);
+}
+
+.found-meta {
+  display: flex;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.found-meta .addr {
+  font-size: 12px;
+}
+
+.found-row .chain-tag {
+  margin-left: 0;
+}
+
+.found-row .chev {
+  display: grid;
+  color: var(--ink-2);
+  transition: transform 200ms ease;
+}
+
+.found-row[aria-expanded="true"] .chev {
+  transform: rotate(180deg);
+}
+
+/* The details sit under the text, not under the tile. */
+.found-body {
+  display: grid;
+  gap: 10px;
+  padding: 2px 12px 14px 56px;
+}
+
+.found-body[hidden] {
+  display: none;
+}
+
+/* A box Check could not read: the warning's colour on its border. */
+.compare input[aria-invalid="true"],
+.compare input[aria-invalid="true"]:focus {
+  border-color: var(--new);
+  box-shadow: inset 0 0 0 1px var(--new);
 }
 
 /* What was checked: specific steps, so the answer shows its work. */
@@ -829,15 +1003,31 @@ main > .notice {
   outline-offset: -1px;
 }
 
-.day + .day {
-  margin-top: 22px;
+/* A group in the book, a day in the journal: each holds its own margins,
+   so the heading's space below stays put when the list under it folds
+   away (collapsing into the gap between groups, it jumped by 6px). */
+.group,
+.day {
+  display: flow-root;
 }
 
-.day > h2 {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+.day + .day {
+  margin-top: 14px;
 }
+
+/* A day's heading folds it, as a group's does in the book. */
+.day-toggle {
+  margin: 0 0 6px -4px;
+}
+
+/* The same record again and again: one row, and how many times. */
+.entry .times {
+  margin-left: 8px;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
 
 /* Action tiles take the colour of what happened. */
 .entry .ic.tone-brand {
@@ -939,8 +1129,7 @@ main > .notice {
   box-shadow: var(--elev-1);
 }
 
-.set-card + .set-card,
-#privacy {
+.set-card + .set-card {
   margin-top: 16px;
 }
 
@@ -964,6 +1153,17 @@ main > .notice {
 
 .set-head h2 {
   font-size: 16px;
+}
+
+/* A card's own action sits at the right of its title. */
+.set-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.set-head > .btn {
+  flex: none;
+  align-self: center;
 }
 
 .set-head p {
@@ -1012,24 +1212,57 @@ main > .notice {
   border-radius: 6px;
 }
 
-.choices {
+/* One of a few, as rows: a radio, a title and one line, hairlines
+   between, like the switch rows. */
+.radio-row {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  padding: 6px 0 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px 0;
+  cursor: pointer;
 }
 
-.set-body > .choices + * {
-  border-top: 0;
+.radio-row input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.choices .choice {
-  height: 100%;
-  font: inherit;
-  color: inherit;
+.radio-row .radio {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  transition:
+    box-shadow 160ms ease,
+    background 160ms ease;
 }
 
-.choices .choice .muted {
+.radio-row:hover .radio {
+  box-shadow: inset 0 0 0 1.5px var(--ink-2);
+}
+
+.radio-row input:checked + .radio {
+  background: var(--brand-strong);
+  box-shadow:
+    inset 0 0 0 1.5px var(--brand-strong),
+    inset 0 0 0 5px var(--surface-card);
+}
+
+.radio-row input:focus-visible + .radio {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.radio-row strong {
+  display: block;
+  font-weight: 600;
+}
+
+.radio-row .muted {
   display: block;
 }
 
@@ -1058,6 +1291,96 @@ main > .notice {
 
 .set-field input {
   flex: 1;
+}
+
+/* Network: the EVM networks asked, as chips under their label. */
+.set-row.net-row {
+  display: grid;
+  align-items: start;
+  gap: 10px;
+}
+
+.net-row .row-label strong {
+  display: block;
+  font-weight: 600;
+}
+
+.net-row .row-label .muted {
+  display: block;
+}
+
+.net-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.net-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px 4px 4px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+/* A network left out keeps its mark, greyed and faded; chosen, it takes
+   its colour back and the chip lights up. */
+.net-chip .chain-mark {
+  border-radius: 50%;
+  filter: grayscale(1);
+  opacity: 0.45;
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease;
+}
+
+.net-chip:hover {
+  color: var(--ink);
+}
+
+.net-chip[aria-pressed="true"] {
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 45%, transparent);
+  color: var(--ink);
+}
+
+.net-chip[aria-pressed="true"] .chain-mark {
+  filter: none;
+  opacity: 1;
+}
+
+/* Your own servers: folded under the chips until you want them. */
+.servers-wrap {
+  padding: 10px 0 4px;
+}
+
+.servers-toggle {
+  margin-left: -4px;
+}
+
+.servers > .set-field + .set-field {
+  border-top: 1px solid var(--line);
+}
+
+.servers .field-label {
+  flex: none;
+  width: 104px;
+}
+
+.servers > p {
+  margin: 4px 0 6px;
 }
 
 .set-body > textarea {
@@ -1098,32 +1421,10 @@ main > .notice {
   font-size: 12.5px;
 }
 
-#privacy .set-body {
-  gap: 14px;
-}
-
-#privacy .set-body > * + * {
-  border-top: 0;
-}
-
-#privacy dl.facts-list {
-  font-size: 13px;
-}
-
-#privacy dl.facts-list p {
-  margin: 0 0 6px;
-}
-
-#privacy ul {
-  margin: 4px 0 8px;
-  padding-left: 18px;
-}
-
 @media (max-width: 700px) {
   .set-body {
     padding-left: 18px;
   }
-  .choices,
   .rules {
     grid-template-columns: 1fr 1fr;
   }
@@ -1140,10 +1441,15 @@ main > .notice {
   margin-top: 20px;
   padding: 10px 10px 10px 16px;
   border-radius: 12px;
-  background: var(--surface-card);
+  /* It floats over the cards as they scroll under it, so it takes the
+     pop-over surface (never a card's colour), a clear edge and the
+     pop-over's deep shadow. Neutral, not tinted: on a blue bar the blue
+     Save, the icon and the edge all ran together. */
+  background: var(--surface-pop);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--brand) 35%, transparent),
-    var(--elev-2);
+    0 0 0 1px color-mix(in srgb, var(--brand) 50%, transparent),
+    0 4px 10px -2px var(--shade),
+    0 22px 48px -12px var(--shade-strong);
 }
 
 .save-bar[hidden] {
@@ -1163,6 +1469,11 @@ main > .notice {
 
 .save-bar .spacer {
   flex: 1;
+}
+
+/* Discarding is a real choice here, not an aside: full ink. */
+.save-bar .btn.ghost {
+  color: var(--ink);
 }
 
 /* A question before something that cannot be undone (confirmSheet.ts). */
@@ -1245,21 +1556,6 @@ main > .notice {
 
 .toast.error .bar {
   background: var(--look);
-}
-
-dl.facts-list {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 8px 16px;
-  margin: 0;
-}
-
-dl.facts-list dt {
-  font-weight: 600;
-}
-
-dl.facts-list dd {
-  margin: 0;
 }
 
 code {
@@ -1349,172 +1645,954 @@ code {
 
 /* ---- Protection ---------------------------------------------------------- */
 
-/* The test: one chip per decoy, lit as it goes out and comes back. */
-.test-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
+/* Laid out as the Journal: the test's progress and answer are notices
+   under the header, then what was caught, by day. */
+.test-result:not(:empty) {
+  margin-bottom: 16px;
 }
 
-.decoys {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.decoy {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px 3px 8px;
-  border-radius: 999px;
-  background: var(--surface-raised);
-  box-shadow: inset 0 0 0 1px var(--line);
+/* The test while it runs: which decoy is out, as words and a bar. */
+.test-progress {
+  display: grid;
+  gap: 8px;
   color: var(--ink-2);
-  font-size: 12.5px;
-  font-weight: 500;
-  transition:
-    background 200ms ease,
-    color 200ms ease;
 }
 
-.decoy .dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--line);
-  transition: background 200ms ease;
+.test-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  overflow: hidden;
 }
 
-.decoy[data-state="run"] .dot {
+.test-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
   background: var(--brand);
-  animation: decoy-pulse 0.9s ease-in-out infinite;
 }
 
-.decoy[data-state="clean"] {
-  color: var(--ink);
-}
-
-.decoy[data-state="clean"] .dot {
-  background: var(--mine);
-}
-
-.decoy[data-state="swap"] {
-  color: var(--look);
-  background: var(--look-soft);
-}
-
-.decoy[data-state="swap"] .dot {
-  background: var(--look);
-}
-
-@keyframes decoy-pulse {
-  50% {
-    opacity: 0.35;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .decoy[data-state="run"] .dot {
-    animation: none;
-  }
-}
-
-.test-result:empty {
-  display: none;
-}
-
+/* A clean run: one line, its sign on the first line of text. */
 .test-clean {
   display: flex;
-  gap: 10px;
   align-items: flex-start;
-  margin: 0;
-  padding: 12px 0 2px;
-  font-size: 13px;
-  color: var(--ink-2);
+  gap: 10px;
+  line-height: 1.5;
 }
 
 .test-clean svg {
   flex: none;
-  margin-top: 1px;
+  margin-top: 2px;
   color: var(--mine);
 }
 
-.test-clean strong {
-  color: var(--ink);
+/* A swap in the test, laid out as Windows' InfoBar does when it does not
+   fit one line: the sign beside the title, then the message, then the
+   action, each under the other. The one red thing on the page, in its own
+   tint, the button included. */
+.test-swapped {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  padding: 14px 16px 16px 14px;
+  border-radius: 12px;
+  background: var(--look-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--look) 18%, transparent);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.test-swapped > svg {
+  margin-top: 2px;
+  color: var(--look);
+}
+
+.test-swapped > strong {
+  font-size: 13.5px;
   font-weight: 600;
 }
 
-.set-body > .test-swapped {
-  margin: 12px 0 2px;
-  border-top: 0;
+.test-swapped > p,
+.test-swapped > .btn {
+  grid-column: 2;
 }
 
-.test-swapped ul {
-  margin: 6px 0 0;
-  padding-left: 18px;
+.test-swapped > p {
+  margin: 2px 0 0;
+  color: color-mix(in srgb, var(--ink) 82%, transparent);
 }
 
-/* How the guard tells a swap: three signs, quiet. */
-.guard-how {
-  padding: 12px 0 2px;
+.test-swapped > .btn {
+  justify-self: start;
+  margin-top: 12px;
+  border-color: color-mix(in srgb, var(--look) 35%, transparent);
+  background: color-mix(in srgb, var(--look) 12%, transparent);
 }
 
-.guard-how p {
-  margin: 0 0 8px;
+.test-swapped > .btn:hover {
+  background: color-mix(in srgb, var(--look) 20%, transparent);
 }
 
-.guard-how ul {
+/* A catch, in a sheet over the page (guardSheet.ts): what happened, the
+   facts, why it was taken for a swap, what to do now. Four sizes, as a
+   Windows dialog: the title (18), the summary and the section heads (14,
+   the heads strong), the content (13), and what is secondary (12.5, grey).
+   The facts are content, not headlines: the addresses in plain mono. A
+   head sits nearer its own lines than the section before it. */
+.sheet-card.guard-sheet {
+  width: min(560px, 100%);
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 22px;
+}
+
+.guard-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guard-sign {
+  flex: none;
   display: grid;
-  gap: 6px;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--look-soft);
+  color: var(--look);
+}
+
+.guard-sheet-head h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.guard-summary {
+  margin: 0;
+  color: var(--ink-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.guard-facts {
+  border-radius: 14px;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.guard-facts > * + * {
+  border-top: 1px solid var(--line);
+}
+
+.guard-facts .addr {
+  font-size: 12.5px;
+  font-weight: 500;
+  user-select: text;
+}
+
+.guard-facts .tone-look {
+  color: var(--look);
+}
+
+.guard-facts dd strong {
+  display: block;
+  font-weight: 500;
+}
+
+.guard-facts .path {
+  display: block;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.guard-facts .link {
+  font-size: 12.5px;
+}
+
+.guard-when {
+  margin: 0;
+  padding: 10px 16px;
+}
+
+/* Why, and what to do: each under a heading in the text's own colour;
+   the steps numbered in small rounds on the heading's edge, a step's
+   "where to find it" quietly under it. */
+.guard-why,
+.guard-steps {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* Inside the facts' box, under its rows: the same inset as they have. */
+.guard-facts .guard-why {
+  margin-top: 0;
+  padding: 12px 16px 14px;
+}
+
+.guard-why h3,
+.guard-steps h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.guard-why ul {
+  margin: 0;
+  color: var(--ink-body);
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.guard-why li::marker {
+  color: var(--ink-2);
+}
+
+.guard-why li + li {
+  margin-top: 2px;
+}
+
+/* Three levels and no more (NN/g: at most three contrast treatments),
+   each told apart by more than one cue: the head by size, weight and
+   colour; the steps in the running text's tone; the step numbers in the
+   secondary grey. */
+.guard-steps ol {
+  display: grid;
+  color: var(--ink-body);
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
   font-size: 13px;
+  line-height: 1.5;
+}
+
+.guard-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.guard-steps .n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.guard-sheet .sheet-actions {
+  flex-wrap: wrap;
+}
+
+/* ---- Book: tools, groups, the form ----------------------------------------- */
+
+/* Search and order stay in reach while the list scrolls under them. */
+.book-tools {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  /* The page shows through, softly, as rows pass beneath. */
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.book-tools .search {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.group + .group {
+  margin-top: 14px;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.group-head .icon-btn {
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.group-head:hover .icon-btn,
+.group-head:focus-within .icon-btn {
+  opacity: 1;
+}
+
+.group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.group-toggle:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.group-toggle .chev {
+  color: var(--ink-2);
+  transition: transform 160ms ease;
+}
+
+.group-toggle[aria-expanded="false"] .chev {
+  transform: rotate(-90deg);
+}
+
+.group-toggle .muted {
+  font-weight: 500;
+}
+
+.group-field {
+  width: 240px;
+  padding: 5px 10px !important;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* The tile with the picture in it: a bit more room for the artwork. */
+.entry .ic .emoji {
+  display: block;
+}
+
+.pic-pick {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 140ms ease;
+}
+
+.pic-pick.chosen {
+  border-style: solid;
+  border-color: transparent;
+}
+
+.pic-pick:hover {
+  border-color: var(--brand);
+}
+
+.pic-pick:active {
+  transform: scale(0.94);
+}
+
+.pic-pick.big {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+}
+
+/* A small pencil on the tile: it can be changed. */
+.pic-edit {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-pop);
+  color: var(--ink-2);
+  box-shadow: var(--elev-pop);
+}
+
+/* The sheet for adding or changing an address (entrySheet.ts). */
+.sheet-card.entry-sheet {
+  width: min(540px, 100%);
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 22px;
+}
+
+.entry-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.entry-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.entry-title h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.entry-sub .chain-tag {
+  margin-left: 0;
+}
+
+.entry-sub code {
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.entry-sheet .form {
+  grid-template-columns: 84px 1fr;
+  max-width: none;
+}
+
+.sheet-actions .spacer {
+  flex: 1;
+}
+
+/* Remove: there, in red, but not a primary action. */
+.btn.danger-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--look);
+}
+
+.btn.danger-ghost:hover {
+  background: var(--look-soft);
+}
+
+/* An address from the book or the journal, over the list (addressSheet.ts):
+   the state's colour on its tile and word, as in the details window. */
+.sheet-card.address-sheet {
+  --tone: var(--brand);
+  --tone-soft: var(--brand-soft);
+  width: min(560px, 100%);
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 22px;
+}
+
+.address-sheet.k-mine,
+.address-sheet.k-team,
+.address-sheet.k-contact {
+  --tone: var(--mine);
+  --tone-soft: var(--mine-soft);
+}
+
+.address-sheet.k-new {
+  --tone: var(--new);
+  --tone-soft: var(--new-soft);
+}
+
+.address-sheet.k-seen {
+  --tone: var(--ink-2);
+  --tone-soft: var(--surface-raised);
+}
+
+.address-sheet.k-lookalike {
+  --tone: var(--look);
+  --tone-soft: var(--look-soft);
+}
+
+.state-tile,
+.entry-tile {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+}
+
+.state-tile {
+  color: var(--tone);
+  background: var(--tone-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+.title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.title-line h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title-line .word {
+  flex: none;
+  color: var(--tone);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.address-sheet .detail {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.address-sheet .detail .sep {
+  margin: 0 8px;
+}
+
+.address-sheet .detail .chain-tag {
+  margin-left: 10px;
+}
+
+.detail-card {
+  border-radius: 14px;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.detail-address {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-address .addr {
+  display: block;
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.55;
+  user-select: text;
+}
+
+.address-sheet .sheet-actions {
+  flex-wrap: wrap;
+}
+
+/* ---- Updates (updateSheet.ts, the sidebar foot) ------------------------- */
+
+/* The version and the licence (the name and the mark are in the title bar
+   already): an icon in the icons' column, the words on the labels' edge.
+   The whole block is a button (it opens "What's new"), shown as one by the
+   same hover as the rows above. */
+.nav-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.nav-meta .icon {
+  flex: none;
+}
+
+.nav-meta span {
+  display: grid;
+  line-height: 1.3;
+}
+
+.nav-meta strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.nav-meta small {
+  font-size: 11px;
+}
+
+.nav-meta:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+/* Only while a newer version is out. */
+.update-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 22%, transparent);
+  color: var(--brand);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.update-pill:hover {
+  background: color-mix(in srgb, var(--brand) 18%, var(--surface-base));
+}
+
+.update-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+/* Watching paused: amber, the colour that means "look at this" in Kenning,
+   always with its sign and its words. Only while paused. */
+.paused-card {
+  padding: 10px 12px 12px;
+  border-radius: 8px;
+  background: var(--new-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--new) 28%, transparent);
+  font-size: 12.5px;
+}
+
+.paused-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paused-head .icon {
+  color: var(--new);
+}
+
+.paused-card p {
+  margin: 4px 0 10px 23px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.paused-card .btn {
+  margin-left: 23px;
+  padding: 4px 12px;
+  font-size: 12.5px;
+}
+
+.sheet-card.update-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(580px, 100%);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Who: the mark, the name, the version and the licence. */
+.update-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px 18px;
+}
+
+.update-head img {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.update-head h2 {
+  margin: 0;
+}
+
+.update-head .muted {
+  font-size: 13px;
+}
+
+/* Where you stand: one row, as on Windows Update's page. */
+.update-status {
+  display: grid;
+  gap: 12px;
+  margin: 0 24px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.update-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.update-sign {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
   color: var(--ink-2);
 }
 
-.guard-how li {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
+.update-row.ok .update-sign {
+  background: var(--mine-soft);
+  color: var(--mine);
 }
 
-.guard-how .ic {
-  flex: none;
-  display: grid;
-  margin-top: 1px;
+.update-row.warn .update-sign {
+  background: var(--new-soft);
+  color: var(--new);
+}
+
+.update-row.brand .update-sign {
+  background: var(--brand-soft);
   color: var(--brand);
 }
 
-.guard-how strong {
-  color: var(--ink);
+.update-row.busy .update-sign .icon {
+  animation: update-spin 1s linear infinite;
+}
+
+@keyframes update-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.update-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.update-text strong {
+  font-size: 14px;
   font-weight: 600;
 }
 
-.guard-caught {
-  margin-top: 24px;
-}
-
-.guard-caught > h2 {
-  margin: 0 0 8px 4px;
-  font-size: 13px;
-  font-weight: 600;
+.update-text span {
   color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 
-/* Guard events are a record, not a link. */
-.entry.static {
-  cursor: default;
+.update-text .link {
+  font: inherit;
 }
 
-.entry.static:hover {
+.update-row > .btn {
+  flex: none;
+}
+
+.update-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 18%, transparent);
+  overflow: hidden;
+}
+
+.update-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width 200ms ease;
+}
+
+/* No size from the server: a stripe that moves instead of a share. */
+.update-bar.busy i {
+  width: 30%;
+  animation: update-busy 1.1s ease-in-out infinite;
+}
+
+@keyframes update-busy {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-bar.busy i {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-row.busy .update-sign .icon {
+    animation: none;
+  }
+}
+
+/* What changed: the sheet's one scrolling area, under a hairline instead
+   of in a box of its own. */
+.update-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: 18px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.update-log-title {
+  margin: 0 0 2px;
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.update-sheet .sheet-actions {
+  margin: 0;
+  padding: 12px 24px;
+  border-top: 1px solid var(--line);
+}
+
+/* Versions, then their parts, then the items: each level a step quieter,
+   none greyer than the text under it. */
+.changelog {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.changelog h3 {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.update-log .changelog h3::before {
+  content: "Version ";
+}
+
+/* Releases fold to one line each: the version and its date, a hairline
+   between them. The notes sit under the title, past the chevron. */
+.release + .release {
+  border-top: 1px solid var(--line);
+}
+
+.release-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
   background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.entry .who .why {
+.release-toggle h3 {
+  margin: 0;
+}
+
+.release-sub {
+  display: block;
   font-size: 12px;
   color: var(--ink-2);
+}
+
+.release-sub:empty {
+  display: none;
+}
+
+.release-toggle .chev {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink-2);
+  transition:
+    transform 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 140ms ease;
+}
+
+.release-toggle:hover .chev {
+  color: var(--ink);
+}
+
+.release-toggle[aria-expanded="false"] .chev {
+  transform: rotate(-90deg);
+}
+
+.release-body {
+  overflow: hidden;
+  padding: 0 0 12px 24px;
+}
+
+.release-body > :first-child {
+  margin-top: 0;
+}
+
+.changelog h4 {
+  margin: 12px 0 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.changelog p {
+  margin: 2px 0;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.changelog ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.changelog li::marker {
+  color: var(--ink-2);
+}
+
+.changelog li + li {
+  margin-top: 4px;
 }

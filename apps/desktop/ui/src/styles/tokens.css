@@ -25,6 +25,10 @@
 
   --ink: light-dark(#16202a, #e6edf3);
   --ink-2: light-dark(#4b5764, #9ba8b5);
+  /* Running text under a title: a step softer than the title, so the
+     title stands out by its colour too, and well above --ink-2, which is
+     for what is secondary. */
+  --ink-body: light-dark(#2b3641, #c7d1da);
 
   /* Brand. `--brand` is for links, focus and small accents; the primary
      action is always the full brand blue with white text, in both themes. */
@@ -63,6 +67,26 @@
   --new-soft: light-dark(#fdf1e2, #2e2213);
   --look: light-dark(#b91c1c, #ff7b7b);
   --look-soft: light-dark(#fdecec, #3a1a1c);
+
+  /* Backgrounds for an entry's picture tile: a pale tint in light mode, a
+     deep one in dark, so a bright emoji stands off either. mist goes to the
+     ends (near white, near black) for silver and grey emoji; slate is a
+     mid grey for pale ones. snow stays light
+     and night stays dark, for emoji that are nearly black or white.
+     scripts/emoji-art.py reads these to pick each emoji's default. */
+  --tint-red: light-dark(#fbd9d7, #4d1c21);
+  --tint-orange: light-dark(#fde0c8, #4b2912);
+  --tint-yellow: light-dark(#f9eab0, #3f3510);
+  --tint-green: light-dark(#d3efd5, #163b21);
+  --tint-teal: light-dark(#cdebe7, #0f3a37);
+  --tint-blue: light-dark(#d6e3fc, #172b52);
+  --tint-purple: light-dark(#e5dafa, #2d1e52);
+  --tint-pink: light-dark(#f9d9ea, #4a1a36);
+  --tint-gray: light-dark(#e1e6ec, #2a323d);
+  --tint-mist: light-dark(#f4f6f9, #181d25);
+  --tint-slate: light-dark(#aab5c4, #3b4553);
+  --tint-snow: light-dark(#f5f7fa, #c9d0da);
+  --tint-night: light-dark(#323b48, #161b22);
 
   /* Depth: a hairline and a shadow that pools under the object rather than
      haloing around it. Cards sit low; dialogs and alerts sit high. */

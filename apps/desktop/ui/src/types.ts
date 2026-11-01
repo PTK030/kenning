@@ -48,6 +48,8 @@ export interface Recognition {
   state: State;
   label: string | null;
   note: string | null;
+  /** The user's picture for a book entry. */
+  emoji: string | null;
   source: string | null;
   label_kind: LabelKind | null;
   history: Contact | null;
@@ -72,7 +74,7 @@ export interface LookalikeView {
 }
 
 /** Where the details window got the address. */
-export type Source = "selection" | "clipboard" | "book" | "journal";
+export type Source = "selection" | "clipboard";
 
 export interface DetailsView {
   recognition: Recognition;
@@ -85,6 +87,9 @@ export interface Entry {
   label: string;
   owner: Owner;
   note: string | null;
+  emoji: string | null;
+  tint: string | null;
+  group: string | null;
   added_at: string | null;
   source: string | null;
 }
@@ -116,10 +121,17 @@ export interface Config {
   sounds: boolean;
   network: boolean;
   solana_rpc?: string | null;
+  /** EVM networks an EVM address is looked up on (ids, see evm_choices). */
+  evm_networks: string[];
+  /** Your own mempool server for Bitcoin lookups. */
+  bitcoin_api?: string | null;
+  trongrid_key?: string | null;
   onboarded: boolean;
   lookalike: Rules;
   /** The clipboard guard: swapped addresses and secrets on the clipboard. */
   guard: boolean;
+  /** Ask for a newer Kenning at start and every 12 hours. */
+  update_check: boolean;
 }
 
 /** Why the guard took a write for a swap. */
@@ -127,8 +139,8 @@ export type Clue = "no_input" | "background" | "looks_alike";
 
 /** What the clipboard guard has seen (kept in memory until Kenning quits). */
 export type GuardEvent =
-  | { kind: "swap"; at: string; chain: Chain; copied: string; found: string; process: string | null; after_ms: number; clues: Clue[] }
-  | { kind: "secret"; at: string; what: string; process: string | null }
+  | { kind: "swap"; at: string; chain: Chain; copied: string; found: string; process: string | null; path: string | null; after_ms: number; clues: Clue[] }
+  | { kind: "secret"; at: string; what: string; process: string | null; path: string | null }
   | { kind: "test"; at: string; checked: number; swaps: TestSwap[] };
 
 export interface TestSwap {
@@ -136,6 +148,8 @@ export interface TestSwap {
   wrote: string;
   found: string | null;
   process: string | null;
+  /** The program's file, for "Show the file". */
+  path: string | null;
 }
 
 /** A running clipboard test: one decoy out (`clean` null) or back. */
@@ -166,6 +180,19 @@ export interface Overview {
   history_count: number;
   warnings: string[];
   hosts: [string, string][];
+  /** EVM networks that can be chosen: id, name, the host asked. */
+  evm_choices: [string, string, string][];
+  /** Where an update check and an install go. */
+  update_hosts: [string, string][];
+}
+
+/** A newer Kenning than this one, as its release describes it. */
+export interface UpdateInfo {
+  version: string;
+  current: string;
+  /** The release notes: that version's section of the changelog. */
+  notes: string | null;
+  date: string | null;
 }
 
 export interface Onchain {
@@ -178,6 +205,21 @@ export interface Onchain {
   verified: boolean | null;
   name: string | null;
   fetched_at: string;
+  /** EVM: each network asked (empty when only one was). */
+  networks?: NetworkUse[];
+}
+
+/** One EVM network's answer. `used` null: no transaction sent and no
+ *  balance as far as a node can tell (tokens received are invisible to
+ *  it), or the network failed (`error`). */
+export interface NetworkUse {
+  network: string;
+  source: string;
+  used: boolean | null;
+  transactions: number | null;
+  transactions_capped: boolean;
+  contract: boolean;
+  error: string | null;
 }
 
 export type Fact =
@@ -188,7 +230,7 @@ export type Fact =
 export interface JournalRecord {
   at: string;
   user: string;
-  action: "checked" | "lookalike_shown" | "copied_correct" | "marked_mine" | "added" | "removed";
+  action: "checked" | "lookalike_shown" | "copied_correct" | "marked_mine" | "added" | "edited" | "removed";
   chain: Chain;
   address: string;
   state: string;
@@ -197,6 +239,16 @@ export interface JournalRecord {
 }
 
 /** Two addresses compared character by character (Check › Compare). */
+/** Why two addresses could not be compared (commands.rs, CompareProblem). */
+export interface CompareProblem {
+  /** The box at fault, or null when it is the pair (different chains). */
+  field: "used" | "expected" | null;
+  kind: "checksum" | "not_address" | "chains";
+  /** The faulty box's chain (checksum), or the used and expected chains. */
+  chains: Chain[];
+  message: string;
+}
+
 export interface Comparison {
   same: boolean;
   chain: Chain;

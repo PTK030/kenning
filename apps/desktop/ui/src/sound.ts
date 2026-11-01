@@ -85,7 +85,7 @@ function breath(start: number, length: number, gain: number, from: number, to: n
   src.stop(t + length + 0.02);
 }
 
-export type Cue = "step" | "back" | "key" | "tick" | "on" | "off";
+export type Cue = "step" | "back" | "key" | "tick" | "on" | "off" | "fail";
 
 /** Small interface sounds for the onboarding and settings, quieter than
  *  the recognition sounds above so those keep their meaning. */
@@ -112,6 +112,10 @@ export function cue(name: Cue) {
       case "off":
         note(784.0, 0, 0.1, 0.024); // G5
         note(587.33, 0.05, 0.14, 0.022); // D5
+        break;
+      case "fail": // something did not work: two notes down, lower and longer
+        note(523.25, 0, 0.14, 0.032); // C5
+        note(392.0, 0.08, 0.28, 0.03); // G4
         break;
     }
   } catch {

@@ -78,6 +78,104 @@ export function settling(ms = 900) {
   settleTimer = window.setTimeout(() => document.documentElement.classList.remove("entering"), ms);
 }
 
+/** A sheet over the window arriving: the shade fades up while the card
+ *  rises a few pixels and grows to size on a long ease-out. Its opacity
+ *  runs on its own, shorter clock, so the card is solid before it settles;
+ *  no spring, which would make it drift and wobble at the end. */
+export function sheetIn(overlay: HTMLElement, card: HTMLElement) {
+  void move(overlay, { opacity: [0, 1] }, { duration: 0.2, ease: EASE_OUT });
+  void move(card, { y: [10, 0], scale: [0.975, 1] }, { duration: 0.28, ease: EASE_OUT });
+  void move(card, { opacity: [0, 1] }, { duration: 0.18, ease: EASE_OUT });
+}
+
+/** The same, reversed and quicker: it speeds up from the first frame, so it
+ *  never seems to hang before going. Nothing under it takes clicks
+ *  meanwhile. */
+export async function sheetOut(overlay: HTMLElement, card: HTMLElement | null) {
+  overlay.style.pointerEvents = "none";
+  await Promise.all([move(overlay, { opacity: 0 }, LEAVE), move(card, { opacity: 0, y: 6, scale: 0.98 }, LEAVE)]);
+}
+
+/** How everything leaves: the way it came, backwards and quicker, speeding
+ *  up from the first frame so it never seems to hang before going. */
+export const LEAVE = { duration: 0.16, ease: [0.4, 0, 1, 1] } as const;
+
+/** Leaving and giving its room back as it goes: fading (and sinking by
+ *  `y`) while its height, padding and margins close, so nothing after it
+ *  jumps when it is hidden. Then hidden, unless `still()` says otherwise
+ *  by then; its own sizes are handed back to the stylesheet either way. */
+export async function collapse(el: HTMLElement, { y = 0, still = (): boolean => true } = {}) {
+  const cs = getComputedStyle(el);
+  el.style.overflow = "hidden";
+  await move(
+    el,
+    {
+      opacity: 0,
+      ...(y ? { y } : {}),
+      height: [el.offsetHeight, 0],
+      paddingTop: [cs.paddingTop, "0px"],
+      paddingBottom: [cs.paddingBottom, "0px"],
+      marginTop: [cs.marginTop, "0px"],
+      marginBottom: [cs.marginBottom, "0px"],
+    },
+    LEAVE,
+  );
+  if (still()) el.hidden = true;
+  for (const prop of ["overflow", "height", "paddingTop", "paddingBottom", "marginTop", "marginBottom"] as const) el.style[prop] = "";
+}
+
+/** Children leaving the way `rise` brought them: sinking back and fading,
+ *  together. Resolves once they are gone, for the caller to clear. */
+export function sink(targets: Targets, { y = 10 } = {}): Promise<void> {
+  return move(targets, { opacity: 0, y }, LEAVE);
+}
+
+/** One curve both ways: it moves from the first frame (a curve that starts
+ *  slowly reads as a delay after the click) and settles gently. */
+const FOLD = { duration: 0.26, ease: [0.4, 0, 0.2, 1] } as const;
+
+/** Open or fold `body` under its `toggle` (which carries aria-expanded):
+ *  the height glides and the content fades, from wherever it is now, so a
+ *  second click mid-way turns it round. A release in What's new, a day in
+ *  the journal. */
+export function fold(toggle: HTMLElement, body: HTMLElement, open: boolean, animate = true) {
+  toggle.setAttribute("aria-expanded", String(open));
+  if (!animate) {
+    body.hidden = !open;
+    return;
+  }
+  // Its own padding goes with the height: a box cannot be shorter than its
+  // padding, so it would stall at that height and then drop the rest.
+  // Exact heights, fractions and all: rounded ones end half a pixel off,
+  // and the layout snaps by that much when the inline height goes.
+  const wasHidden = body.hidden;
+  const from = wasHidden ? 0 : body.getBoundingClientRect().height;
+  const fromPad = wasHidden ? ["0px", "0px"] : [getComputedStyle(body).paddingTop, getComputedStyle(body).paddingBottom];
+  body.style.paddingTop = body.style.paddingBottom = body.style.height = "";
+  body.hidden = false;
+  const pad = [getComputedStyle(body).paddingTop, getComputedStyle(body).paddingBottom];
+  const to = open ? body.getBoundingClientRect().height : 0;
+  const toPad = open ? pad : ["0px", "0px"];
+  // In place before the first frame: no padding showing for a frame.
+  body.style.overflow = "hidden";
+  body.style.paddingTop = fromPad[0];
+  body.style.paddingBottom = fromPad[1];
+  void move(
+    body,
+    {
+      height: [from, to],
+      paddingTop: [fromPad[0], toPad[0]],
+      paddingBottom: [fromPad[1], toPad[1]],
+      opacity: [open ? 0 : 1, open ? 1 : 0],
+    },
+    FOLD,
+  ).then(() => {
+    if (toggle.getAttribute("aria-expanded") !== String(open)) return;
+    body.hidden = !open;
+    for (const prop of ["height", "opacity", "overflow", "paddingTop", "paddingBottom"] as const) body.style[prop] = "";
+  });
+}
+
 /** Children arriving one after another, lifting into place. */
 export function rise(targets: Targets, { y = 10, delay = 0, gap = 0.045 } = {}): Promise<void> {
   return move(targets, { opacity: [0, 1], y: [y, 0] }, { ...SPRING, delay: stagger(gap, { startDelay: delay }) });
