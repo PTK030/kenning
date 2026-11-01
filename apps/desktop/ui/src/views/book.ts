@@ -1,17 +1,17 @@
-import { chainChip, metaChip, OWNER_CHOICES } from "../address";
-import { dropdown } from "../dropdown";
-import { confirmSheet } from "../confirmSheet";
+import { chainChip } from "../address";
 import { menuFor } from "../contextMenu";
 import { clear, h } from "../dom";
-import { icon, STATE_ICON, type IconName } from "../icons";
+import { emojiMark } from "../emoji";
+import { icon } from "../icons";
 import { ipc, message } from "../ipc";
-import { move, rise } from "../motion";
+import { fold, rise } from "../motion";
+import { segmented } from "../segmented";
 import type { BookView, Entry, Overview, Owner } from "../types";
 import { toast } from "../toast";
-import { recognitionCard } from "./card";
+import { addressSheet } from "./addressSheet";
+import { entrySheet, OWNER_ICON, tileClass } from "./entrySheet";
 
 const OWNER_WORD: Record<Owner, string> = { me: "Yours", team: "Team", contact: "Contact" };
-const OWNER_ICON: Record<Owner, IconName> = { me: STATE_ICON.mine, team: STATE_ICON.team, contact: STATE_ICON.contact };
 
 /** An address in groups of four, its middle left out: "0x A0b8 6991 … 3606 eB48". */
 function shortGrouped(text: string): string {
@@ -22,53 +22,108 @@ function shortGrouped(text: string): string {
   return `${prefix} ${groups(body.slice(0, 8))} … ${groups(body.slice(-8))}`.trim();
 }
 
+type Sort = "name" | "newest";
+const byName = (x: Entry, y: Entry) => x.label.localeCompare(y.label);
+// Entries from before Kenning kept the date go last, by name.
+const newestFirst = (x: Entry, y: Entry) => (y.added_at ?? "").localeCompare(x.added_at ?? "") || byName(x, y);
+
+// How this window was left: the order and the folded groups. Only a
+// convenience, so storage that is blocked or cleared just means the defaults.
+const SORT_KEY = "kenning.book.sort";
+const FOLDED_KEY = "kenning.book.folded";
+function recall<T>(key: string, fallback: T): T {
+  try {
+    const v = localStorage.getItem(key);
+    return v ? (JSON.parse(v) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function remember(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Not kept; the defaults come back next time.
+  }
+}
+
 export async function bookView(main: HTMLElement, overview: Overview, refresh: () => Promise<void>) {
-  const books = await ipc.listBooks();
+  let books = await ipc.listBooks();
   const notice = h("div");
   const say = (text: string, error = false) => clear(notice, h("div", { class: `notice${error ? " error" : ""}` }, text));
   const watching = overview.config.clipboard === "watch";
+  let sort = recall<Sort>(SORT_KEY, "name");
+  const folded = new Set(recall<string[]>(FOLDED_KEY, []));
+  const groupNames = () =>
+    [...new Set(books.flatMap((b) => b.entries.flatMap((e) => (e.group ? [e.group] : []))))].sort((x, y) => x.localeCompare(y));
 
-  const filter = h("input", { type: "search", placeholder: "Search by name, note or address", "aria-label": "Filter" });
+  const filter = h("input", { type: "search", placeholder: "Search by name, note, group or address", "aria-label": "Filter" });
   const lists = h("div");
   const draw = (animate = false) => {
     const q = filter.value.trim().toLowerCase();
     clear(
       lists,
-      books.map((b) => bookSection(b, q, overview, { refresh, say, openAdd, watching })),
+      books.map((b) => bookSection(b, q, overview, ctx)),
     );
     if (animate) void rise(lists.querySelectorAll(".entry"), { y: 8, gap: 0.03 });
   };
   filter.addEventListener("input", () => draw());
+  /** After an edit or a renamed group: read the books again, keep the search. */
+  const reloadList = async () => {
+    books = await ipc.listBooks();
+    draw();
+  };
 
-  const addArea = h("div");
-  // The form slides down and fades in while its room opens, so the search
-  // and the list below follow it; it leaves the same way, exactly reversed.
-  // A smooth curve, not a spring: a spring overshoots the height and wobbles.
-  const OPEN = { duration: 0.3, ease: [0.22, 1, 0.36, 1] } as const;
-  const CLOSE = { duration: 0.3, ease: [0.64, 0, 0.78, 0] } as const;
-  const room = (from: number, to: number, how: typeof OPEN | typeof CLOSE) => {
-    addArea.style.overflow = "hidden";
-    return move(addArea, { height: [from, to] }, how).then(() => {
-      addArea.style.height = "";
-      addArea.style.overflow = "";
-    });
+  // Adding and changing an address both happen in a sheet over the list.
+  let sheet = false;
+  const openAdd = async () => {
+    if (sheet) return;
+    sheet = true;
+    const outcome = await entrySheet({ groups: groupNames() });
+    sheet = false;
+    if (outcome) await refresh();
   };
-  const openAdd = () => {
-    if (addArea.firstChild) return addArea.querySelector<HTMLElement>("input")?.focus();
-    const form = addForm(refresh, closeAdd);
-    clear(addArea, form);
-    addArea.style.overflow = "hidden";
-    void room(0, addArea.scrollHeight, OPEN);
-    void move(form, { opacity: [0, 1], y: [-8, 0] }, OPEN);
+  const edit = async (e: Entry) => {
+    if (sheet) return;
+    sheet = true;
+    const outcome = await entrySheet({ entry: e, groups: groupNames() });
+    sheet = false;
+    // A removal changes the counts in the header too; an edit only the list.
+    if (outcome === "removed") await refresh();
+    else if (outcome === "saved") await reloadList();
   };
-  const closeAdd = async () => {
-    const form = addArea.firstElementChild;
-    if (!form) return;
-    addArea.style.overflow = "hidden";
-    const full = addArea.offsetHeight;
-    await Promise.all([room(full, 0, CLOSE), move(form, { opacity: [1, 0], y: [0, -8] }, CLOSE)]);
-    clear(addArea);
+
+  const ctx: Ctx = {
+    refresh,
+    reloadList,
+    say,
+    openAdd,
+    edit,
+    // A row opens over the list; a change made from there redraws it, the search kept.
+    view: (e) => addressSheet(e.address.text, { network: overview.config.network, watching, changed: reloadList }),
+    watching,
+    sort: () => sort,
+    folded,
+    fold: (key, fold) => {
+      if (fold) folded.add(key);
+      else folded.delete(key);
+      remember(FOLDED_KEY, [...folded]);
+    },
   };
+
+  const order = segmented<Sort>(
+    "Order",
+    [
+      { value: "name", label: "Name" },
+      { value: "newest", label: "Newest" },
+    ],
+    sort,
+    (v) => {
+      sort = v;
+      remember(SORT_KEY, v);
+      draw(true);
+    },
+  );
 
   const more = h("button", { class: "btn icon-btn", title: "More", "aria-label": "More actions" }, icon("more", 18));
   more.addEventListener("click", () =>
@@ -123,13 +178,11 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
       "header",
       {},
       h("h1", {}, "Address book"),
-      h("p", { class: "lead" }, metaChip("user", `${overview.book_count} yours`), metaChip("landmark", `${overview.public_label_count} public labels built in`)),
       h("span", { class: "spacer" }),
       more,
       h("button", { class: "btn primary", onclick: openAdd }, icon("plusCircle", 16), "Add address"),
     ),
-    addArea,
-    overview.book_count ? h("label", { class: "search" }, icon("search", 16), filter) : null,
+    overview.book_count ? h("div", { class: "book-tools" }, h("label", { class: "search" }, icon("search", 16), filter), order) : null,
     notice,
     lists,
   );
@@ -138,20 +191,27 @@ export async function bookView(main: HTMLElement, overview: Overview, refresh: (
 
 type Ctx = {
   refresh: () => Promise<void>;
+  reloadList: () => Promise<void>;
   say: (t: string, e?: boolean) => void;
   openAdd: () => void;
+  edit: (e: Entry) => void;
+  view: (e: Entry) => Promise<void>;
   watching: boolean;
+  sort: () => Sort;
+  folded: Set<string>;
+  fold: (key: string, folded: boolean) => void;
 };
 
 function bookSection(b: BookView, q: string, overview: Overview, ctx: Ctx): HTMLElement {
-  const match = (e: Entry) =>
-    !q || e.label.toLowerCase().includes(q) || (e.note ?? "").toLowerCase().includes(q) || e.address.text.toLowerCase().includes(q);
-  const entries = b.entries.filter(match).sort((x, y) => x.label.localeCompare(y.label));
+  const match = (e: Entry) => !q || [e.label, e.note, e.group, e.emoji, e.address.text].some((s) => s?.toLowerCase().includes(q));
+  const entries = b.entries.filter(match).sort(ctx.sort() === "newest" ? newestFirst : byName);
   const title = b.writable ? "Your book" : `Shared book: ${b.name}`;
 
   if (!b.entries.length) {
     return h("section", {}, h("h2", {}, title), b.writable ? emptyBook(overview, ctx) : h("div", { class: "empty" }, "This shared book is empty."));
   }
+  // Groups appear once the user has made one; until then, one plain list.
+  const grouped = b.entries.some((e) => e.group);
   return h(
     "section",
     {},
@@ -162,19 +222,105 @@ function bookSection(b: BookView, q: string, overview: Overview, ctx: Ctx): HTML
       h("span", { class: "muted" }, `${b.entries.length}`),
       !b.writable && h("span", { class: "meta-chip" }, icon("book", 12), "read-only"),
     ),
-    entries.length
-      ? h(
-          "ul",
-          { class: "entries" },
-          entries.map((e) => entryRow(e, b.writable, ctx)),
-        )
-      : h("div", { class: "empty" }, `No address matches “${q}”.`),
+    !entries.length
+      ? h("div", { class: "empty" }, `No address matches “${q}”.`)
+      : grouped
+        ? groupBlocks(b, entries, q, ctx)
+        : entryList(entries, b.writable, ctx),
   );
 }
 
-/** One address: who it belongs to, its name and note, the address, its chain. */
+function entryList(entries: Entry[], writable: boolean, ctx: Ctx): HTMLElement {
+  return h(
+    "ul",
+    { class: "entries" },
+    entries.map((e) => entryRow(e, writable, ctx)),
+  );
+}
+
+/** The user's groups by name, then the addresses in none of them. */
+function groupBlocks(b: BookView, entries: Entry[], q: string, ctx: Ctx): HTMLElement[] {
+  const by = new Map<string | null, Entry[]>();
+  for (const e of entries) by.set(e.group, [...(by.get(e.group) ?? []), e]);
+  const names = [...by.keys()].sort((x, y) => (x === null ? 1 : y === null ? -1 : x.localeCompare(y)));
+  return names.map((name) => groupBlock(b, name, by.get(name)!, q, ctx));
+}
+
+/** A group: a heading that folds it away, and its rows. While searching,
+ *  every group with a match is open, folded or not. */
+function groupBlock(b: BookView, name: string | null, entries: Entry[], q: string, ctx: Ctx): HTMLElement {
+  const key = `${b.name}/${name ?? ""}`;
+  let isFolded = !q && ctx.folded.has(key);
+  const list = entryList(entries, b.writable, ctx);
+  list.hidden = isFolded;
+
+  const toggle = h(
+    "button",
+    {
+      type: "button",
+      class: "group-toggle",
+      "aria-expanded": String(!isFolded),
+      onclick: () => {
+        isFolded = !isFolded;
+        if (!q) ctx.fold(key, isFolded);
+        // The whole card glides open or shut, as a day in the journal does:
+        // folding its rows alone left the empty card to vanish at the end.
+        fold(toggle, list, !isFolded);
+      },
+    },
+    icon("chevronDown", 16, "chev"),
+    h("span", { class: "group-name" }, name ?? "Other"),
+    h("span", { class: "muted" }, `${entries.length}`),
+  );
+
+  // Renaming a group renames it in every entry; an empty name ungroups them.
+  const rename = () => {
+    const field = h("input", { type: "text", class: "group-field", value: name ?? "", maxlength: "40", "aria-label": "Group name" });
+    const done = async (save: boolean) => {
+      field.onblur = null;
+      const to = field.value.trim();
+      if (!save || to === name) return void field.replaceWith(toggle);
+      try {
+        await ipc.renameGroup(name!, to);
+        if (ctx.folded.has(key)) ctx.fold(key, false);
+        toast(to ? `Renamed the group to “${to}”` : `Moved the addresses out of “${name}”`);
+        await ctx.reloadList();
+      } catch (e) {
+        field.replaceWith(toggle);
+        ctx.say(message(e), true);
+      }
+    };
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") void done(true);
+      else if (e.key === "Escape") {
+        e.stopPropagation();
+        void done(false);
+      }
+    });
+    field.onblur = () => void done(false);
+    toggle.replaceWith(field);
+    field.focus();
+    field.select();
+  };
+
+  return h(
+    "div",
+    { class: "group" },
+    h(
+      "div",
+      { class: "group-head" },
+      toggle,
+      b.writable &&
+        name !== null &&
+        h("button", { type: "button", class: "btn icon-btn", title: "Rename group", "aria-label": `Rename group ${name}`, onclick: rename }, icon("pencil", 14)),
+    ),
+    list,
+  );
+}
+
+/** One address: its picture or whose it is, its name and note, the address, its chain. */
 function entryRow(e: Entry, writable: boolean, ctx: Ctx): HTMLElement {
-  const details = () => ipc.showEntry(e.address.text).catch((err) => ctx.say(message(err), true));
+  const details = () => ctx.view(e).catch((err) => ctx.say(message(err), true));
   const copy = async (ev: Event) => {
     ev.stopPropagation();
     try {
@@ -185,24 +331,10 @@ function entryRow(e: Entry, writable: boolean, ctx: Ctx): HTMLElement {
       ctx.say(message(err), true);
     }
   };
-  const remove = async (ev: Event) => {
+  const edit = (ev: Event) => {
     ev.stopPropagation();
-    const ok = await confirmSheet({
-      title: `Remove “${e.label}”?`,
-      body: "Kenning stops naming this address. Lookalikes of it are then caught only while it is in your copy history.",
-      confirm: "Remove",
-      danger: true,
-    });
-    if (!ok) return;
-    try {
-      await ipc.removeEntry(e.address.text);
-      toast(`Removed “${e.label}”`);
-      await ctx.refresh();
-    } catch (err) {
-      ctx.say(message(err), true);
-    }
+    ctx.edit(e);
   };
-
   return h(
     "li",
     {
@@ -216,20 +348,25 @@ function entryRow(e: Entry, writable: boolean, ctx: Ctx): HTMLElement {
         void details();
       },
     },
-    h("span", { class: `ic owner-${e.owner}`, title: OWNER_WORD[e.owner] }, icon(OWNER_ICON[e.owner], 16)),
+    // A picture takes the tile; its tint and the word on the right still say whose it is.
+    h("span", { class: `ic ${tileClass(e.emoji, e.tint, e.owner)}`, title: OWNER_WORD[e.owner] }, e.emoji ? emojiMark(e.emoji, 22) : icon(OWNER_ICON[e.owner], 16)),
     h(
       "span",
       { class: "who" },
       h("strong", {}, e.label),
-      h("span", { class: "addr", title: e.address.text }, shortGrouped(e.address.text)),
-      e.note && h("span", { class: "note" }, e.note),
+      h(
+        "span",
+        { class: "line" },
+        h("span", { class: "addr", title: e.address.text }, shortGrouped(e.address.text)),
+        e.note && h("span", { class: "note" }, e.note),
+      ),
     ),
     h("span", { class: "meta" }, chainChip(e.address.chain), h("span", { class: "owner" }, OWNER_WORD[e.owner])),
     h(
       "span",
       { class: "acts" },
       h("button", { class: "btn icon-btn", title: "Copy address", "aria-label": `Copy ${e.label}`, onclick: copy }, icon("copy", 16)),
-      writable && h("button", { class: "btn icon-btn", title: "Remove", "aria-label": `Remove ${e.label}`, onclick: remove }, icon("x", 16)),
+      writable && h("button", { class: "btn icon-btn", title: "Edit or remove", "aria-label": `Edit ${e.label}`, onclick: edit }, icon("pencil", 15)),
     ),
   );
 }
@@ -283,60 +420,6 @@ function emptyBook(overview: Overview, ctx: Ctx): HTMLElement {
         h("span", { class: "ic" }, icon("checkCircle", 16)),
         h("span", {}, h("b", {}, "Binance deposits"), h("code", {}, "0x28C6 c062 … 1d60")),
         h("i", { class: "bar" }),
-      ),
-    ),
-  );
-}
-
-function addForm(refresh: () => Promise<void>, close: () => Promise<void>): HTMLElement {
-  const address = h("input", { type: "text", placeholder: "Paste an address", "aria-label": "Address", class: "addr" });
-  const label = h("input", { type: "text", placeholder: "e.g. Binance deposits", "aria-label": "Name" });
-  const owner = dropdown({ label: "Whose address", choices: OWNER_CHOICES, value: "me" });
-  const note = h("input", { type: "text", placeholder: "Optional", "aria-label": "Note" });
-  const preview = h("div", { class: "full" });
-  const error = h("div", { class: "full" });
-
-  // Show what Kenning already knows about the address while typing.
-  address.addEventListener("input", async () => {
-    const found = await ipc.recognizeText(address.value);
-    clear(preview, found[0] ? recognitionCard(found[0]) : null);
-  });
-
-  const save = async () => {
-    try {
-      await ipc.addEntry(address.value.trim(), label.value, owner.value, note.value || null);
-      toast(`Saved “${label.value.trim()}”`);
-      await close();
-      await refresh();
-    } catch (e) {
-      clear(error, h("div", { class: "notice error" }, message(e)));
-    }
-  };
-  label.addEventListener("keydown", (e) => e.key === "Enter" && void save());
-
-  setTimeout(() => address.focus());
-  return h(
-    "section",
-    { class: "card add-card" },
-    h("h2", {}, "New address"),
-    h(
-      "div",
-      { class: "form" },
-      h("label", {}, "Address"),
-      address,
-      preview,
-      h("label", {}, "Name"),
-      label,
-      h("label", {}, "Whose"),
-      owner.el,
-      h("label", {}, "Note"),
-      note,
-      error,
-      h(
-        "div",
-        { class: "full inline" },
-        h("button", { class: "btn primary", onclick: save }, "Save"),
-        h("button", { class: "btn", onclick: close }, "Cancel"),
       ),
     ),
   );
