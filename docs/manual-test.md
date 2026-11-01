@@ -23,7 +23,17 @@ cd apps/desktop; npx tauri dev
 - [ ] Ctrl+Alt+D with nothing selected uses the clipboard and says so; with a lookalike selected, the lookalike window opens instead.
 - [ ] In a terminal running a program, Ctrl+Alt+D with nothing selected does not interrupt it.
 - [ ] Esc, ✕ or clicking another window closes the details window; "Add to book" saves the address and the window shows it under its new name.
+- [ ] Book: "Add address" opens a sheet over the list; pick a picture and a background, a group, save. The row shows the picture on its tile; Esc and Cancel close the sheet; a click beside it closes it only while nothing was changed, and with an emoji picker open it only closes the picker.
+- [ ] Clicking a row of the book opens its details in a sheet over the list (no second window): copy, explorer, Edit (the edit sheet, with Remove) and Close; a click beside it closes it, a drag that starts on the address does not.
+- [ ] Sidebar: Address book, Check, Journal, Protection at the top, Settings and Shortcuts at the foot; Ctrl+1 to 5 open them in that order, and hovering a row names its key. The current row has a short blue bar at its left edge, and the bar follows Settings when the window is resized.
+- [ ] Tray → Pause watching: the tray icon shows a pause sign, and the sidebar shows "Watching paused" above Settings; Resume there removes both and the tray menu says "Pause watching" again. With "Only when I press the shortcut", no card.
 - [ ] Settings → Soft sounds off: badges are silent.
-- [ ] Journal lists checks, lookalikes and book changes.
-- [ ] Resource Monitor → Network: no connections from kenning.exe.
+- [ ] Journal lists checks, lookalikes and book changes; clicking one opens the same sheet over the journal, with "Add to book" for an address not yet named.
+- [ ] Onboarding preferences: "Start with Windows" and "Check for updates" are on; leaving both on, Kenning starts at the next sign-in and, about 15 s after starting, asks github.com for `latest.json` (and nothing else).
+- [ ] "Version 0.1.0" at the foot of the sidebar opens "What's new": one status row, then the changelog in the sheet's only scrolling area. "Check now" turns the row into "Checking for updates…", then "Kenning is up to date", or "Could not check for updates" with the reason while the repository is private or has no release. With automatic checks off, "Turn them on" opens Settings.
+- [ ] With a newer signed release published (see docs/releasing.md): "Update to X.Y.Z" appears in the sidebar and as the first item of the tray menu; "Install and restart" shows progress, then Kenning closes and opens the new version.
+- [ ] Check, Protection, the Journal and the Address book share one layout: the title with the page's one control on the right, a line under it, then the page. Check: "A text" / "Two addresses" switch in the header; "Try an example" under the two fields.
+- [ ] Protection: with the guard on, a line under the header says so, with "Turn off"; with it off, a notice with "Turn on". "Run the test" (in the header) counts the decoys under a bar ("Checking the Bitcoin decoy, 2 of 4…"); a clean run says so in one notice. What was caught is listed by day, as in the Journal.
+- [ ] With a clipper simulated (e.g. a PowerShell loop writing an address to the clipboard), the test shows "Something on this computer swaps addresses" and "See what happened"; the catch also appears under "What it caught". Clicking it (or Enter on it) opens a sheet with what happened, the facts, why it was taken for a swap and what to do now; "Show the file" opens Explorer with the program selected.
+- [ ] Resource Monitor → Network: no connections from kenning.exe with on-chain lookups and update checks off.
 - [ ] After 30 s without badges, Task Manager shows no msedgewebview2 processes under Kenning.
