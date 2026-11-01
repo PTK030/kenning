@@ -9,14 +9,16 @@ import { addressWithDiff, CHAIN_NAME } from "../address";
 import { clear, h } from "../dom";
 import { icon, type IconName } from "../icons";
 import { ipc, message } from "../ipc";
-import { draw, EASE_IN, EASE_OUT, move, POP, rise, SPRING, stagger } from "../motion";
-import type { Overview, Recognition } from "../types";
-import { group, KNOWN, POISON, shortAddr, spans } from "./demo";
+import { draw, EASE_IN, EASE_OUT, LEAVE, move, POP, rise, sink, SPRING, stagger } from "../motion";
+import type { Keys, Overview, Recognition } from "../types";
+import { group, KNOWN, KNOWN_RECOGNITION, LOOKALIKE_RECOGNITION, POISON, shortAddr, spans } from "./demo";
 import { sandbox } from "./sandbox";
 import { keysStep } from "./keys";
 import { playIntro } from "./intro";
 import { cue } from "../sound";
 import { chainMark, chainOf } from "../chainMarks";
+import { badgeEnter, badgeLeave, fillBadge, fillLookalike, lookalikeEnter } from "../alerts";
+import { titlebar } from "../titlebar";
 import iconUrl from "../../../src-tauri/icons/128x128@2x.png";
 
 /** A real stablecoin contract, recognised by its public label. */
@@ -40,13 +42,23 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     step: 0,
     watch: c.clipboard === "watch" || !c.onboarded,
     sounds: c.sounds,
-    autostart: c.autostart,
+    // A first run offers these on, said plainly on the preferences step:
+    // a Kenning that is not running guards nothing, and one that is out
+    // of date misses what the newer rules catch.
+    autostart: c.onboarded ? c.autostart : true,
+    updates: c.onboarded ? c.update_check : true,
     network: c.network,
+    // The guard reads every copy, so on a first run it follows the mode
+    // chosen (on with "Every time I copy") until it is switched by hand.
+    guard: c.onboarded ? c.guard : true,
+    guardChosen: c.onboarded,
     added: [] as Added[],
     saved: false,
   };
   /** Timers and loops owned by the current step, stopped when it leaves. */
   let stops: (() => void)[] = [];
+  /** Counts content swaps, so only the last of quick clicks is drawn. */
+  let swaps = 0;
   const later = (fn: () => void, ms: number) => {
     const t = setTimeout(fn, ms);
     stops.push(() => clearTimeout(t));
@@ -103,8 +115,10 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     await ipc.saveConfig({
       ...fresh,
       clipboard: s.watch ? "watch" : "shortcut",
+      guard: s.guard,
       sounds: s.sounds,
       autostart: s.autostart,
+      update_check: s.updates,
     });
     if (fresh.network !== s.network) await ipc.setNetwork(s.network);
     s.saved = true;
@@ -238,24 +252,10 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           bullet("checkCircle", "mine", "A badge for addresses you know", "It appears in the corner for a few seconds with the name you gave it, and never takes focus from what you are doing."),
           bullet("alert", "look", "A window when one only looks familiar", "Both addresses in full, every difference marked, and one button that puts the right one back. It stays until you choose."),
         ],
-        h(
-          "div",
-          { class: "ob-how" },
-          h(
-            "div",
-            { class: "ob-badge" },
-            h("span", { class: "tile" }, icon("checkCircle", 20)),
-            h("span", { class: "t" }, h("b", {}, "Binance deposits"), h("code", {}, "0x28C6 c062 … 1d60")),
-            h("i", { class: "bar" }),
-          ),
-          h(
-            "div",
-            { class: "ob-look" },
-            h("div", { class: "top" }, icon("alert", 18), h("b", {}, "This is not your Binance address.")),
-            addressWithDiff(group(POISON), spans(POISON, KNOWN)),
-            h("span", { class: "fix" }, icon("copy", 14), "Copy the correct address"),
-          ),
-        ),
+        // The real badge and the real lookalike window, built by the same
+        // code as the windows (alerts.ts), only smaller: a picture that can
+        // never promise what the app does not do.
+        h("div", { class: "ob-how", inert: true }, h("div", { class: "ob-badge" }, demoBadge()), h("div", { class: "ob-look" }, demoLookalike(c.keys))),
       ),
 
     try: () => {
@@ -274,38 +274,72 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
 
     clipboard: () => {
       const visual = h("div", { class: "ob-mode" });
-      const cards = h("div", { class: "ob-choices" });
-      const paint = () => {
-        clear(
-          cards,
-          choice(false, "keyboard", `Only when I press ${c.shortcut}`, "Recommended to start. Kenning reads nothing until you ask, then checks what is on the clipboard."),
-          choice(true, "clipboard", "Every time I copy", "Kenning checks each copy as it happens. Only single addresses are looked at; other text is ignored and never stored."),
-        );
-        drawMode(visual);
-      };
+      // The cards stay; only their state changes, so their colours ease
+      // from one to the other instead of being drawn anew.
       const choice = (value: boolean, ic: IconName, title: string, text: string) =>
         h(
           "button",
           {
             class: "ob-choice",
             "aria-pressed": s.watch === value ? "true" : "false",
-            onclick: () => {
+            onclick: async () => {
               if (s.watch === value) return;
               s.watch = value;
+              choices.forEach((b, i) => b.setAttribute("aria-pressed", String(i === Number(value))));
+              if (!s.guardChosen) s.guard = guardInput.checked = value;
               if (s.sounds) cue("on");
-              paint();
+              // The picture shown leaves the way the next one comes in.
+              const mine = ++swaps;
+              await move(visual.firstElementChild, { opacity: 0, scale: 0.94 }, LEAVE);
+              if (mine !== swaps) return;
+              drawMode(visual);
               void move(visual.firstElementChild, { opacity: [0, 1], scale: [0.94, 1] }, SPRING);
             },
           },
           h("span", { class: "ic" }, icon(ic, 20)),
           h("span", {}, h("strong", {}, title), h("span", { class: "muted" }, text)),
         );
-      paint();
+      const choices = [
+        choice(false, "keyboard", `Only when I press ${c.shortcut}`, "Recommended to start. Nothing is read until you ask."),
+        choice(true, "clipboard", "Every time I copy", "Each copy is checked as it happens. Only addresses are looked at; other text is never kept."),
+      ];
+      const cards = h("div", { class: "ob-choices" }, ...choices);
+      // Malware that swaps a copied address for its own: a separate watch,
+      // said plainly, since it reads every copy whichever mode is chosen.
+      const guardInput = h("input", {
+        type: "checkbox",
+        role: "switch",
+        checked: s.guard,
+        onchange: (e: Event) => {
+          s.guard = (e.target as HTMLInputElement).checked;
+          s.guardChosen = true;
+          if (s.sounds) cue(s.guard ? "on" : "off");
+        },
+      });
+      const guard = h(
+        "div",
+        { class: "ob-toggles" },
+        h(
+          "label",
+          { class: "ob-toggle" },
+          h("span", { class: "ic" }, icon("shield", 18)),
+          h(
+            "span",
+            {},
+            h("strong", {}, "Clipboard guard"),
+            h("span", { class: "muted" }, "Warns if a program swaps an address you copied. Reads every copy, keeps none of it."),
+          ),
+          guardInput,
+          h("i", { class: "switch" }),
+        ),
+      );
+      drawMode(visual);
       return panel(
         [
           h("h1", {}, "When should Kenning look?"),
           h("p", { class: "lead" }, "Pick one. You can switch any time from the tray icon."),
           cards,
+          guard,
           h("p", { class: "muted small" }, "Content that password managers mark as private is skipped before it is read, in both modes."),
         ],
         visual,
@@ -348,7 +382,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       const save = async () => {
         if (!found || !label.value.trim()) return;
         try {
-          await ipc.addEntry(found.address.text, label.value.trim(), "me", null);
+          await ipc.addEntry(found.address.text, { label: label.value.trim(), owner: "me", note: null, emoji: null, tint: null, group: null });
           s.added.unshift({ label: label.value.trim(), address: found.address.text, chain: CHAIN_NAME[found.address.chain] });
           label.value = address.value = "";
           clear(preview);
@@ -398,7 +432,7 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
     },
 
     prefs: () => {
-      const toggle = (key: "sounds" | "autostart" | "network", ic: IconName, title: string, text: string) => {
+      const toggle = (key: "sounds" | "autostart" | "updates" | "network", ic: IconName, title: string, text: string) => {
         const input = h("input", {
           type: "checkbox",
           role: "switch",
@@ -406,7 +440,11 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           onchange: (e: Event) => {
             s[key] = (e.target as HTMLInputElement).checked;
             if (s.sounds || key === "sounds") cue(s[key] ? "on" : "off");
-            if (key === "network") paintHosts();
+            if (key === "network" || key === "updates") {
+              // What is listed leaves the way it came before the other list.
+              const mine = ++swaps;
+              void sink(hosts.children, { y: 6 }).then(() => mine === swaps && paintHosts());
+            }
           },
         });
         return h("label", { class: "ob-toggle" }, h("span", { class: "ic" }, icon(ic, 18)), h("span", {}, h("strong", {}, title), h("span", { class: "muted" }, text)), input, h("i", { class: "switch" }));
@@ -421,13 +459,11 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
             ? h(
                 "ul",
                 { class: "ob-files ob-hostlist" },
-                // Pairs of host and what it is for, e.g. "EVM addresses
-                // (Ethereum mainnet)": the network leads, with its mark;
-                // the host it asks sits under it.
-                overview.hosts.map(([host, why]) => {
-                  const chain = chainOf(why);
-                  const net = why.replace(/ addresses.*$/, "");
-                  const note = /\((.+)\)/.exec(why)?.[1];
+                // Pairs of host and what it is for ("EVM addresses on Base"),
+                // one row per chain: its mark, its name and the networks
+                // asked, then the host (or how many, listed in the tooltip).
+                hostRows(overview.hosts).map(({ net, nets, hosts: on }) => {
+                  const chain = chainOf(net);
                   return h(
                     "li",
                     {},
@@ -435,8 +471,8 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
                     h(
                       "span",
                       { class: "net" },
-                      h("span", { class: "name" }, h("b", {}, net), note && h("span", { class: "note" }, `${note[0].toUpperCase()}${note.slice(1)}`)),
-                      h("code", { title: host }, host),
+                      h("span", { class: "name" }, h("b", {}, net), h("span", { class: "note", title: nets.join(", ") || undefined }, nets.length ? nets.join(", ") : "Mainnet")),
+                      h("code", { title: on.join("\n") }, on.length === 1 ? on[0] : `${on.length} hosts`),
                     ),
                   );
                 }),
@@ -460,9 +496,12 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
             "p",
             { class: "ob-hosts-foot" },
             icon("info", 14),
-            s.network
-              ? "Only the address is sent, never your book or labels. Answers are kept for an hour."
-              : "No accounts, no analytics, no update checks. Turn lookups on any time in Settings.",
+            [
+              s.network
+                ? "Only the address is sent, never your book or labels. Answers are kept for an hour."
+                : "No accounts, no analytics. Turn lookups on any time in Settings.",
+              s.updates ? " Update checks ask github.com for the latest version, and send nothing of yours." : " No update checks.",
+            ].join(""),
           ),
         );
         void rise(hosts.querySelectorAll("li, .ob-hosts-foot"), { y: 6, gap: 0.04 });
@@ -471,24 +510,31 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       return panel(
         [
           h("h1", {}, "A few preferences."),
-          toggle("sounds", "volume", "Soft sounds", "A short chime for a known address, a lower two-note sound for a lookalike."),
-          toggle("autostart", "power", "Start with Windows", "Kenning waits in the tray from the moment you sign in."),
-          toggle("network", "globe", "On-chain lookups", "Shows whether an address was ever used. Only the address is sent, to one public provider per chain."),
+          // One list, as in Settings: four cards of their own did not fit.
+          h(
+            "div",
+            { class: "ob-toggles" },
+            toggle("sounds", "volume", "Soft sounds", "A chime for a known address, a lower one for a lookalike."),
+            toggle("autostart", "power", "Start with Windows", "Waits in the tray from the moment you sign in."),
+            toggle("updates", "download", "Check for updates", "Every 12 hours. Installs only when you say so, and only if signed."),
+            toggle("network", "globe", "On-chain lookups", "Shows whether an address was ever used. Only the address is sent."),
+          ),
         ],
         hosts,
       );
     },
 
     done: () => {
-      const hint = h("p", { class: "ob-try-hint muted" });
+      // The answer to a click, right under the buttons: what happened, then
+      // where to look, quieter.
+      const hint = h("p", { class: "ob-try-hint", "aria-live": "polite" });
       const tryCopy = (text: string, what: string) => async () => {
         try {
           await navigator.clipboard.writeText(text);
-          hint.textContent = s.watch
-            ? `Copied ${what}. Watch the ${what === "a lookalike" ? "middle of the screen" : "corner of the screen"}.`
-            : `Copied ${what}. Now press ${c.shortcut}.`;
+          const next = s.watch ? `Watch the ${what === "a lookalike" ? "middle" : "corner"} of the screen.` : `Now press ${c.shortcut}.`;
+          clear(hint, icon("copy", 14), h("strong", {}, `Copied ${what}.`), h("span", {}, next));
         } catch {
-          hint.textContent = `Copy this yourself: ${text}`;
+          clear(hint, icon("copy", 14), h("strong", {}, "Copy this yourself:"), h("code", {}, text));
         }
         void move(hint, { opacity: [0, 1], y: [6, 0] }, SPRING);
       };
@@ -498,12 +544,16 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
           h("p", { class: "lead" }, "Kenning is running. These buttons put a test address on your actual clipboard, the way copying from a wallet would."),
           h(
             "div",
-            { class: "ob-try" },
-            h("button", { class: "btn", onclick: tryCopy(SAMPLE, "USDC") }, icon("checkCircle", 16), "Copy a known address"),
-            h("button", { class: "btn", onclick: tryCopy(SAMPLE_LOOKALIKE, "a lookalike") }, icon("alert", 16), "Copy a lookalike"),
+            { class: "ob-trygroup" },
+            h(
+              "div",
+              { class: "ob-try" },
+              h("button", { class: "btn", onclick: tryCopy(SAMPLE, "USDC") }, icon("checkCircle", 16), "Copy a known address"),
+              h("button", { class: "btn", onclick: tryCopy(SAMPLE_LOOKALIKE, "a lookalike") }, icon("alert", 16), "Copy a lookalike"),
+            ),
+            hint,
           ),
-          hint,
-          h("p", { class: "muted small" }, "Kenning lives in the tray. Right-click its icon for settings, pause and the address book."),
+          h("p", { class: "ob-aside" }, "Kenning lives in the tray. Right-click its icon for settings, pause and the address book."),
         ],
         h("div", { class: "ob-done" }, h("div", { class: "seal" }, icon("check", 40))),
       );
@@ -528,18 +578,19 @@ export function welcomeView(main: HTMLElement, overview: Overview, done: () => P
       }, 1000);
     },
     how: (p) => {
-      const badge = p.querySelector<HTMLElement>(".ob-badge")!;
+      // The badge comes and goes as the real one does, its bar counting down;
+      // the window drops in and lights its differences as the real one does.
+      const badge = p.querySelector<HTMLElement>(".ob-badge .badge-card")!;
       const look = p.querySelector<HTMLElement>(".ob-look")!;
       const cycle = () => {
-        void move(badge, { opacity: [0, 1], x: [24, 0] }, SPRING);
+        badgeEnter(badge);
         void move(badge.querySelector(".bar"), { scaleX: [1, 0] }, { duration: 3.2, ease: "linear" });
-        draw(badge.querySelector("svg"), { delay: 0.1 });
-        later(() => void move(badge, { opacity: 0, x: 14 }, { duration: 0.24, ease: EASE_IN }), 3300);
+        later(() => void badgeLeave(badge), 3300);
       };
       cycle();
       every(cycle, 4200);
       void move(look, { opacity: [0, 1], y: [18, 0] }, { ...SPRING, delay: 0.3 });
-      void move(look.querySelectorAll(".diff"), { opacity: [0.2, 1] }, { duration: 0.3, delay: stagger(0.04, { startDelay: 0.7 }) });
+      later(() => lookalikeEnter(look.querySelector<HTMLElement>(".look-card")!, 0), 300);
     },
     clipboard: () => undefined,
     done: (p) => {
@@ -593,4 +644,36 @@ function bullet(ic: IconName, tone: string, title: string, text: string) {
   return h("div", { class: `ob-bullet ${tone}` }, h("span", { class: "ic" }, icon(ic, 18)), h("div", {}, h("strong", {}, title), h("p", { class: "muted" }, text)));
 }
 
+/** The hosts Kenning asks, one row per chain: EVM is asked on several
+ *  networks, each through its own host. */
+function hostRows(pairs: [string, string][]): { net: string; nets: string[]; hosts: string[] }[] {
+  const rows = new Map<string, { net: string; nets: string[]; hosts: string[] }>();
+  for (const [host, why] of pairs) {
+    const net = why.split(" ")[0];
+    const row = rows.get(net) ?? { net, nets: [], hosts: [] };
+    row.hosts.push(host);
+    const on = / on (.+)$/.exec(why)?.[1];
+    if (on) row.nets.push(on);
+    rows.set(net, row);
+  }
+  return [...rows.values()];
+}
 
+// ---- The pictures of the badge and the lookalike window --------------------
+
+/** The corner badge for the address you know. */
+function demoBadge(): HTMLElement {
+  const card = h("div");
+  fillBadge(card, { kind: "recognition", recognition: KNOWN_RECOGNITION, seconds: 4, sounds: false });
+  return card;
+}
+
+/** The lookalike window: its title bar (a picture of one: it moves no
+ *  window), then its content. */
+function demoLookalike(keys: Keys): HTMLElement {
+  const bar = titlebar({ title: "Not the address you know", sign: "alert", onClose: () => undefined }).el;
+  for (const el of [bar, ...bar.querySelectorAll("[data-tauri-drag-region]")]) el.removeAttribute("data-tauri-drag-region");
+  const card = h("div");
+  fillLookalike(card, { recognition: LOOKALIKE_RECOGNITION, variant: 0, sounds: false }, keys, {}, false);
+  return h("div", { class: "look-window" }, bar, card);
+}

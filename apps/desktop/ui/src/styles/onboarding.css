@@ -64,6 +64,10 @@ main.onboarding {
   min-height: 0;
   display: grid;
   overflow: hidden;
+  /* Room for rings drawn outside an edge (a chosen card, a focus outline)
+     without moving the content: the clip reaches 6px further out. */
+  padding-inline: 6px;
+  margin-inline: -6px;
 }
 
 .ob-panel {
@@ -348,94 +352,55 @@ main.onboarding {
   align-content: space-between;
 }
 
+/* The real badge and lookalike window (alerts.ts), at their own sizes and
+   scaled down as a whole, so the picture is the app, only smaller. */
 .ob-badge {
-  position: relative;
   justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 250px;
-  padding: 11px 12px 13px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #fff;
-  color: #16202a;
-  box-shadow: 0 14px 30px -12px rgb(0 0 0 / 60%);
-}
-
-.ob-badge .tile {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  color: #1f7a3a;
-  background: #e7f4eb;
-}
-
-.ob-badge .t {
-  display: grid;
-  font-size: 12.5px;
-}
-
-.ob-badge code {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: #4b5764;
-}
-
-.ob-badge .bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: #1f7a3a;
-  transform-origin: left center;
+  width: 384px;
+  zoom: 0.74;
+  /* The badge follows the system theme, as the real one does; the panel
+     around it is always graphite. */
+  color-scheme: light dark;
 }
 
 .ob-look {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 14px;
-  background: var(--v-bg);
-  border-top: 4px solid var(--v-look);
-  box-shadow: 0 20px 40px -16px rgb(0 0 0 / 70%);
+  width: 600px;
+  zoom: 0.55;
 }
 
-.ob-look .top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
+/* A window: Windows 11's rounded corners and a deep shadow. */
+.ob-look .look-window,
+.sbx-look .look-window {
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 8%),
+    0 30px 60px -20px rgb(0 0 0 / 80%);
 }
 
-.ob-look .top .icon {
-  color: var(--v-look);
-}
-
-.ob-look .addr {
-  font-size: 11.5px;
-}
-
-.ob-look .fix {
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border-radius: 8px;
-  background: #3a55c9;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
+.ob-look .titlebar .tb-buttons {
+  pointer-events: none;
 }
 
 /* Step 3: clipboard mode */
 .ob-choices {
   display: grid;
   gap: 10px;
+}
+
+/* Choosing a card eases its colours over; the one let go eases back on
+   the same clock, so the two read as one change. */
+.ob-choices .ob-choice {
+  transition:
+    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ob-choices .ob-choice .ic {
+  transition:
+    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* `.choice` and `.toggle` are the same controls, used in Settings. */
@@ -709,6 +674,35 @@ main.onboarding {
   opacity: 0.7;
 }
 
+/* Step 5: preferences. The switches as one list with hairlines between
+   (as in Settings), so all four fit beside the picture. */
+.ob-toggles {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ob-toggles .ob-toggle {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+}
+
+.ob-toggles .ob-toggle + .ob-toggle {
+  border-top: 1px solid var(--line);
+}
+
+.ob-toggles .ob-toggle .ic {
+  width: 30px;
+  height: 30px;
+}
+
+.ob-toggles .ob-toggle .muted {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
 /* Step 5: preferences */
 .ob-toggle,
 .toggle {
@@ -792,8 +786,47 @@ main.onboarding {
   flex-wrap: wrap;
 }
 
-.ob-try-hint {
+/* The buttons and the answer to them: one group, held close. */
+.ob-trygroup {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.ob-copy .ob-try-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
   min-height: 20px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.ob-try-hint svg {
+  flex: none;
+  color: var(--brand);
+}
+
+.ob-try-hint strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ob-try-hint code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* An aside, set apart from the task above it. */
+.ob-copy .ob-aside {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  max-width: 34em;
 }
 
 .ob-done {
@@ -970,6 +1003,17 @@ body.immersive #app::before {
   color: #4b5764;
 }
 
+/* A token's or network's mark in a chip: a small square tile, flat. */
+.meta-chip .chain-mark {
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.meta-chip:has(.chain-mark) {
+  gap: 5px;
+  padding-left: 3px;
+}
+
 .sbx-wallet ul {
   list-style: none;
   margin: 0;
@@ -1058,128 +1102,29 @@ body.immersive #app::before {
   color: #1f7a3a;
 }
 
+/* The real badge and lookalike window (alerts.ts), scaled down: the badge
+   in the corner, the window over the wallet. */
 .sbx-badge-slot {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 250px;
-}
-
-.sbx-badge {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px 12px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #1f2b38;
-  color: var(--v-ink);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 10%),
-    0 16px 30px -12px rgb(0 0 0 / 70%);
-}
-
-.sbx-badge .tile {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  color: var(--v-mine);
-  background: rgb(90 208 122 / 14%);
-}
-
-.sbx-badge.info .tile {
-  color: #f5b04e;
-  background: rgb(245 176 78 / 14%);
-}
-
-.sbx-badge .t {
-  display: grid;
-  font-size: 12.5px;
-}
-
-.sbx-badge .t span {
-  color: var(--v-ink-2);
-  font-size: 11.5px;
-}
-
-.sbx-badge .bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--v-mine);
-  transform-origin: left center;
-}
-
-.sbx-badge.info .bar {
-  background: #f5b04e;
+  width: 384px;
+  zoom: 0.66;
+  /* It follows the system theme, as the real badge does. */
+  color-scheme: light dark;
 }
 
 .sbx-look {
   position: absolute;
   inset: 50% 0 auto;
   translate: 0 -50%;
-  display: grid;
-  gap: 4px;
-  padding: 16px;
-  border-radius: 14px;
-  background: var(--v-bg);
-  border-top: 4px solid var(--v-look);
-  box-shadow: 0 30px 60px -18px rgb(0 0 0 / 80%);
-}
-
-.sbx-look .head {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 8px;
+  justify-content: center;
 }
 
-.sbx-look .head div {
-  display: grid;
-}
-
-.sbx-look .head span:not(.sign) {
-  font-size: 11.5px;
-  color: var(--v-ink-2);
-}
-
-.sbx-look .sign {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  color: var(--v-look);
-  background: var(--v-look-soft);
-}
-
-.sbx-look small {
-  color: var(--v-ink-2);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.sbx-look .addr {
-  font-size: 11.5px;
-  margin-bottom: 6px;
-}
-
-.sbx-look .actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 6px;
-}
-
-.sbx-look .btn.primary {
-  background: #3a55c9;
-  border-color: #3a55c9;
-  color: #fff;
+.sbx-look .look-window {
+  width: 600px;
+  zoom: 0.55;
 }
 
 /* ---- Keycaps, the shortcut list, the HUD and the "?" sheet -------------- */
@@ -1378,8 +1323,13 @@ body.immersive #app::before {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgb(10 14 20 / 55%);
-  backdrop-filter: blur(6px);
+  /* A plain shade, no blur: blurring the whole window again on every frame
+     of the fade made sheets stutter in WebView2. */
+  background: rgb(10 14 20 / 62%);
+}
+
+.sheet-overlay > .sheet-card {
+  will-change: transform, opacity;
 }
 
 .sheet-card {
@@ -1519,6 +1469,47 @@ body.immersive #app::before {
 
 .hud-demo > * {
   width: min(280px, 100%);
+}
+
+/* The real badge and lookalike window (alerts.ts), scaled to the stage. */
+.hud-demo > .hud-badge {
+  width: 384px;
+  zoom: 0.72;
+  color-scheme: light dark;
+}
+
+.hud-demo > .hud-look {
+  width: 600px;
+  zoom: 0.42;
+}
+
+.hud-demo > .hud-details {
+  width: 600px;
+  zoom: 0.4;
+}
+
+/* A window is taller than the other scenes: it may use the panel's room
+   below the stage rather than be cut off. */
+.hud-demo:has(> .hud-details, > .hud-look) {
+  overflow: visible;
+}
+
+.hud-details .details-window,
+.hud-look .look-window {
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 8%),
+    0 30px 60px -20px rgb(0 0 0 / 80%);
+}
+
+/* The key pressing the button: it lights as under a finger. */
+.hud-look .actions .primary.pressed {
+  filter: brightness(1.18);
+}
+
+.hud-look .actions .dismiss.pressed {
+  color: var(--ink);
 }
 
 .mini-look {
@@ -1835,13 +1826,9 @@ body.immersive #app::before {
   opacity: 0.8;
 }
 
-/* A network's mark on its own colour, lit from the top like the tiles. */
-.chain-mark {
-  flex: none;
-  display: grid;
-  place-items: center;
+/* The network marks themselves (chainMarks.ts) are styled in base.css. */
+.ob-hosts .chain-mark {
   border-radius: 9px;
-  background: var(--mark-bg);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 22%),
     inset 0 0 0 1px rgb(255 255 255 / 8%),

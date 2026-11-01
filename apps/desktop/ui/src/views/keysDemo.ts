@@ -4,58 +4,69 @@
 
 import { clear, h } from "../dom";
 import { icon } from "../icons";
-import { draw, EASE_IN, EASE_OUT, move, POP, SPRING } from "../motion";
-import { keycaps, type Shortcut } from "../shortcuts";
+import { badgeEnter, detailsEnter, fillBadge, fillDetails, fillLookalike, lookalikeEnter } from "../alerts";
+import { EASE_IN, EASE_OUT, move, POP, SPRING } from "../motion";
+import { titlebar } from "../titlebar";
+import { KNOWN_RECOGNITION, LOOKALIKE_RECOGNITION } from "./demo";
+import { DEFAULT_KEYS, keycaps, type Shortcut } from "../shortcuts";
 
 const SECTIONS = ["Address book", "Check", "Protection", "Journal", "Settings"];
 
 type Later = (fn: () => void, ms: number) => void;
 
-function badge(title: string, line: string): HTMLElement {
-  const bar = h("i", { class: "bar" });
-  const el = h(
-    "div",
-    { class: "sbx-badge mine" },
-    h("span", { class: "tile" }, icon("checkCircle", 18)),
-    h("span", { class: "t" }, h("b", {}, title), h("span", {}, line)),
-    bar,
-  );
-  void move(el, { opacity: [0, 1], x: [24, 0] }, SPRING);
-  draw(el.querySelector(".tile svg"), { delay: 0.08 });
+/** The real badge (alerts.ts) for the address you know, arriving as the
+ *  real one does, its bar counting down. */
+function badge(): HTMLElement {
+  const card = h("div");
+  const bar = fillBadge(card, { kind: "recognition", recognition: KNOWN_RECOGNITION, seconds: 3, sounds: false });
+  badgeEnter(card);
   void move(bar, { scaleX: [1, 0] }, { duration: 2.6, ease: "linear" });
-  return el;
+  return h("div", { class: "hud-badge" }, card);
 }
 
-function look(): { el: HTMLElement; fix: HTMLElement } {
-  const fix = h("span", { class: "mini-fix" }, icon("copy", 12), "Copy the correct address");
-  const el = h(
-    "div",
-    { class: "mini-look" },
-    h("div", { class: "top" }, icon("alert", 14), h("b", {}, "Not your Binance address")),
-    h("code", {}, "0x28C6 C0", h("mark", {}, "aa AAaA AAaa"), " … 1d60"),
-    h("div", { class: "row" }, fix, h("span", { class: "mini-link" }, "Dismiss")),
-  );
-  void move(el, { opacity: [0, 1], y: [10, 0] }, SPRING);
-  return { el, fix };
+/** The real lookalike window (alerts.ts), its title bar a picture of one. */
+function look(): { el: HTMLElement; fix: HTMLElement; dismiss: HTMLElement } {
+  const bar = titlebar({ title: "Not the address you know", sign: "alert", onClose: () => undefined }).el;
+  for (const el of [bar, ...bar.querySelectorAll("[data-tauri-drag-region]")]) el.removeAttribute("data-tauri-drag-region");
+  const card = h("div");
+  fillLookalike(card, { recognition: LOOKALIKE_RECOGNITION, variant: 0, sounds: false }, DEFAULT_KEYS, {}, false);
+  const el = h("div", { class: "hud-look", inert: true }, h("div", { class: "look-window" }, bar, card));
+  lookalikeEnter(card, 0);
+  return { el, fix: card.querySelector<HTMLElement>(".actions .primary")!, dismiss: card.querySelector<HTMLElement>(".actions .dismiss")! };
 }
 
 /** Act out `s` inside `box`. `key` is the key pressed (for Ctrl+1…5). */
 export function actOut(box: HTMLElement, s: Shortcut, key: string, later: Later) {
   switch (s.id) {
     case "check":
-      clear(box, badge("Binance deposits", "Checked: in your book"));
+      clear(box, badge());
       break;
 
     case "details": {
-      const el = h(
-        "div",
-        { class: "mini-look mini-details" },
-        h("div", { class: "top" }, icon("search", 14), h("b", {}, "Binance deposits")),
-        h("code", {}, "0x28C6 c062 98d5 … 1d60"),
-        h("div", { class: "row" }, h("span", { class: "mini-link" }, "1,204 transactions · Ethereum")),
-      );
-      clear(box, el);
-      void move(el, { opacity: [0, 1], scale: [0.94, 1] }, POP);
+      // The real details window (alerts.ts), its on-chain row answered as
+      // a lookup would answer it.
+      const bar = titlebar({ title: "Address details", sign: "search", onClose: () => undefined }).el;
+      for (const el of [bar, ...bar.querySelectorAll("[data-tauri-drag-region]")]) el.removeAttribute("data-tauri-drag-region");
+      const card = h("div");
+      const facts = fillDetails(card, { recognition: KNOWN_RECOGNITION, source: "selection", network: true }, {}, false);
+      facts.paintChain({
+        state: "ok",
+        summary: "1,204+ transactions · Ethereum via Blockscout",
+        active: true,
+        onchain: {
+          network: "Ethereum",
+          source: "Blockscout",
+          active: true,
+          transactions: 1204,
+          transactions_capped: true,
+          contract: false,
+          verified: null,
+          name: null,
+          fetched_at: new Date().toISOString(),
+        },
+      });
+      clear(box, h("div", { class: "hud-details", inert: true }, h("div", { class: "details-window k-mine" }, bar, card)));
+      detailsEnter(card);
       break;
     }
 
@@ -68,7 +79,7 @@ export function actOut(box: HTMLElement, s: Shortcut, key: string, later: Later)
       }, 380);
       later(async () => {
         await move(l.el, { opacity: 0, y: -8 }, { duration: 0.2, ease: EASE_IN });
-        clear(box, badge("Binance deposits", "Copied the correct address"));
+        clear(box, badge());
       }, 680);
       break;
     }
@@ -77,7 +88,7 @@ export function actOut(box: HTMLElement, s: Shortcut, key: string, later: Later)
       const l = look();
       clear(box, l.el);
       later(async () => {
-        l.el.querySelector(".mini-link")?.classList.add("pressed");
+        l.dismiss.classList.add("pressed");
         await move(l.el, { opacity: 0, y: 18, scale: 0.97 }, { duration: 0.26, ease: EASE_IN });
         const note = h("p", { class: "mini-note" }, "Closed. Nothing was copied.");
         clear(box, note);

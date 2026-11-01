@@ -4,13 +4,16 @@
 // one, and one click to take the right address back. Nothing here touches
 // the real clipboard.
 
-import { addressWithDiff, detailLine, metaChip } from "../address";
+import { chainMark, tokenMark } from "../chainMarks";
 import { clear, h } from "../dom";
-import { icon, type IconName } from "../icons";
-import { draw, EASE_IN, move, POP, rise, SPRING, stagger } from "../motion";
+import { icon } from "../icons";
+import { draw, EASE_IN, move, POP, rise, SPRING } from "../motion";
 import { cue, playFor } from "../sound";
-import type { State } from "../types";
-import { group, KNOWN, POISON, shortAddr, spans } from "./demo";
+import type { Recognition, State } from "../types";
+import { KNOWN, KNOWN_RECOGNITION, LOOKALIKE_RECOGNITION, NEW_ADDRESS, NEW_RECOGNITION, POISON, shortAddr } from "./demo";
+import { badgeEnter, badgeLeave, fillBadge, fillLookalike, lookalikeEnter } from "../alerts";
+import { titlebar } from "../titlebar";
+import { DEFAULT_KEYS } from "../shortcuts";
 
 type Task = "known" | "poison" | "fix";
 
@@ -73,21 +76,16 @@ export function sandbox(opts: {
   const badgeSlot = h("div", { class: "sbx-badge-slot" });
   let badgeTimer = 0;
 
-  const showBadge = (ic: IconName, title: string, line: string, tone: "mine" | "info") => {
+  // The real badge (alerts.ts) for what was copied, coming and going as
+  // the real one does, its bar counting down.
+  const showBadge = (recognition: Recognition) => {
     clearTimeout(badgeTimer);
-    const bar = h("i", { class: "bar" });
-    const badge = h(
-      "div",
-      { class: `sbx-badge ${tone}` },
-      h("span", { class: "tile" }, icon(ic, 18)),
-      h("span", { class: "t" }, h("b", {}, title), h("span", {}, ...detailLine(line))),
-      bar,
-    );
+    const badge = h("div");
+    const bar = fillBadge(badge, { kind: "recognition", recognition, seconds: 4, sounds: false });
     clear(badgeSlot, badge);
-    void move(badge, { opacity: [0, 1], x: [24, 0], scale: [0.96, 1] }, SPRING);
-    draw(badge.querySelector(".tile svg"), { delay: 0.08 });
+    badgeEnter(badge);
     void move(bar, { scaleX: [1, 0] }, { duration: 3.4, ease: "linear" });
-    badgeTimer = window.setTimeout(() => void move(badge, { opacity: 0, x: 14 }, { duration: 0.24, ease: EASE_IN }), 3500);
+    badgeTimer = window.setTimeout(() => void badgeLeave(badge), 3500);
   };
 
   const wallet = h("div", { class: "sbx-wallet" });
@@ -122,38 +120,36 @@ export function sandbox(opts: {
     await move(el, { opacity: 0, y: 16, scale: 0.97 }, { duration: 0.22, ease: EASE_IN });
     el.remove();
   };
+  // The real lookalike window (alerts.ts) over the wallet: its title bar,
+  // its content, its entrance. Its buttons work as in the app: the right
+  // address goes back on the clipboard (and, with every copy watched, its
+  // badge follows), or the window goes.
   const openLook = () => {
     if (look) return;
-    const fix = h("button", { class: "btn primary" }, icon("copy", 14), "Copy the correct address");
-    const dismiss = h("button", { class: "link muted" }, "Dismiss");
-    look = h(
-      "div",
-      { class: "sbx-look", role: "alertdialog", "aria-label": "Not the address you know" },
-      h("div", { class: "head" }, h("span", { class: "sign" }, icon("alert", 18)), h("div", {}, h("b", {}, "This is not your Binance address."), h("span", {}, "Matches 6 + 4 characters, 30 differ"))),
-      h("small", {}, "You copied"),
-      addressWithDiff(group(POISON), spans(POISON, KNOWN)),
-      h("small", {}, "Your Binance"),
-      addressWithDiff(group(KNOWN), spans(KNOWN, POISON)),
-      h("div", { class: "actions" }, fix, dismiss),
-    );
-    fix.addEventListener("click", () => {
-      void closeLook();
-      sound("mine");
-      showBadge("checkCircle", "Binance deposits", "Copied the correct address", "mine");
-      complete("fix");
-    });
-    dismiss.addEventListener("click", () => void closeLook());
+    const bar = titlebar({ title: "Not the address you know", sign: "alert", onClose: () => void closeLook() }).el;
+    for (const el of [bar, ...bar.querySelectorAll("[data-tauri-drag-region]")]) el.removeAttribute("data-tauri-drag-region");
+    const card = h("div");
+    fillLookalike(card, { recognition: LOOKALIKE_RECOGNITION, variant: 0, sounds: false }, DEFAULT_KEYS, {
+      copy: async () => {
+        void closeLook();
+        sound("mine");
+        showBadge(KNOWN_RECOGNITION);
+        complete("fix");
+      },
+      mine: async () => void closeLook(),
+      dismiss: () => void closeLook(),
+    }, false);
+    look = h("div", { class: "sbx-look" }, h("div", { class: "look-window", role: "alertdialog", "aria-label": "Not the address you know" }, bar, card));
     stage.appendChild(look);
     void move(wallet, { scale: 0.95, opacity: 0.4, filter: "blur(2px)" }, SPRING);
-    void move(look, { opacity: [0, 1], y: [-16, 0], scale: [0.96, 1] }, SPRING);
-    void move(look.querySelector(".sign"), { rotate: [0, -12, 10, -6, 4, 0] }, { duration: 0.6, delay: 0.12 });
-    void move(look.querySelectorAll(".diff"), { opacity: [0.2, 1], y: [-3, 0] }, { ...POP, delay: stagger(0.035, { startDelay: 0.25 }) });
-    fix.focus();
+    void move(look, { opacity: [0, 1] }, { duration: 0.2 });
+    lookalikeEnter(card, 0);
+    card.querySelector<HTMLButtonElement>(".actions .primary")?.focus();
   };
 
   clear(
     wallet,
-    h("div", { class: "sbx-head" }, h("b", {}, "Activity"), h("span", { class: "chips" }, metaChip("coins", "USDT"), metaChip("layers", "Ethereum"))),
+    h("div", { class: "sbx-head" }, h("b", {}, "Activity"), h("span", { class: "chips" }, h("span", { class: "meta-chip" }, tokenMark("usdt", 14), "USDT"), h("span", { class: "meta-chip" }, chainMark("evm", 14), "Ethereum"))),
     h(
       "ul",
       {},
@@ -165,13 +161,13 @@ export function sandbox(opts: {
       row("out", "Sent", KNOWN, "2,400 USDT", "3 days ago", () => {
         void closeLook();
         sound("mine");
-        showBadge("checkCircle", "Binance deposits", "Yours · sent 3 days ago", "mine");
+        showBadge(KNOWN_RECOGNITION);
         complete("known");
       }),
-      row("out", "Sent", "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", "120 USDT", "last week", () => {
+      row("out", "Sent", NEW_ADDRESS, "120 USDT", "last week", () => {
         void closeLook();
         sound("new");
-        showBadge("plusCircle", "New address", "First time you copied it", "info");
+        showBadge(NEW_RECOGNITION);
       }),
     ),
   );
