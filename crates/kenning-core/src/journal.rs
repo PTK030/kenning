@@ -24,6 +24,8 @@ pub enum Action {
     /// The user clicked "This is mine" on a lookalike.
     MarkedMine,
     Added,
+    /// The user changed the name, note, picture or group of an entry.
+    Edited,
     Removed,
 }
 
@@ -35,6 +37,7 @@ impl Action {
             Action::CopiedCorrect => "copied correct",
             Action::MarkedMine => "marked mine",
             Action::Added => "added",
+            Action::Edited => "edited",
             Action::Removed => "removed",
         }
     }

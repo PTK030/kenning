@@ -19,7 +19,7 @@ pub mod lookalike;
 pub mod message;
 pub mod secret;
 
-pub use book::{Book, Entry, Owner};
+pub use book::{Book, Edit, Entry, Owner};
 pub use chain::{Address, AddressKey, Chain, ParseError, parse};
 pub use classify::{KnownKind, LookalikeMatch, Recognition, Recognizer, State};
 pub use config::{ClipboardMode, Config, Keys};

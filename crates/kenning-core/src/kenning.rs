@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use jiff::Timestamp;
 
-use crate::book::{Book, Entry, Owner};
+use crate::book::{Book, Edit, Entry, Owner};
 use crate::chain::{Address, AddressKey};
 use crate::classify::{Recognition, Recognizer, State};
 use crate::config::Config;
@@ -206,6 +206,23 @@ impl Kenning {
         self.personal.save()?;
         self.rebuild();
         Ok(added)
+    }
+
+    /// Change an entry of the personal book exactly as given, and save it.
+    pub fn edit(&mut self, key: &AddressKey, edit: Edit) -> Result<()> {
+        self.personal.edit(key, edit)?;
+        self.personal.save()?;
+        self.rebuild();
+        Ok(())
+    }
+
+    /// Rename a group of the personal book. Returns how many entries moved.
+    pub fn rename_group(&mut self, from: &str, to: &str) -> Result<usize> {
+        let moved = self.personal.rename_group(from, to)?;
+        if moved > 0 {
+            self.personal.save()?;
+        }
+        Ok(moved)
     }
 
     pub fn remove(&mut self, key: &AddressKey) -> Result<Option<Entry>> {

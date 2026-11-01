@@ -7,6 +7,9 @@
 //! label = "Binance"
 //! note = "my deposits"
 //! owner = "me"
+//! emoji = "🏦"
+//! tint = "blue"
+//! group = "Exchanges"
 //! added_at = "2026-10-10T12:00:00Z"
 //! ```
 
@@ -60,6 +63,13 @@ pub struct Entry {
     pub label: String,
     pub owner: Owner,
     pub note: Option<String>,
+    /// A picture of the user's choosing, shown beside the name.
+    pub emoji: Option<String>,
+    /// The background of the picture's tile, one of [`TINTS`]; none means
+    /// the app chooses one to suit the picture.
+    pub tint: Option<String>,
+    /// The user's own grouping in the book, e.g. "Exchanges".
+    pub group: Option<String>,
     pub added_at: Option<Timestamp>,
     pub source: Option<String>,
 }
@@ -71,6 +81,9 @@ impl Entry {
             label: label.into(),
             owner,
             note: None,
+            emoji: None,
+            tint: None,
+            group: None,
             added_at: Some(Timestamp::now()),
             source: None,
         }
@@ -92,6 +105,12 @@ struct RawEntry {
     owner: Owner,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     note: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    emoji: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tint: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    group: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     added_at: Option<Timestamp>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -184,11 +203,17 @@ impl Book {
             if entries.iter().any(|e: &Entry| e.address.key() == address.key()) {
                 return Err(entry_err(format!("{} is listed twice", raw.address)));
             }
+            let emoji = check_emoji(raw.emoji).map_err(|e| entry_err(e.to_string()))?;
+            let tint = check_tint(raw.tint).map_err(|e| entry_err(e.to_string()))?;
+            let group = check_group(raw.group).map_err(|e| entry_err(e.to_string()))?;
             entries.push(Entry {
                 address,
                 label: raw.label,
                 owner: raw.owner,
                 note: raw.note,
+                emoji,
+                tint,
+                group,
                 added_at: raw.added_at,
                 source: raw.source,
             });
@@ -218,17 +243,30 @@ impl Book {
 
     /// Add an entry, or replace the label, owner and note of an existing one.
     /// Returns `true` if the address was new.
-    pub fn upsert(&mut self, entry: Entry) -> Result<bool> {
+    pub fn upsert(&mut self, mut entry: Entry) -> Result<bool> {
         self.ensure_writable()?;
         if entry.label.trim().is_empty() {
             return Err(Error::Invalid("label must not be empty".into()));
         }
+        entry.emoji = check_emoji(entry.emoji)?;
+        entry.tint = check_tint(entry.tint)?;
+        entry.group = check_group(entry.group)?;
         let key = entry.address.key();
         if let Some(existing) = self.entries.iter_mut().find(|e| e.address.key() == key) {
             existing.label = entry.label;
             existing.owner = entry.owner;
+            // An import knows nothing of notes, pictures or groups: it keeps them.
             if entry.note.is_some() {
                 existing.note = entry.note;
+            }
+            if entry.emoji.is_some() {
+                existing.emoji = entry.emoji;
+            }
+            if entry.tint.is_some() {
+                existing.tint = entry.tint;
+            }
+            if entry.group.is_some() {
+                existing.group = entry.group;
             }
             if entry.source.is_some() {
                 existing.source = entry.source;
@@ -238,6 +276,46 @@ impl Book {
             self.entries.push(entry);
             Ok(true)
         }
+    }
+
+    /// Change what the user wrote about an address, exactly: an empty note,
+    /// picture or group clears it. The address itself never changes here.
+    pub fn edit(&mut self, key: &AddressKey, edit: Edit) -> Result<&Entry> {
+        self.ensure_writable()?;
+        let label = edit.label.trim();
+        if label.is_empty() {
+            return Err(Error::Invalid("label must not be empty".into()));
+        }
+        let emoji = check_emoji(edit.emoji)?;
+        let tint = check_tint(edit.tint)?;
+        let group = check_group(edit.group)?;
+        let e = self
+            .entries
+            .iter_mut()
+            .find(|e| &e.address.key() == key)
+            .ok_or_else(|| Error::Invalid("that address is not in the book".into()))?;
+        e.label = label.to_owned();
+        e.owner = edit.owner;
+        e.note = edit.note.map(|n| n.trim().to_owned()).filter(|n| !n.is_empty());
+        e.emoji = emoji;
+        e.tint = tint;
+        e.group = group;
+        Ok(e)
+    }
+
+    /// Move every entry of group `from` to `to`, or out of any group when
+    /// `to` is empty. Returns how many entries moved.
+    pub fn rename_group(&mut self, from: &str, to: &str) -> Result<usize> {
+        self.ensure_writable()?;
+        let to = check_group(Some(to.to_owned()))?;
+        let mut moved = 0;
+        for e in &mut self.entries {
+            if e.group.as_deref() == Some(from) {
+                e.group = to.clone();
+                moved += 1;
+            }
+        }
+        Ok(moved)
     }
 
     pub fn remove(&mut self, key: &AddressKey) -> Result<Option<Entry>> {
@@ -277,6 +355,9 @@ impl Book {
                     label: e.label.clone(),
                     owner: e.owner,
                     note: e.note.clone(),
+                    emoji: e.emoji.clone(),
+                    tint: e.tint.clone(),
+                    group: e.group.clone(),
                     added_at: e.added_at,
                     source: e.source.clone(),
                 })
@@ -294,6 +375,53 @@ impl Book {
             .ok_or_else(|| Error::Invalid("in-memory book has no path".into()))?;
         fsutil::write_atomic(path, self.to_toml().as_bytes())
     }
+}
+
+/// What the user can change about an entry (and writes when adding one).
+#[derive(Clone, Debug, Deserialize)]
+pub struct Edit {
+    pub label: String,
+    pub owner: Owner,
+    pub note: Option<String>,
+    pub emoji: Option<String>,
+    pub tint: Option<String>,
+    pub group: Option<String>,
+}
+
+/// The tile backgrounds the app draws (the --tint-* colours in its tokens).
+pub const TINTS: &[&str] = &[
+    "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink", "gray", "mist", "slate", "snow", "night",
+];
+
+fn check_tint(tint: Option<String>) -> Result<Option<String>> {
+    let Some(t) = tint.map(|t| t.trim().to_lowercase()).filter(|t| !t.is_empty()) else {
+        return Ok(None);
+    };
+    if !TINTS.contains(&t.as_str()) {
+        return Err(Error::Invalid(format!("`{t}` is not a tint (expected one of {})", TINTS.join(", "))));
+    }
+    Ok(Some(t))
+}
+
+/// A picture is one emoji, perhaps a few code points joined; never a sentence.
+fn check_emoji(emoji: Option<String>) -> Result<Option<String>> {
+    let Some(e) = emoji.map(|e| e.trim().to_owned()).filter(|e| !e.is_empty()) else {
+        return Ok(None);
+    };
+    if e.chars().count() > 8 || e.chars().any(|c| c.is_control() || c.is_whitespace()) {
+        return Err(Error::Invalid(format!("`{e}` is not one emoji")));
+    }
+    Ok(Some(e))
+}
+
+fn check_group(group: Option<String>) -> Result<Option<String>> {
+    let Some(g) = group.map(|g| g.trim().to_owned()).filter(|g| !g.is_empty()) else {
+        return Ok(None);
+    };
+    if g.chars().count() > 40 {
+        return Err(Error::Invalid("a group name is at most 40 characters".into()));
+    }
+    Ok(Some(g))
 }
 
 #[cfg(test)]
@@ -342,6 +470,96 @@ pub(crate) mod tests {
         assert!(!book.upsert(Entry::new(a.clone(), "new", Owner::Contact)).unwrap());
         assert_eq!(book.get(&a.key()).unwrap().label, "new");
         assert_eq!(book.entries().len(), 1);
+    }
+
+    #[test]
+    fn emoji_and_group_round_trip_and_survive_an_import() {
+        let dir = tempdir();
+        let path = dir.join("book.toml");
+        let mut book = Book::load_personal(&path).unwrap();
+        let a = addr("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        let mut e = Entry::new(a.clone(), "Binance", Owner::Me);
+        e.emoji = Some("🏦".into());
+        e.group = Some(" Exchanges ".into());
+        book.upsert(e).unwrap();
+        // A later import of the same address names it, nothing more.
+        book.upsert(Entry::new(a.clone(), "Binance hot", Owner::Me)).unwrap();
+        book.save().unwrap();
+        assert!(book.to_toml().contains("emoji = \"🏦\""));
+
+        let again = Book::load_personal(&path).unwrap();
+        let got = again.get(&a.key()).unwrap();
+        assert_eq!(got.label, "Binance hot");
+        assert_eq!(got.emoji.as_deref(), Some("🏦"));
+        assert_eq!(got.group.as_deref(), Some("Exchanges"));
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn edit_sets_exactly_and_clears() {
+        let mut book = Book::new("t");
+        let a = addr("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        let mut e = Entry::new(a.clone(), "old", Owner::Me);
+        e.note = Some("n".into());
+        e.emoji = Some("🔥".into());
+        e.group = Some("Hot".into());
+        book.upsert(e).unwrap();
+        let edit = |label: &str, emoji: Option<&str>| Edit {
+            label: label.into(),
+            owner: Owner::Contact,
+            note: Some("  ".into()),
+            emoji: emoji.map(Into::into),
+            tint: None,
+            group: None,
+        };
+        let got = book.edit(&a.key(), edit(" new ", None)).unwrap();
+        assert_eq!(got.label, "new");
+        assert_eq!(got.owner, Owner::Contact);
+        assert_eq!((&got.note, &got.emoji, &got.group), (&None, &None, &None));
+        assert!(book.edit(&a.key(), edit(" ", None)).is_err());
+        assert!(book.edit(&a.key(), edit("x", Some("a whole sentence"))).is_err());
+        assert!(book.edit(&a.key(), edit("x", Some("👨‍👩‍👧"))).is_ok());
+        let other = addr("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed");
+        assert!(book.edit(&other.key(), edit("x", None)).is_err());
+    }
+
+    #[test]
+    fn rename_group_moves_every_member() {
+        let mut book = Book::new("t");
+        for (a, g) in [
+            ("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", Some("Hot")),
+            ("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", Some("Hot")),
+            ("0x28C6c06298d514Db089934071355E5743bf21d60", None),
+        ] {
+            let mut e = Entry::new(addr(a), "x", Owner::Me);
+            e.group = g.map(Into::into);
+            book.upsert(e).unwrap();
+        }
+        assert_eq!(book.rename_group("Hot", "Spending").unwrap(), 2);
+        let in_spending = book.entries().iter().filter(|e| e.group.as_deref() == Some("Spending"));
+        assert_eq!(in_spending.count(), 2);
+        assert_eq!(book.rename_group("Spending", "").unwrap(), 2);
+        assert!(book.entries().iter().all(|e| e.group.is_none()));
+    }
+
+    #[test]
+    fn tint_is_one_of_the_palette() {
+        let mut book = Book::new("t");
+        let a = addr("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        let mut e = Entry::new(a.clone(), "x", Owner::Me);
+        e.tint = Some(" Blue ".into());
+        book.upsert(e).unwrap();
+        assert_eq!(book.get(&a.key()).unwrap().tint.as_deref(), Some("blue"));
+        let mut e = Entry::new(a, "x", Owner::Me);
+        e.tint = Some("#ff0000".into());
+        assert!(book.upsert(e).is_err());
+    }
+
+    #[test]
+    fn rejects_a_sentence_for_an_emoji() {
+        let p = Path::new("book.toml");
+        let bad = "[[entry]]\nchain = \"tron\"\naddress = \"TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t\"\nlabel = \"x\"\nemoji = \"far too long\"\n";
+        assert!(matches!(Book::parse(p, bad), Err(Error::Entry { index: 1, .. })));
     }
 
     #[test]

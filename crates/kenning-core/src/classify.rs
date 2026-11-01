@@ -85,6 +85,7 @@ struct Known {
     kind: KnownKind,
     label: Option<String>,
     note: Option<String>,
+    emoji: Option<String>,
     /// Book name for book entries, URL for public labels.
     source: Option<String>,
     label_kind: Option<LabelKind>,
@@ -113,6 +114,8 @@ pub struct Recognition {
     pub state: State,
     pub label: Option<String>,
     pub note: Option<String>,
+    /// The user's picture for a book entry; never set for public labels.
+    pub emoji: Option<String>,
     pub source: Option<String>,
     pub label_kind: Option<LabelKind>,
     /// Earlier contact with this exact address, before this copy.
@@ -178,6 +181,7 @@ impl Recognizer {
                 kind: e.owner.into(),
                 label: Some(e.label.clone()),
                 note: e.note.clone(),
+                emoji: e.emoji.clone(),
                 source: Some(book.name().to_owned()),
                 label_kind: None,
                 last_seen: None,
@@ -192,6 +196,7 @@ impl Recognizer {
                 kind: KnownKind::Public,
                 label: Some(l.name.clone()),
                 note: None,
+                emoji: None,
                 source: Some(l.source.clone()),
                 label_kind: Some(l.kind),
                 last_seen: None,
@@ -210,6 +215,7 @@ impl Recognizer {
             kind: KnownKind::History,
             label: None,
             note: None,
+            emoji: None,
             source: None,
             label_kind: None,
             last_seen: Some(c.last_seen),
@@ -278,6 +284,7 @@ impl Recognizer {
             state: State::New,
             label: None,
             note: None,
+            emoji: None,
             source: None,
             label_kind: None,
             history: contact,
@@ -296,6 +303,7 @@ impl Recognizer {
             };
             r.label = k.label.clone();
             r.note = k.note.clone();
+            r.emoji = k.emoji.clone();
             r.source = k.source.clone();
             r.label_kind = k.label_kind;
         } else {

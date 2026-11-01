@@ -48,6 +48,16 @@ pub struct Config {
     /// Custom Solana RPC URL (for example a Helius endpoint with your key).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub solana_rpc: Option<String>,
+    /// The EVM networks an EVM address is looked up on, by the ids in
+    /// `kenning-net` (ethereum, base, arbitrum, optimism, polygon, bsc).
+    pub evm_networks: Vec<String>,
+    /// Your own mempool server for Bitcoin lookups (one on your node, so no
+    /// one else sees which addresses you look up), instead of mempool.space.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bitcoin_api: Option<String>,
+    /// A TronGrid API key, for its higher limits. Kept in this file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trongrid_key: Option<String>,
     /// Set once the user has finished onboarding.
     pub onboarded: bool,
     pub lookalike: Rules,
@@ -55,6 +65,10 @@ pub struct Config {
     /// address replaced behind your back, or a recovery phrase or private
     /// key left on it. Off by default: it reads every change.
     pub guard: bool,
+    /// Ask whether a newer Kenning is out, at start and every 12 hours
+    /// (desktop). Off until chosen: the onboarding offers it, switched on,
+    /// and says what it sends.
+    pub update_check: bool,
 }
 
 impl Default for Config {
@@ -72,9 +86,15 @@ impl Default for Config {
             sounds: true,
             network: false,
             solana_rpc: None,
+            evm_networks: ["ethereum", "base", "arbitrum", "optimism", "polygon", "bsc"]
+                .map(String::from)
+                .to_vec(),
+            bitcoin_api: None,
+            trongrid_key: None,
             onboarded: false,
             lookalike: Rules::default(),
             guard: false,
+            update_check: false,
         }
     }
 }

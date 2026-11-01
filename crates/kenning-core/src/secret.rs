@@ -8,7 +8,9 @@
 //! * a BIP-39 recovery phrase: 12, 15, 18, 21 or 24 words, every one from the
 //!   English word list (`data/bip39-english.txt`, from bitcoin/bips);
 //! * a Bitcoin private key in WIF (Base58Check, version 0x80 or 0xEF);
-//! * a Solana keypair secret (Base58, 64 bytes; addresses are 32).
+//! * a Solana keypair secret (Base58, 64 bytes: a 32-byte seed and the
+//!   public key it derives; a transaction signature is 64 bytes too, so the
+//!   second half must be the first half's public key).
 //!
 //! Hex private keys are left out on purpose: 64 hex characters are just as
 //! often a transaction hash, and a warning on every copied hash would teach
@@ -87,14 +89,23 @@ fn key(text: &str) -> Option<Secret> {
     {
         return Some(Secret::BitcoinKey);
     }
-    // Solana: a 64-byte keypair in Base58 is 86 to 88 characters.
+    // Solana: a 64-byte keypair in Base58 is 86 to 88 characters. So is a
+    // transaction signature, which people copy all the time; only a keypair
+    // ends with the public key of its first half.
     if (85..=88).contains(&text.len())
         && let Ok(bytes) = bs58::decode(text).into_vec()
-        && bytes.len() == 64
+        && is_solana_keypair(&bytes)
     {
         return Some(Secret::SolanaKey);
     }
     None
+}
+
+fn is_solana_keypair(bytes: &[u8]) -> bool {
+    let (Ok(seed), Some(public)) = (<[u8; 32]>::try_from(&bytes[..bytes.len().min(32)]), bytes.get(32..)) else {
+        return false;
+    };
+    bytes.len() == 64 && ed25519_dalek::SigningKey::from_bytes(&seed).verifying_key().as_bytes() == public
 }
 
 #[cfg(test)]
@@ -137,7 +148,18 @@ mod tests {
 
     #[test]
     fn solana_keypair() {
-        let secret = bs58::encode([7u8; 64]).into_string();
+        let seed = [7u8; 32];
+        let public = ed25519_dalek::SigningKey::from_bytes(&seed).verifying_key().to_bytes();
+        let secret = bs58::encode([seed, public].concat()).into_string();
         assert_eq!(detect(&secret), Some(Secret::SolanaKey));
+    }
+
+    #[test]
+    fn solana_signature_is_not_a_key() {
+        // Shaped like a transaction signature: 64 bytes in Base58, as a keypair is.
+        let signature = "5VERv8NMvzbJMEkV8xnrLkEaWRtSz9CosKDYjCJjBRnbJLgp8uirBgmQpjKhoR4tjF3ZpRzrFmBV6UjKdiSZkQUW";
+        assert_eq!(bs58::decode(signature).into_vec().unwrap().len(), 64);
+        assert_eq!(detect(signature), None);
+        assert_eq!(detect(&bs58::encode([7u8; 64]).into_string()), None);
     }
 }
