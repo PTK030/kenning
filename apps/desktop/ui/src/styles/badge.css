@@ -1,4 +1,5 @@
 @import "./base.css";
+@import "./badgeCard.css";
 
 /* The badge window is transparent; the card leaves room for its shadow.
    It shares nothing with the lookalike window: different place (corner vs
@@ -13,189 +14,14 @@ body {
   user-select: none;
 }
 
+/* The window's own card: anchored to the bottom (the window is tall enough
+   for an on-chain line, and the space above stays transparent when there is
+   none), hidden until the entrance runs (see badge.ts). */
 #badge {
-  --accent: var(--ink-2);
-  --accent-soft: var(--bg-2);
-
-  /* Anchored to the bottom: the window is tall enough for an on-chain
-     line, and the space above stays transparent when there is none. */
   position: absolute;
   left: 8px;
   right: 8px;
   bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 36px 14px 12px;
-  overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 96%, var(--accent) 4%), var(--bg));
-  border: 1px solid color-mix(in srgb, var(--line) 70%, var(--accent) 30%);
-  border-radius: 14px;
-  /* The window is transparent and only 8px larger than the card, so the
-     shadow must fit inside 8px or it gets cut into a dark halo. */
-  box-shadow: 0 2px 6px -1px rgb(0 0 0 / 22%);
-  cursor: default;
-  /* Hidden until the entrance runs (see badge.ts). */
   opacity: 0;
   will-change: transform, opacity;
-}
-
-#badge.k-mine,
-#badge.k-team,
-#badge.k-contact {
-  --accent: var(--mine);
-  --accent-soft: var(--mine-soft);
-}
-#badge.k-public {
-  --accent: var(--brand);
-  --accent-soft: var(--brand-soft);
-}
-#badge.k-new {
-  --accent: var(--new);
-  --accent-soft: var(--new-soft);
-}
-#badge.k-info {
-  --accent: var(--brand);
-  --accent-soft: var(--brand-soft);
-}
-/* The clipboard guard: the one badge that is a warning. The tile and the
-   border carry the red; the text stays readable ink. */
-#badge.k-alert {
-  --accent: var(--look);
-  --accent-soft: var(--look-soft);
-  align-items: flex-start;
-  border-color: color-mix(in srgb, var(--look) 55%, var(--line));
-}
-
-#badge.k-alert .headline .name {
-  font-size: 14.5px;
-}
-
-#badge.k-alert .detail {
-  white-space: normal;
-  line-height: 1.35;
-  margin-top: 2px;
-}
-
-#badge .act {
-  margin-top: 7px;
-  padding: 4px 10px;
-  border: none;
-  border-radius: 7px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
-  /* The light red in both themes: white on it is 6.5:1. */
-  background: #b91c1c;
-  cursor: pointer;
-  transition: filter 120ms;
-}
-
-#badge .act:hover {
-  filter: brightness(1.12);
-}
-
-.tile {
-  flex: none;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-.text {
-  min-width: 0;
-  flex: 1;
-}
-
-.headline {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 14.5px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.headline .name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--font-display);
-  font-weight: 650;
-  font-size: 15.5px;
-  letter-spacing: -0.01em;
-}
-
-.headline .word {
-  flex: none;
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-}
-
-.detail {
-  font-size: 12px;
-  color: var(--ink-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.detail .addr {
-  font-size: 11.5px;
-}
-
-.close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
-  opacity: 0.7;
-  transition:
-    opacity 120ms,
-    background 120ms;
-}
-
-.close:hover {
-  opacity: 1;
-  background: var(--bg-2);
-  color: var(--ink);
-}
-
-/* Countdown: how long until the badge goes. Hover holds it. */
-.track {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-
-.bar {
-  height: 100%;
-  background: var(--accent);
-  opacity: 0.75;
-  transform-origin: left center;
-  border-radius: 0 2px 2px 0;
-}
-
-#badge.held .bar {
-  opacity: 1;
 }

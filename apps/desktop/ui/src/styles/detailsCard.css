@@ -1,0 +1,245 @@
+/* The details window's look, as classes: .details-window is the window
+   (graphite, one colour taken from the state on its edge, its light and
+   its tile), .details-card its content. The window uses them, and so does
+   the onboarding's picture of it, built from the same code (alerts.ts). */
+
+.details-window {
+  color-scheme: dark;
+  --brand: #8aa4ff;
+  --brand-ink: #0e1319;
+  --brand-soft: #1d2740;
+  --ink: #e6edf3;
+  --ink-2: #a3b0bd;
+  --bg: #141b23;
+  --bg-2: #0f151c;
+  --line: #26313d;
+  --line-strong: #3b4756;
+  --mine: #5ad07a;
+  --mine-soft: rgb(90 208 122 / 12%);
+  --new: #f5b04e;
+  --new-soft: rgb(245 176 78 / 12%);
+  --fix: #3a55c9;
+
+  color: var(--ink);
+  /* One colour per window, taken from the state (below): the edge, the
+     title-bar sign, the light and the tile all say the same thing. */
+  background:
+    radial-gradient(90% 60% at 0% 0%, color-mix(in srgb, var(--tone) 8%, transparent), transparent 60%),
+    var(--bg);
+  border-top: 3px solid var(--tone);
+  --sign: var(--tone);
+  transition: border-color 300ms ease;
+  --tone: var(--brand);
+  --tone-soft: rgb(138 164 255 / 12%);
+}
+
+.details-window .titlebar {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
+.details-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 28px 22px;
+}
+
+.details-card:focus {
+  outline: none;
+}
+
+/* ---- Head ---------------------------------------------------------------- */
+
+.details-card .head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.details-card .tile {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--tone);
+  background: var(--tone-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+/* The state sets the window's one colour: symbol, word and colour
+   together, never colour alone. Blue is information (a public label, an
+   address from your history); green is yours; amber is new; red is only
+   ever a lookalike, so red keeps meaning "stop". */
+.details-window.k-mine,
+.details-window.k-team,
+.details-window.k-contact {
+  --tone: var(--mine);
+  --tone-soft: var(--mine-soft);
+}
+
+.details-window.k-new {
+  --tone: var(--new);
+  --tone-soft: var(--new-soft);
+}
+
+.details-window.k-seen {
+  --tone: #8aa4ff;
+  --tone-soft: rgb(138 164 255 / 10%);
+}
+
+.details-window.k-lookalike {
+  --tone: #ff8f8f;
+  --tone-soft: rgb(255 123 123 / 14%);
+}
+
+.details-card .title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.details-card .headline {
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.details-card .word {
+  flex: none;
+  color: var(--tone);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.details-card .detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 0;
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.details-card .detail .sep {
+  height: 12px;
+  vertical-align: 0;
+}
+
+.details-card .detail .meta-chip,
+.details-card .detail .chain-tag {
+  margin-left: 10px;
+  vertical-align: 0;
+}
+
+/* ---- The address and what is known about it ----------------------------- */
+
+.details-card .card {
+  border-radius: 14px;
+  background: rgb(255 255 255 / 2.5%);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.details-card .address {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.details-card .address .addr {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
+  user-select: text;
+}
+
+.details-card .address small {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+/* ---- Actions --------------------------------------------------------------- */
+
+.details-card .actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.details-card .actions .primary {
+  padding: 9px 15px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: var(--fix);
+  border-color: var(--fix);
+  color: #fff;
+}
+
+.details-card .actions .primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fix) 85%, #fff);
+  border-color: color-mix(in srgb, var(--fix) 85%, #fff);
+  box-shadow: 0 8px 18px -10px rgb(58 85 201 / 80%);
+}
+
+.details-card .actions .secondary {
+  padding: 9px 13px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.details-card .actions .spacer {
+  flex: 1;
+}
+
+.details-card .actions .dismiss {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-2);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.details-card .actions .dismiss kbd {
+  min-width: 0;
+  padding: 1px 6px;
+  font-size: 10.5px;
+}
+
+.details-card .add-form {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  align-items: center;
+}
+
+.details-card .add-form input {
+  flex: 1;
+}
+
+.details-card .error {
+  color: #ff8f8f;
+  font-size: 12px;
+}
+
+.details-card .error:empty {
+  display: none;
+}
+
+/* The book entry's picture, beside its name. */
+.details-card .title .emoji {
+  align-self: center;
+}

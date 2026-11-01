@@ -1,0 +1,280 @@
+/* The lookalike window's look, as classes: .look-window is the window
+   (its graphite palette, the red edge, the bare title bar), .look-card its
+   content. The window uses them, and so does the onboarding's picture of
+   it, built from the same code (alerts.ts). It is always graphite: a
+   warning should look the same on a light or a dark desktop. */
+
+.look-window {
+  color-scheme: dark;
+  --brand: #8aa4ff;
+  --brand-ink: #0e1319;
+  --brand-soft: #1d2740;
+  --ink: #e6edf3;
+  --ink-2: #a3b0bd;
+  --bg: #141b23;
+  --bg-2: #0f151c;
+  --line: #26313d;
+  --line-strong: #3b4756;
+  --look: #ff8f8f;
+  --look-soft: rgb(255 123 123 / 14%);
+  --fix: #3a55c9;
+  color: var(--ink);
+  background:
+    radial-gradient(90% 60% at 0% 0%, rgb(255 123 123 / 7%), transparent 60%),
+    var(--bg);
+  /* The red edge sits above the title bar, on the window itself. */
+  border-top: 3px solid var(--look);
+}
+
+.look-window .titlebar {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
+.look-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 10px 28px 20px;
+}
+
+/* The window takes focus so keys reach it, but has no visible ring. */
+.look-card:focus {
+  outline: none;
+}
+
+/* ---- Head ---------------------------------------------------------------- */
+
+.look-card .head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.look-card .sign {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--look);
+  background: var(--look-soft);
+  box-shadow: inset 0 0 0 1px rgb(255 143 143 / 22%);
+}
+
+.look-card .headline {
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* One line, everything on the same centre: the pieces of the detail, the
+   hairlines between them, and the chain chip. */
+.look-card .detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 0;
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.look-card .detail .sep {
+  height: 12px;
+  vertical-align: 0;
+}
+
+.look-card .detail .meta-chip,
+.look-card .detail .chain-tag {
+  margin-left: 10px;
+  vertical-align: 0;
+}
+
+/* ---- The comparison ------------------------------------------------------- */
+
+.look-card .rows {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 2.5%);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.look-card .row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 118px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding: 14px 16px;
+}
+
+.look-card .row + .row {
+  border-top: 1px solid var(--line);
+}
+
+/* The copied address is marked by a thin red edge, not a red frame. */
+.look-card .row.copied::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--look);
+}
+
+.look-card .row .who {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.look-card .row .who small {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.look-card .row .addr {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* Differences, as in the onboarding: the matching start and end are
+   bright, the differing middle a muted red with a fine dotted underline.
+   The cascade is colour only (see lookalike.ts). */
+.look-card .addr .same {
+  color: var(--ink);
+  font-weight: 600;
+  transition: color 450ms ease;
+}
+
+.look-card .addr .diff {
+  color: color-mix(in srgb, var(--look) 90%, transparent);
+  background: none;
+  font-weight: 400;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, var(--look) 55%, transparent);
+  transition:
+    color 450ms ease,
+    text-decoration-color 450ms ease;
+}
+
+.look-card:not(.lit) .addr .same,
+.look-card:not(.lit) .addr .diff {
+  color: var(--ink-2);
+  font-weight: 400;
+  text-decoration-color: transparent;
+}
+
+/* ---- Actions --------------------------------------------------------------- */
+
+.look-card .actions {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.look-card .actions .primary {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--fix);
+  border-color: var(--fix);
+  color: #fff;
+}
+
+.look-card .actions .primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fix) 85%, #fff);
+  border-color: color-mix(in srgb, var(--fix) 85%, #fff);
+  box-shadow: 0 8px 18px -10px rgb(58 85 201 / 80%);
+}
+
+.look-card .actions .primary .keycaps kbd {
+  min-width: 0;
+  padding: 1px 5px;
+  font-size: 10.5px;
+  background: rgb(255 255 255 / 16%);
+  color: #fff;
+  box-shadow: none;
+}
+
+.look-card .actions .secondary {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.look-card .actions .spacer {
+  flex: 1;
+}
+
+.look-card .actions .dismiss {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.look-card .mine-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.look-card .mine-form input {
+  width: 200px;
+}
+
+.look-card .error {
+  color: var(--look);
+  font-size: 12px;
+}
+
+/* ---- Variants ---------------------------------------------------------------
+   0: the copied address first. 1: yours first. 2: labels above addresses. */
+.look-card.v1 .rows {
+  flex-direction: column-reverse;
+}
+
+.look-card.v1 .row + .row {
+  border-top: 0;
+}
+
+.look-card.v1 .row:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.look-card.v2 .row {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.look-card.v2 .row .who small {
+  display: inline;
+  margin-left: 6px;
+}
+
+/* In the window there is room: a long on-chain answer (several networks)
+   wraps under its icon instead of being cut. */
+.look-card .onchain {
+  align-items: flex-start;
+  white-space: normal;
+}
+
+.look-card .onchain .icon {
+  margin-top: 2px;
+}

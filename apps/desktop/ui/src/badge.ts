@@ -4,13 +4,10 @@
 // and it slips back out the same way. A newer badge replaces the content in
 // place instead of replaying the entrance.
 
-import { detailLine, short, STATE_WORD } from "./address";
-import { $, clear, h } from "./dom";
-import { icon, STATE_ICON } from "./icons";
+import { badgeEnter, badgeLeave, badgeSwap, fillBadge } from "./alerts";
+import { $, clear } from "./dom";
 import { ipc, on } from "./ipc";
-import { draw, EASE_IN, move, POP, rise, SPRING } from "./motion";
-import { onchainLine } from "./onchain";
-import { playFor } from "./sound";
+import { cue, playFor } from "./sound";
 import type { BadgeView } from "./types";
 import "./guard";
 
@@ -23,72 +20,23 @@ let startedAt = 0;
 let shown = false;
 
 function render(view: BadgeView | null) {
-  root.className = "";
   if (!view) {
+    root.className = "";
     clear(root);
     shown = false;
     return;
   }
-
-  const close = h("button", { class: "close", "aria-label": "Close", title: "Close", onclick: () => ipc.hideBadge() }, icon("x", 14));
-  bar = h("div", { class: "bar" });
-
-  if (view.kind === "alert") {
-    // The guard caught something: red, a sentence that says what, and the
-    // one thing to do about it.
-    root.classList.add("k-alert");
-    const action = view.action;
-    clear(
-      root,
-      h("div", { class: "tile" }, icon("alert", 20)),
-      h(
-        "div",
-        { class: "text" },
-        h("div", { class: "headline" }, h("span", { class: "name" }, view.title)),
-        h("div", { class: "detail" }, view.text),
-        action &&
-          h(
-            "button",
-            {
-              class: "act",
-              onclick: () => {
-                void ipc.guardAction(action.id).catch(() => {});
-              },
-            },
-            action.label,
-          ),
-      ),
-      close,
-      h("div", { class: "track" }, bar),
-    );
-    if (view.sounds) playFor("lookalike");
-  } else if (view.kind === "info") {
-    root.classList.add("k-info");
-    clear(
-      root,
-      h("div", { class: "tile" }, icon("info", 20)),
-      h("div", { class: "text" }, h("div", { class: "headline" }, h("span", { class: "name" }, view.text))),
-      close,
-      h("div", { class: "track" }, bar),
-    );
-  } else {
-    const r = view.recognition;
-    root.classList.add(`k-${r.state}`);
-    clear(
-      root,
-      h("div", { class: "tile" }, icon(STATE_ICON[r.state], 20)),
-      h(
-        "div",
-        { class: "text" },
-        h("div", { class: "headline" }, h("span", { class: "name" }, r.headline), h("span", { class: "word" }, STATE_WORD[r.state])),
-        h("div", { class: "detail" }, ...detailLine(r.detail)),
-        h("div", { class: "detail" }, h("span", { class: "addr" }, short(r.address.text))),
-        onchainLine(r.address.text),
-      ),
-      close,
-      h("div", { class: "track" }, bar),
-    );
-    if (view.sounds) playFor(r.state);
+  // The card itself is built in alerts.ts, where the onboarding's picture
+  // of it comes from too.
+  bar = fillBadge(root, view, {
+    close: () => void ipc.hideBadge(),
+    act: (id) => void ipc.guardAction(id).catch(() => {}),
+  });
+  if (view.sounds) {
+    if (view.kind === "alert") playFor("lookalike");
+    else if (view.kind === "recognition") playFor(view.recognition.state);
+    // A note in the corner is a toast too: heard like the window's toasts.
+    else cue("tick");
   }
 
   total = remaining = view.seconds * 1000;
@@ -114,25 +62,19 @@ function whenVisible(run: () => void) {
 }
 
 function enter() {
-  void move(root, { opacity: [0, 1], x: [18, 0], scale: [0.965, 1] }, SPRING);
-  const tile = root.querySelector(".tile");
-  void move(tile, { scale: [0.55, 1], rotate: [-14, 0] }, { ...POP, delay: 0.05 });
-  draw(tile?.querySelector("svg") ?? null, { delay: 0.1 });
-  void rise(root.querySelectorAll(".text > *"), { y: 6, delay: 0.07, gap: 0.04 });
+  badgeEnter(root);
   runBar();
 }
 
 /** A newer badge while one is showing: a small nudge and the new content. */
 function swap() {
-  void move(root, { opacity: 1, x: 0, scale: [0.975, 1] }, POP);
-  draw(root.querySelector<SVGSVGElement>(".tile svg"), { duration: 0.4 });
-  void rise(root.querySelectorAll(".text > *"), { y: 5, gap: 0.03 });
+  badgeSwap(root);
   runBar();
 }
 
 function leave() {
   shown = false;
-  void move(root, { opacity: 0, x: 14, scale: 0.98 }, { duration: 0.24, ease: EASE_IN });
+  void badgeLeave(root);
 }
 
 /** Animate the bar from its current width to empty over `remaining` ms. */

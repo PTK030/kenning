@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Kenning</title>
+    <!-- The page colour before the styles arrive (--surface in tokens.css). -->
+    <style>
+      html { background: #f4f6f9; color-scheme: light dark; }
+      @media (prefers-color-scheme: dark) { html { background: #121a22; } }
+    </style>
     <link rel="stylesheet" href="./src/styles/main.css" />
   </head>
   <body>
