@@ -6,3 +6,6 @@ apps/desktop/src-tauri/gen
 .DS_Store
 Thumbs.db
 apps/desktop/shots
+
+.vercel
+.env*

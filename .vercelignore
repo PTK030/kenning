@@ -1,0 +1,13 @@
+# The landing page builds from site/, the desktop app's UI sources it embeds
+# (apps/desktop) and CHANGELOG.md. Nothing else needs to reach Vercel.
+target
+node_modules
+**/node_modules
+**/dist
+crates
+tests
+docs
+.github
+apps/desktop/src-tauri/*
+!apps/desktop/src-tauri/icons
+apps/desktop/shots
