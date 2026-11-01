@@ -7,7 +7,7 @@ use std::sync::atomic::Ordering;
 
 use kenning_core::journal::{self, Action};
 use kenning_core::{
-    Chain, ClipboardMode, Config, Entry, Owner, Recognition, diff, extract, interop, lookalike,
+    Chain, ClipboardMode, Config, Edit, Entry, Owner, Recognition, diff, extract, interop, lookalike,
 };
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
@@ -18,7 +18,7 @@ use tauri_plugin_opener::OpenerExt;
 use crate::onchain::{self, Fact};
 use crate::state::{AppState, BadgeView, DetailsView};
 use crate::guard::{self, Event};
-use crate::{clipboard, flow, hotkey, tray, ui};
+use crate::{clipboard, flow, hotkey, platform, tray, ui};
 
 type Res<T> = Result<T, String>;
 
@@ -38,8 +38,12 @@ pub struct Overview {
     public_label_count: usize,
     history_count: usize,
     warnings: Vec<String>,
-    /// Hosts contacted when the network is on, and why.
-    hosts: Vec<(&'static str, &'static str)>,
+    /// Hosts contacted when the network is on, and why, as the settings
+    /// stand.
+    hosts: Vec<(String, String)>,
+    /// The EVM networks that can be chosen: id, name, the host asked.
+    evm_choices: Vec<(&'static str, &'static str, &'static str)>,
+    update_hosts: Vec<(&'static str, &'static str)>,
 }
 
 #[derive(Serialize)]
@@ -71,7 +75,12 @@ pub fn overview(state: State<AppState>) -> Overview {
         public_label_count: k.labels().len(),
         history_count: k.history().len(),
         warnings: k.warnings().to_vec(),
-        hosts: kenning_net::HOSTS.to_vec(),
+        hosts: kenning_net::Endpoints::from_config(k.config()).hosts(),
+        evm_choices: kenning_net::EVM_NETWORKS
+            .iter()
+            .map(|(id, name, source)| (*id, *name, source.url()))
+            .collect(),
+        update_hosts: crate::update::HOSTS.to_vec(),
     }
 }
 
@@ -170,6 +179,12 @@ pub fn get_details(state: State<AppState>) -> Option<DetailsView> {
     state.details.lock().unwrap().clone()
 }
 
+/// The lookalike page measured itself; see `ui::fit_lookalike`.
+#[tauri::command]
+pub fn fit_lookalike(app: AppHandle, height: f64, reveal: bool) {
+    ui::fit_lookalike(&app, height, reveal);
+}
+
 /// The details page measured itself; see `ui::fit_details`.
 #[tauri::command]
 pub fn fit_details(app: AppHandle, height: f64, reveal: bool) {
@@ -228,10 +243,14 @@ pub fn add_details_address(state: State<AppState>, label: String, owner: Owner) 
     Ok(view.clone())
 }
 
-/// Open the address in the chain's public explorer, in the browser.
+/// Open the address in the chain's public explorer, in the browser: the one
+/// given, or else the details window's.
 #[tauri::command]
-pub fn open_explorer(app: AppHandle, state: State<AppState>) -> Res<()> {
-    let address = details_address(&state)?;
+pub fn open_explorer(app: AppHandle, state: State<AppState>, address: Option<String>) -> Res<()> {
+    let address = match address {
+        Some(a) => kenning_core::parse(&a).map_err(err)?,
+        None => details_address(&state)?,
+    };
     let a = address.as_str();
     let url = match address.chain() {
         Chain::Evm => format!("https://etherscan.io/address/{a}"),
@@ -278,18 +297,33 @@ pub struct Comparison {
     b_spans: Vec<diff::Span>,
 }
 
+/// Why two addresses could not be compared: which box (`used`, `expected`,
+/// or none for both) and what is wrong, for the page to say in its words.
+/// `message` says it in a sentence, for anything that only shows text.
+#[derive(Debug, Serialize)]
+pub struct CompareProblem {
+    field: Option<&'static str>,
+    /// `checksum`, `not_address` or `chains`.
+    kind: &'static str,
+    /// The chain of the box at fault (`checksum`), or of each box (`chains`).
+    chains: Vec<Chain>,
+    message: String,
+}
+
 /// Check: the address someone expects against the one in front of them.
-/// Comparing is not checking either against the book: nothing is recorded.
+/// `a` is the one about to be used, `b` the one expected. Comparing is not
+/// checking either against the book: nothing is recorded.
 #[tauri::command]
-pub fn compare_addresses(a: String, b: String) -> Res<Comparison> {
-    let a = extract::single(&a).ok_or("The first box does not hold one address.")?;
-    let b = extract::single(&b).ok_or("The second box does not hold one address.")?;
+pub fn compare_addresses(a: String, b: String) -> Result<Comparison, CompareProblem> {
+    let a = one_address(&a, "used", "The address you are about to use")?;
+    let b = one_address(&b, "expected", "The address you expected")?;
     if a.chain() != b.chain() {
-        return Err(format!(
-            "These are on different chains: {} and {}.",
-            a.chain().display_name(),
-            b.chain().display_name()
-        ));
+        return Err(CompareProblem {
+            field: None,
+            kind: "chains",
+            chains: vec![a.chain(), b.chain()],
+            message: format!("These are on different chains: {} and {}.", a.chain().display_name(), b.chain().display_name()),
+        });
     }
     let ab = lookalike::compare(&a, &b);
     let ba = lookalike::compare(&b, &a);
@@ -304,17 +338,34 @@ pub fn compare_addresses(a: String, b: String) -> Res<Comparison> {
     })
 }
 
+/// The address in one of Check's boxes (`field`; `label` as the page names
+/// it), or what is wrong with it.
+fn one_address(text: &str, field: &'static str, label: &str) -> Result<kenning_core::Address, CompareProblem> {
+    if let Some(address) = extract::single(text) {
+        return Ok(address);
+    }
+    let trimmed = text
+        .trim()
+        .trim_matches(|c: char| matches!(c, '"' | '\'' | '`' | '<' | '>' | '(' | ')' | ','));
+    Err(match kenning_core::parse(trimmed) {
+        Err(kenning_core::ParseError::BadChecksum { chain }) => CompareProblem {
+            field: Some(field),
+            kind: "checksum",
+            chains: vec![chain],
+            message: format!("{label} has a wrong character: its {} checksum does not match.", chain.display_name()),
+        },
+        _ => CompareProblem { field: Some(field), kind: "not_address", chains: vec![], message: format!("{label} is not one address.") },
+    })
+}
+
 #[tauri::command]
-pub fn add_entry(
-    state: State<AppState>,
-    address: String,
-    label: String,
-    owner: Owner,
-    note: Option<String>,
-) -> Res<Recognition> {
+pub fn add_entry(state: State<AppState>, address: String, fields: Edit) -> Res<Recognition> {
     let address = kenning_core::parse(&address).map_err(err)?;
-    let mut e = Entry::new(address.clone(), label.trim(), owner);
-    e.note = note.map(|n| n.trim().to_owned()).filter(|n| !n.is_empty());
+    let mut e = Entry::new(address.clone(), fields.label.trim(), fields.owner);
+    e.note = fields.note.map(|n| n.trim().to_owned()).filter(|n| !n.is_empty());
+    e.emoji = fields.emoji;
+    e.tint = fields.tint;
+    e.group = fields.group;
     e.source = Some("manual".into());
     let mut k = state.kenning.lock().unwrap();
     k.upsert(e).map_err(err)?;
@@ -323,19 +374,20 @@ pub fn add_entry(
     Ok(r)
 }
 
-/// A row of the address book (or, with `from: "journal"`, of the journal)
-/// was clicked. Async, so it runs off the main thread: building the details
-/// window from a synchronous command leaves its WebView2 unloaded on
-/// Windows, and the window never shows.
+/// The edit form in the book: the fields are set exactly as sent, so an
+/// empty note, picture or group clears it.
 #[tauri::command]
-pub async fn show_entry(app: AppHandle, address: String, from: Option<String>) -> Res<()> {
+pub fn edit_entry(state: State<AppState>, address: String, fields: Edit) -> Res<()> {
     let address = kenning_core::parse(&address).map_err(err)?;
-    let source = match from.as_deref() {
-        Some("journal") => clipboard::Source::Journal,
-        _ => clipboard::Source::Book,
-    };
-    crate::flow::show_details_from(&app, address, source);
-    Ok(())
+    let mut k = state.kenning.lock().unwrap();
+    k.edit(&address.key(), fields).map_err(err)?;
+    let r = k.recognize(&address);
+    k.journal(Action::Edited, &r).map_err(err)
+}
+
+#[tauri::command]
+pub fn rename_group(state: State<AppState>, from: String, to: String) -> Res<usize> {
+    state.kenning.lock().unwrap().rename_group(&from, &to).map_err(err)
 }
 
 #[tauri::command]
@@ -364,6 +416,11 @@ pub fn journal(state: State<AppState>, limit: Option<usize>) -> Res<Vec<journal:
 pub fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Res<Overview> {
     if let Some(clash) = config.keys.clash(&config.shortcut, &config.details_shortcut) {
         return Err(format!("Two shortcuts would do different things: {clash}."));
+    }
+    for url in [&config.solana_rpc, &config.bitcoin_api].into_iter().flatten() {
+        if !url.trim().is_empty() {
+            kenning_net::check_url(url)?;
+        }
     }
     let (old_check, old_details) = {
         let k = state.kenning.lock().unwrap();
@@ -527,6 +584,16 @@ pub fn guard_events(state: State<AppState>) -> Vec<Event> {
     state.guard.events()
 }
 
+/// "Show the file": Explorer opens on the program the guard caught, with
+/// its file selected. Only files of caught programs are shown.
+#[tauri::command]
+pub fn show_caught_file(state: State<AppState>, path: String) -> Res<()> {
+    if !state.guard.caught_path(&path) || !std::path::Path::new(&path).is_file() {
+        return Err("That file is no longer there.".into());
+    }
+    platform::reveal_file(&path).map_err(err)
+}
+
 /// Write a decoy address of each chain and watch for anything swapping it.
 /// Takes a few seconds; the clipboard is put back afterwards.
 #[tauri::command]
@@ -582,6 +649,48 @@ mod tests {
         let err = compare_addresses(KNOWN.into(), "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa".into())
             .err()
             .unwrap();
-        assert!(err.contains("different chains"), "{err}");
+        assert_eq!(err.kind, "chains");
+        assert!(err.message.contains("different chains"), "{}", err.message);
     }
+
+    #[test]
+    fn compare_names_the_box_and_a_bad_checksum() {
+        // One letter of KNOWN in the wrong case.
+        let typo = "0x28c6c06298d514Db089934071355E5743bf21d60";
+        let err = compare_addresses(typo.into(), KNOWN.into()).err().unwrap();
+        assert_eq!((err.field, err.kind), (Some("used"), "checksum"));
+        assert!(err.message.starts_with("The address you are about to use"), "{}", err.message);
+        let err = compare_addresses(KNOWN.into(), "pay me".into()).err().unwrap();
+        assert_eq!((err.field, err.kind), (Some("expected"), "not_address"));
+    }
+}
+
+/// "Check for updates": ask now, whatever the daily setting says.
+#[tauri::command]
+pub async fn update_check(app: AppHandle) -> Res<Option<crate::update::Available>> {
+    crate::update::check(&app).await
+}
+
+/// The newer version the last check found, for a window opening later.
+#[tauri::command]
+pub fn update_found(app: AppHandle) -> Option<crate::update::Available> {
+    crate::update::found(&app)
+}
+
+/// Download, verify and install the update found; Kenning then restarts.
+#[tauri::command]
+pub async fn update_install(app: AppHandle) -> Res<()> {
+    crate::update::install(&app).await
+}
+
+/// "Resume" on the sidebar's "Watching paused" card.
+#[tauri::command]
+pub fn set_paused(app: AppHandle, paused: bool) {
+    tray::set_paused(&app, paused);
+}
+
+/// The main window's page has drawn itself: show the window (see `ui::open_main`).
+#[tauri::command]
+pub fn main_ready(app: AppHandle) {
+    ui::reveal_main(&app);
 }

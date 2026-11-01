@@ -1,10 +1,11 @@
 import { addressWithDiff, CHAIN_NAME } from "../address";
-import { clear, h } from "../dom";
+import { clear, h, type Child } from "../dom";
 import { icon } from "../icons";
 import { ipc, message } from "../ipc";
-import { move, rise, SPRING } from "../motion";
-import type { Comparison, Overview } from "../types";
-import { recognitionCard } from "./card";
+import { move, rise, sink, SPRING } from "../motion";
+import type { CompareProblem, Comparison, Overview } from "../types";
+import { segmented } from "../segmented";
+import { recognitionCard, recognitionList, type Scope } from "./card";
 
 // A made-up pair for "Try an example": a real-looking address and one that
 // shares its first 6 and last 4 characters. Nothing is saved or recorded.
@@ -13,25 +14,44 @@ const EXAMPLE_PASTED = "0x28C6C0aaAAaAAAaaAaAaAAaaAAaaaaaaAAaA1d60";
 
 /** Paste anything and every address in it is recognised, or compare the
  *  address you expected with the one you are about to use. Nothing pasted
- *  here is stored. */
+ *  here is stored. Laid out as the Journal is: the two ways in a switch in
+ *  the header, a line on what answers are compared with, then the page. */
 export function checkView(main: HTMLElement, overview: Overview) {
   const results = h("div", { class: "check-results" });
   const body = h("div");
 
-  // What the answers are compared against: the system's status, not a tip.
-  const status = h(
-    "p",
-    { class: "check-status" },
-    icon("book", 15),
-    overview.book_count
-      ? `Compared with ${overview.book_count} address${overview.book_count === 1 ? "" : "es"} in your book, ${overview.history_count} you copied, and ${overview.public_label_count} public labels.`
-      : h(
-          "span",
-          {},
-          `Your book is empty, so only the ${overview.history_count} addresses you copied and ${overview.public_label_count} public labels are compared. `,
-          h("a", { class: "link", href: "#book" }, "Add your first address"),
-        ),
-  );
+  // What the answers are compared with goes on each answer that depends on
+  // it (a "not found"). Above the field only when it changes what to do:
+  // with an empty book, lookalikes are caught only against what you copied
+  // and the public labels.
+  const scope: Scope = { book: overview.book_count, history: overview.history_count, labels: overview.public_label_count };
+  const status =
+    !overview.book_count &&
+    h(
+      "p",
+      { class: "page-status" },
+      icon("book", 15),
+      h(
+        "span",
+        {},
+        "Your book is empty, so lookalikes are caught only against addresses you copied and public labels. ",
+        h("a", { class: "link", href: "#book" }, "Add your first address"),
+      ),
+    );
+
+  // Answers leave the way they came, then the space is cleared; a newer
+  // answer arriving meanwhile takes its place at once.
+  let turn = 0;
+  const fill = (...children: (Child | Child[])[]) => {
+    turn++;
+    clear(results, ...children);
+  };
+  const empty = async () => {
+    const mine = ++turn;
+    if (!results.children.length) return;
+    await sink(results.children, { y: 8 });
+    if (mine === turn) clear(results);
+  };
 
   const pasteMode = () => {
     const input = h("textarea", {
@@ -41,10 +61,11 @@ export function checkView(main: HTMLElement, overview: Overview) {
     });
     const show = async () => {
       const text = input.value;
-      if (!text.trim()) return clear(results);
+      if (!text.trim()) return void empty();
       const found = await ipc.recognizeText(text);
-      if (!found.length) return clear(results, h("div", { class: "empty" }, "No address in this text."));
-      clear(results, found.map(recognitionCard));
+      if (!found.length) return fill(h("div", { class: "empty" }, "No address in this text."));
+      // One address: its card. Several: one card with a row each.
+      fill(found.length === 1 ? recognitionCard(found[0], scope) : recognitionList(found, scope));
       void rise(results.children, { y: 8, gap: 0.05 });
       if (overview.config.network) for (const r of found) void ipc.lookupOnchain(r.address.text).catch(() => {});
     };
@@ -53,14 +74,9 @@ export function checkView(main: HTMLElement, overview: Overview) {
       body,
       h("label", { class: "field-label" }, "Paste anything with addresses in it"),
       input,
-      h(
-        "div",
-        { class: "check-foot" },
-        h("span", { class: "muted" }, "Every address in the text is checked. Nothing you paste is stored."),
-        h("button", { class: "link", onclick: () => compareMode() }, "Compare with the address you expected"),
-      ),
+      h("p", { class: "check-foot muted" }, "Every address in the text is checked. Nothing you paste is stored."),
     );
-    clear(results);
+    void empty();
     input.focus();
   };
 
@@ -69,13 +85,20 @@ export function checkView(main: HTMLElement, overview: Overview) {
     const actual = h("input", { type: "text", class: "addr", placeholder: "The one in your wallet, about to be used", "aria-label": "The address you are about to use" });
     const show = async () => {
       const [want, have] = [expected.value.trim(), actual.value.trim()];
-      if (!want || !have) return clear(results);
+      expected.removeAttribute("aria-invalid");
+      actual.removeAttribute("aria-invalid");
+      if (!want || !have) return void empty();
       try {
         // The one about to be used is the candidate, the expected one is known.
-        clear(results, comparisonCard(await ipc.compareAddresses(have, want), overview, example));
+        fill(comparisonCard(await ipc.compareAddresses(have, want), overview, example));
         void move(results.firstElementChild, { opacity: [0, 1], y: [8, 0] }, SPRING);
       } catch (e) {
-        clear(results, h("div", { class: "notice" }, message(e)));
+        const p = e as Partial<CompareProblem>;
+        if (!p?.kind) return void fill(h("div", { class: "notice" }, message(e)));
+        if (p.field === "used") actual.setAttribute("aria-invalid", "true");
+        if (p.field === "expected") expected.setAttribute("aria-invalid", "true");
+        fill(problemCard(p as CompareProblem));
+        void move(results.firstElementChild, { opacity: [0, 1], y: [8, 0] }, SPRING);
       }
     };
     expected.addEventListener("input", () => void show());
@@ -94,7 +117,7 @@ export function checkView(main: HTMLElement, overview: Overview) {
         "div",
         { class: "check-foot" },
         h("span", { class: "muted" }, "Kenning compares every character, so you don't have to."),
-        h("button", { class: "link", onclick: () => pasteMode() }, "Check a text instead"),
+        h("button", { class: "link", onclick: () => compareMode(true) }, "Try an example"),
       ),
     );
     if (example) {
@@ -102,10 +125,20 @@ export function checkView(main: HTMLElement, overview: Overview) {
       actual.value = EXAMPLE_PASTED;
       void show();
     } else {
-      clear(results);
+      void empty();
       expected.focus();
     }
   };
+
+  const modes = segmented(
+    "Check",
+    [
+      { value: "text", label: "A text" },
+      { value: "compare", label: "Two addresses" },
+    ],
+    "text",
+    (m) => (m === "text" ? pasteMode() : compareMode()),
+  );
 
   clear(
     main,
@@ -114,7 +147,7 @@ export function checkView(main: HTMLElement, overview: Overview) {
       {},
       h("h1", {}, "Check"),
       h("span", { class: "spacer" }),
-      h("button", { class: "btn ghost", onclick: () => compareMode(true) }, icon("info", 16), "Try an example"),
+      modes,
       h(
         "p",
         { class: "lead" },
@@ -128,6 +161,44 @@ export function checkView(main: HTMLElement, overview: Overview) {
     results,
   );
   pasteMode();
+}
+
+const FIELD = { used: "In the address you are about to use", expected: "In the address you expected" } as const;
+
+/** Why the two could not be compared, as a verdict: what is wrong, in which
+ *  box, and what to do about it. */
+function problemCard(p: CompareProblem): HTMLElement {
+  const [chain, other] = p.chains;
+  const name = chain ? CHAIN_NAME[chain] : "";
+  const [title, sub, why] =
+    p.kind === "checksum"
+      ? [
+          "A character is wrong",
+          p.field ? FIELD[p.field] : "",
+          `${chain === "evm" ? "EVM addresses carry a checksum in the case of their letters" : `${name} addresses end in a checksum`}. This one does not add up, so a character was changed or mistyped on the way. Copy it again from where it came from, rather than fixing it by hand.`,
+        ]
+      : p.kind === "chains"
+        ? [
+            "These are on different networks",
+            `About to use: ${name}. Expected: ${other ? CHAIN_NAME[other] : ""}.`,
+            "An address on one network cannot be the one you expected on another. Check that both came from the same place.",
+          ]
+        : [
+            "Not an address",
+            p.field ? FIELD[p.field] : "",
+            "Paste one whole address here: an EVM 0x… address, or a Bitcoin, Solana or Tron one.",
+          ];
+  return h(
+    "div",
+    { class: "card verdict k-new" },
+    h(
+      "div",
+      { class: "verdict-head" },
+      h("span", { class: "tile" }, icon("alert", 18)),
+      h("div", {}, h("strong", {}, title), h("div", { class: "muted" }, sub)),
+    ),
+    h("p", { class: "verdict-why" }, why),
+  );
 }
 
 /** Two addresses, every character compared, and what that means. */

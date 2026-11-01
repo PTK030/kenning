@@ -1,5 +1,6 @@
 // Address rendering: always the full address, monospace, in groups of 4.
 
+import { chainMark } from "./chainMarks";
 import { h } from "./dom";
 import { icon, STATE_ICON, type IconName } from "./icons";
 import type { Chain, Owner, Span, State } from "./types";
@@ -73,8 +74,10 @@ export function metaChip(ic: IconName, text: string): HTMLElement {
   return h("span", { class: "meta-chip" }, icon(ic, 12), text);
 }
 
+/** The network: its mark in its own colour, then its name. Not a chip: the
+ *  colour is what the eye finds first in a list. */
 export function chainChip(chain: Chain): HTMLElement {
-  return metaChip("layers", CHAIN_NAME[chain]);
+  return h("span", { class: "chain-tag" }, chainMark(chain, 16), CHAIN_NAME[chain]);
 }
 
 /** A detail line from the core ("a · b · c") as separate pieces with a

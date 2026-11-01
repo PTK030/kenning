@@ -16,15 +16,16 @@ function paint(el: HTMLElement, fact: Fact | undefined) {
     return;
   }
   el.hidden = false;
+  const words = (text: string) => h("span", { class: "t", title: text }, text);
   if (fact.state === "pending") {
     el.classList.add("pending");
-    el.append(icon("globe", 12), "Checking on chain…");
+    el.append(icon("globe", 12), words("Checking on chain…"));
   } else if (fact.state === "error") {
     el.classList.add("error");
-    el.append(icon("globe", 12), `On-chain lookup failed: ${fact.message}`);
+    el.append(icon("globe", 12), words(`On-chain lookup failed: ${fact.message}`));
   } else {
     el.classList.add(fact.active ? "active" : "unused");
-    el.append(icon("globe", 12), fact.summary);
+    el.append(icon("globe", 12), words(fact.summary));
   }
 }
 
@@ -35,7 +36,7 @@ export function onchainLine(address: string): HTMLElement {
   if (!set) waiting.set(address, (set = new Set()));
   set.add(el);
   void ipc.getOnchain([address]).then((facts) => {
-    if (facts[address]) paint(el, facts[address]);
+    if (facts?.[address]) paint(el, facts[address]);
   });
   return el;
 }

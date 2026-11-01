@@ -52,11 +52,11 @@ impl OnchainState {
 
 fn net(app: &AppHandle) -> Option<Arc<Net>> {
     let st = app.state::<AppState>();
-    let (enabled, rpc, home) = {
+    let (enabled, endpoints, home) = {
         let k = st.kenning.lock().unwrap();
         (
             k.config().network,
-            k.config().solana_rpc.clone(),
+            Endpoints::from_config(k.config()),
             k.home().to_owned(),
         )
     };
@@ -66,10 +66,7 @@ fn net(app: &AppHandle) -> Option<Arc<Net>> {
     let mut slot = st.onchain.net.lock().unwrap();
     Some(
         slot.get_or_insert_with(|| {
-            Arc::new(Net::new(
-                Endpoints::with_solana_rpc(rpc.as_deref()),
-                Some(home.join("net-cache.json")),
-            ))
+            Arc::new(Net::new(endpoints, Some(home.join("net-cache.json"))))
         })
         .clone(),
     )
