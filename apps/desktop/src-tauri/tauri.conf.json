@@ -27,6 +27,17 @@
       ]
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZGRDkyNkZFNDRFRDcxQzgKUldUSWNlMUUvaWJaLzlWUlkxd2lycUxIQ0tvN2lUV1crWmwzUnlndW5pM0REN2lrOFdvSURwN2wK",
+      "endpoints": [
+        "https://github.com/PTK030/kenning/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": [
@@ -46,6 +57,7 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser",
+        "template": "installer/installer.nsi",
         "installerIcon": "icons/icon.ico",
         "headerImage": "installer/nsis-header.bmp",
         "sidebarImage": "installer/nsis-sidebar.bmp",
