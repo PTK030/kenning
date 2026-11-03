@@ -15,7 +15,7 @@ bech32 = "0.12.0"
 bs58 = { version = "0.5.1", default-features = false, features = ["alloc", "check"] }
 csv = "1.4.0"
 directories = "6.0.0"
-ed25519-dalek = { version = "2", default-features = false }
+ed25519-dalek = { version = "3", default-features = false }
 jiff = { version = "0.2.38", features = ["serde"] }
 kenning-labels = { path = "../kenning-labels", version = "0.1.0" }
 serde = { version = "1.0.229", features = ["derive"] }
